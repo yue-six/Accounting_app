@@ -41,6 +41,22 @@ class ProfilePage {
                     </div>
                     <div class="profile-name" id="profile-nickname">未登录</div>
                     <div class="profile-email" id="profile-contact">--</div>
+                    
+                    <!-- 登录按钮 -->
+                    <div id="user-info" style="margin-top: 15px;">
+                        <button id="wechat-login-btn" class="btn btn-primary" style="width: 100%; background: #09bb07; margin-bottom: 8px;">
+                            <i class="fab fa-weixin" style="margin-right: 8px;"></i>
+                            微信登录
+                        </button>
+                        <button id="alipay-login-btn" class="btn btn-primary" style="width: 100%; background: #1677ff; margin-bottom: 8px;">
+                            <i class="fab fa-alipay" style="margin-right: 8px;"></i>
+                            支付宝登录
+                        </button>
+                        <button id="logout-btn" class="btn btn-secondary" style="width: 100%; display: none;">
+                            <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i>
+                            退出登录
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 功能菜单 -->
@@ -193,6 +209,9 @@ class ProfilePage {
         // 设置全局变量
         profilePage = this;
 
+        // 绑定登录按钮事件
+        this.bindLoginEvents();
+
         // 用户模式切换
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -214,6 +233,33 @@ class ProfilePage {
         }
     }
 
+    // 绑定登录相关事件
+    bindLoginEvents() {
+        // 微信登录按钮
+        const wechatLoginBtn = document.getElementById('wechat-login-btn');
+        if (wechatLoginBtn) {
+            wechatLoginBtn.addEventListener('click', () => {
+                this.app.showWechatLogin();
+            });
+        }
+
+        // 支付宝登录按钮
+        const alipayLoginBtn = document.getElementById('alipay-login-btn');
+        if (alipayLoginBtn) {
+            alipayLoginBtn.addEventListener('click', () => {
+                this.app.showAlipayLogin();
+            });
+        }
+
+        // 登出按钮
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.app.logout();
+            });
+        }
+    }
+
     // 更新数据
     updateData() {
         // 更新应用信息
@@ -224,14 +270,16 @@ class ProfilePage {
         if (lastUpdate) lastUpdate.textContent = new Date().toLocaleTimeString('zh-CN');
         if (userMode) userMode.textContent = this.app.userMode;
 
-        // 同步登录用户信息到头像区
+        // 同步登录用户信息到头像区（避免再次调用 app.updateUserInfo() 导致递归）
         try {
-            const user = JSON.parse(localStorage.getItem('auth_user') || 'null');
+            const user = this.app.getCurrentUser();
             const nameEl = document.getElementById('profile-nickname');
             const contactEl = document.getElementById('profile-contact');
             if (nameEl) nameEl.textContent = user?.nickname || '未登录';
             if (contactEl) contactEl.textContent = user?.phone || (user?.provider ? `第三方：${user.provider}` : '--');
-        } catch (e) {}
+        } catch (e) {
+            console.error('更新个人页头像区信息失败:', e);
+        }
 
         // 更新储蓄目标列表
         this.updateSavingsGoalsList();
@@ -947,11 +995,9 @@ class ProfilePage {
 
     // 退出登录
     logout() {
-        try {
-            localStorage.removeItem('auth_user');
-        } catch (e) {}
-        this.app.showToast('已退出登录', 'success');
-        if (window.router) window.router.switchToPage('login');
+        // 调用app.js中的logout方法
+        this.app.logout();
+        this.updateData();
     }
 }
 

@@ -33,6 +33,17 @@ window.addEventListener('error', function(e) {
     }
 });
 
+// 捕获未处理的 Promise 拒绝，避免触发全局未捕获错误
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('未处理的 Promise 拒绝:', event.reason);
+    if (window.accountingApp && typeof window.accountingApp.showToast === 'function') {
+        // 更友好的提示，避免与同步 error 混淆
+        window.accountingApp.showToast('应用发生异步错误，请重试或刷新页面', 'error');
+    }
+    // 阻止默认处理（避免在控制台重复抛出）
+    try { event.preventDefault(); } catch (e) { /* ignore */ }
+});
+
 // 页面卸载前保存数据
 window.addEventListener('beforeunload', function() {
     if (window.accountingApp) {

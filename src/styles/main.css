@@ -1289,3 +1289,187 @@ input:checked + .slider:before {
 .login-btn:active {
     transform: translateY(0);
 }
+
+/* 语音记账模态框样式 */
+.voice-input-btn {
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.voice-input-btn i {
+    color: #3b82f6;
+    text-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.voice-input-btn:hover {
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.12));
+}
+
+.voice-input-btn.listening {
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.12));
+    border-color: rgba(239, 68, 68, 0.4);
+    animation: pulse 1.5s infinite;
+}
+
+.voice-input-btn.listening i {
+    color: #ef4444;
+}
+
+/* 语音识别结果样式 */
+.voice-result-modal {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.voice-result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.voice-result-header i {
+    font-size: 1.5rem;
+    color: #3b82f6;
+}
+
+.voice-result-header h3 {
+    margin: 0;
+    color: #1a202c;
+}
+
+.voice-result-content {
+    margin-bottom: 25px;
+}
+
+.voice-original {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f7fafc;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.voice-original label {
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.voice-original p {
+    margin: 0;
+    color: #718096;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.voice-parsed {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.parsed-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.parsed-item .label {
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.parsed-item .value {
+    font-weight: 500;
+}
+
+.parsed-item .value.amount {
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+.parsed-item .value.income {
+    color: #10b981;
+}
+
+.parsed-item .value.expense {
+    color: #ef4444;
+}
+
+.voice-result-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* 语音监听状态动画 */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 模态框按钮样式 */
+.action-btn.success {
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.action-btn.success i {
+    color: #10b981;
+}
+
+.action-btn.success:hover {
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.12));
+}
+
+.action-btn.secondary {
+    background: linear-gradient(145deg, rgba(107, 114, 128, 0.15), rgba(107, 114, 128, 0.08));
+    border-color: rgba(107, 114, 128, 0.3);
+}
+
+.action-btn.secondary i {
+    color: #6b7280;
+}
+
+.action-btn.secondary:hover {
+    background: linear-gradient(145deg, rgba(107, 114, 128, 0.2), rgba(107, 114, 128, 0.12));
+}
+
+.action-btn.outline {
+    background: transparent;
+    border: 2px solid #3b82f6;
+    color: #3b82f6;
+}
+
+.action-btn.outline:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.action-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.action-btn.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}

@@ -129,24 +129,66 @@ const userSchema = new mongoose.Schema({
     },
     createdAt: { type: Date, default: Date.now },
     completedAt: Date
-  }
   },
+
   statistics: {
     totalIncome: { type: Number, default: 0 },
     totalExpense: { type: Number, default: 0 },
     transactionCount: { type: Number, default: 0 },
     lastActive: { type: Date, default: Date.now }
   },
-  isActive: {
+  // 第三方登录关联
+  thirdPartyAuth: {
+    alipay: {
+      userId: {
+        type: String,
+        unique: true,
+        sparse: true
+      },
+      nickName: String,
+      avatar: String,
+      gender: String,
+      province: String,
+      city: String,
+      isCertified: Boolean,
+      isStudentCertified: Boolean,
+      connectedAt: {
+        type: Date,
+        default: Date.now
+      },
+      lastSync: Date
+    },
+    wechat: {
+      openId: {
+        type: String,
+        unique: true,
+        sparse: true
+      },
+      unionId: String,
+      nickName: String,
+      avatar: String,
+      gender: Number,
+      province: String,
+      city: String,
+      country: String,
+      connectedAt: {
+        type: Date,
+        default: Date.now
+      },
+      lastSync: Date
+    }
+  },
+  
+  isActive, {
     type: Boolean,
     default: true
   },
-  lastLogin: Date,
-  loginCount: {
+  lastLogin,Date,
+  loginCount,{
     type: Number,
     default: 0
   }
-}, {
+, {
   timestamps: true,
   toJSON: {
     transform: function(doc, ret) {
@@ -154,7 +196,7 @@ const userSchema = new mongoose.Schema({
       return ret;
     }
   }
-});
+;
 
 // 索引
 userSchema.index({ email: 1 });
@@ -199,6 +241,173 @@ userSchema.statics.findByEmail = function(email) {
 // 静态方法：根据用户名查找用户
 userSchema.statics.findByUsername = function(username) {
   return this.findOne({ username: new RegExp('^' + username + '$', 'i') });
+};
+
+// 静态方法：根据支付宝用户ID查找或创建用户
+userSchema.statics.findOrCreateByAlipay = async function(alipayUserInfo) {
+  try {
+    // 首先尝试查找已关联的用户
+    let user = await this.findOne({ 
+      'thirdPartyAuth.alipay.userId': alipayUserInfo.user_id 
+    });
+    
+    if (user) {
+      // 更新支付宝用户信息
+      user.thirdPartyAuth.alipay.nickName = alipayUserInfo.nick_name;
+      user.thirdPartyAuth.alipay.avatar = alipayUserInfo.avatar;
+      user.thirdPartyAuth.alipay.gender = alipayUserInfo.gender;
+      user.thirdPartyAuth.alipay.province = alipayUserInfo.province;
+      user.thirdPartyAuth.alipay.city = alipayUserInfo.city;
+      user.thirdPartyAuth.alipay.isCertified = alipayUserInfo.is_certified === 'T';
+      user.thirdPartyAuth.alipay.isStudentCertified = alipayUserInfo.is_student_certified === 'T';
+      user.thirdPartyAuth.alipay.lastSync = new Date();
+      
+      await user.save();
+      return user;
+    }
+    
+    // 创建新用户（使用支付宝信息）
+    const username = `alipay_${alipayUserInfo.user_id.substring(0, 8)}`;
+    const email = `${username}@alipay.local`;
+    
+    // 生成随机密码
+    const randomPassword = crypto.randomBytes(16).toString('hex');
+    
+    user = new this({
+      username,
+      email,
+      password: randomPassword, // 密码会被bcrypt加密
+      profile: {
+        fullName: alipayUserInfo.nick_name,
+        avatar: alipayUserInfo.avatar,
+        gender: alipayUserInfo.gender === 'M' ? 'male' : 
+                alipayUserInfo.gender === 'F' ? 'female' : 'other'
+      },
+      thirdPartyAuth: {
+        alipay: {
+          userId: alipayUserInfo.user_id,
+          nickName: alipayUserInfo.nick_name,
+          avatar: alipayUserInfo.avatar,
+          gender: alipayUserInfo.gender,
+          province: alipayUserInfo.province,
+          city: alipayUserInfo.city,
+          isCertified: alipayUserInfo.is_certified === 'T',
+          isStudentCertified: alipayUserInfo.is_student_certified === 'T',
+          connectedAt: new Date(),
+          lastSync: new Date()
+        }
+      }
+    });
+    
+    await user.save();
+    return user;
+    
+  } catch (error) {
+    console.error('支付宝用户关联失败:', error);
+    throw error;
+  }
+};
+
+// 静态方法：根据支付宝用户ID查找用户
+userSchema.statics.findByAlipayUserId = function(alipayUserId) {
+  return this.findOne({ 'thirdPartyAuth.alipay.userId': alipayUserId });
+};
+
+// 根据支付宝用户信息查找或创建用户
+userSchema.statics.findOrCreateByAlipay = async function(alipayUserInfo) {
+  try {
+    // 查找已存在的支付宝用户
+    let user = await this.findOne({ 
+      'alipay.user_id': alipayUserInfo.user_id 
+    });
+    
+    if (user) {
+      return user;
+    }
+    
+    // 创建新用户
+    const username = `alipay_${alipayUserInfo.user_id.substring(0, 8)}`;
+    const email = `${username}@alipay.com`;
+    
+    user = new this({
+      username,
+      email,
+      password: 'alipay_' + Date.now(), // 随机密码
+      profile: {
+        nickname: alipayUserInfo.nick_name || '支付宝用户',
+        avatar: alipayUserInfo.avatar || '',
+        gender: alipayUserInfo.gender || '未知',
+        province: alipayUserInfo.province || '',
+        city: alipayUserInfo.city || ''
+      },
+      alipay: {
+        user_id: alipayUserInfo.user_id,
+        nick_name: alipayUserInfo.nick_name,
+        avatar: alipayUserInfo.avatar,
+        gender: alipayUserInfo.gender,
+        province: alipayUserInfo.province,
+        city: alipayUserInfo.city,
+        is_certified: alipayUserInfo.is_certified,
+        is_student_certified: alipayUserInfo.is_student_certified
+      }
+    });
+    
+    await user.save();
+    return user;
+    
+  } catch (error) {
+    console.error('创建支付宝用户失败:', error);
+    throw error;
+  }
+};
+
+// 根据微信用户信息查找或创建用户
+userSchema.statics.findOrCreateByWechat = async function(wechatUserInfo) {
+  try {
+    // 查找已存在的微信用户
+    let user = await this.findOne({ 
+      'wechat.openid': wechatUserInfo.openid 
+    });
+    
+    if (user) {
+      return user;
+    }
+    
+    // 创建新用户
+    const username = `wechat_${wechatUserInfo.openid.substring(0, 8)}`;
+    const email = `${username}@wechat.com`;
+    
+    user = new this({
+      username,
+      email,
+      password: 'wechat_' + Date.now(), // 随机密码
+      profile: {
+        nickname: wechatUserInfo.nickname || '微信用户',
+        avatar: wechatUserInfo.headimgurl || '',
+        gender: wechatUserInfo.sex === 1 ? '男' : wechatUserInfo.sex === 2 ? '女' : '未知',
+        province: wechatUserInfo.province || '',
+        city: wechatUserInfo.city || '',
+        country: wechatUserInfo.country || ''
+      },
+      wechat: {
+        openid: wechatUserInfo.openid,
+        unionid: wechatUserInfo.unionid,
+        nickname: wechatUserInfo.nickname,
+        avatar: wechatUserInfo.headimgurl,
+        gender: wechatUserInfo.sex,
+        province: wechatUserInfo.province,
+        city: wechatUserInfo.city,
+        country: wechatUserInfo.country
+      }
+    });
+    
+    await user.save();
+    return user;
+    
+  } catch (error) {
+    console.error('创建微信用户失败:', error);
+    throw error;
+  }
 };
 
 module.exports = mongoose.model('User', userSchema);

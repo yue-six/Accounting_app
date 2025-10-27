@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝登录回调</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1677FF 0%, #1890FF 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #1677FF;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .status {
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        
+        .error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        
+        .loading {
+            background: #f0f0f0;
+            border: 1px solid #d9d9d9;
+            color: #666;
+        }
+        
+        .button {
+            background: #1677FF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        
+        .button:hover {
+            background: #0958d9;
+        }
+        
+        .button:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1677FF;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">支</div>
+        <h1>支付宝登录</h1>
+        
+        <div id="loading" class="status loading">
+            <div class="spinner"></div>
+            <p>正在处理支付宝授权...</p>
+        </div>
+        
+        <div id="success" class="status success hidden">
+            <p>✅ 支付宝登录成功！</p>
+            <p>正在跳转回应用...</p>
+        </div>
+        
+        <div id="error" class="status error hidden">
+            <p id="error-message">❌ 支付宝登录失败</p>
+            <button class="button" onclick="retryLogin()">重新登录</button>
+            <button class="button" onclick="redirectToApp()">返回应用</button>
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const authCode = params.get('auth_code');
+            const state = params.get('state');
+            const error = params.get('error');
+            const errorDescription = params.get('error_description');
+            
+            return {
+                authCode,
+                state,
+                error,
+                errorDescription
+            };
+        }
+        
+        // 显示状态
+        function showStatus(status) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('success').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            
+            document.getElementById(status).classList.remove('hidden');
+        }
+        
+        // 显示错误
+        function showError(message) {
+            document.getElementById('error-message').textContent = '❌ ' + message;
+            showStatus('error');
+        }
+        
+        // 显示成功
+        function showSuccess() {
+            showStatus('success');
+        }
+        
+        // 跳转回应用
+        function redirectToApp() {
+            const redirectUrl = sessionStorage.getItem('alipay_oauth_redirect') || 'index.html';
+            window.location.href = redirectUrl;
+        }
+        
+        // 重新登录
+        function retryLogin() {
+            // 重新启动支付宝登录
+            const redirectUri = window.location.origin + '/alipay-callback.html';
+            const state = 'alipay_oauth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            sessionStorage.setItem('alipay_oauth_state', state);
+            sessionStorage.setItem('alipay_oauth_redirect', 'index.html');
+            
+            // 直接构建支付宝授权URL
+            const authUrl = `https://openauth.alipay.com/oauth2/publicAppAuthorize.htm?app_id=2021006103604761&scope=auth_user&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+            
+            window.location.href = authUrl;
+        }
+        
+        // 处理OAuth2回调
+        async function handleOAuthCallback() {
+            const { authCode, state, error, errorDescription } = getUrlParams();
+            
+            if (error) {
+                showError(errorDescription || '授权失败：' + error);
+                return;
+            }
+            
+            if (!authCode) {
+                showError('缺少授权码');
+                return;
+            }
+            
+            if (!state) {
+                showError('缺少状态参数');
+                return;
+            }
+            
+            // 验证state参数 - 支持sessionStorage和localStorage两种存储方式
+            let savedState = sessionStorage.getItem('alipay_oauth_state');
+            let savedRedirect = sessionStorage.getItem('alipay_oauth_redirect');
+            let savedTimestamp = sessionStorage.getItem('alipay_oauth_timestamp');
+            
+            // 如果sessionStorage中没有，尝试从localStorage获取
+            if (!savedState) {
+                savedState = localStorage.getItem('alipay_oauth_state');
+                savedRedirect = localStorage.getItem('alipay_oauth_redirect');
+                savedTimestamp = localStorage.getItem('alipay_oauth_timestamp');
+            }
+            
+            if (!savedState) {
+                showError('状态参数验证失败：未找到保存的状态');
+                return;
+            }
+            
+            if (state !== savedState) {
+                showError('状态参数验证失败：状态不匹配');
+                return;
+            }
+            
+            // 检查时间戳，防止重放攻击（10分钟内有效）
+            if (savedTimestamp) {
+                const timestamp = parseInt(savedTimestamp);
+                const now = Date.now();
+                if (now - timestamp > 10 * 60 * 1000) { // 10分钟
+                    showError('授权已过期，请重新登录');
+                    return;
+                }
+            }
+            
+            // 保存重定向URL
+            if (savedRedirect) {
+                sessionStorage.setItem('alipay_oauth_redirect', savedRedirect);
+            }
+            
+            try {
+                console.log('开始处理支付宝回调，授权码:', authCode);
+                
+                // 调用后端API处理OAuth2回调
+                const response = await fetch('http://localhost:3000/api/payments/alipay/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ auth_code: authCode })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 登录成功，保存用户信息
+                    const authUser = {
+                        provider: 'alipay',
+                        ...data.data.user,
+                        tokenInfo: data.data.tokenInfo,
+                        loginTime: data.data.loginTime
+                    };
+                    
+                    localStorage.setItem('auth_user', JSON.stringify(authUser));
+                    
+                    // 保存支付连接状态
+                    const paymentConnections = JSON.parse(localStorage.getItem('paymentConnections') || '{}');
+                    paymentConnections.alipay = {
+                        connected: true,
+                        connectedAt: new Date().toISOString(),
+                        lastSync: new Date().toISOString(),
+                        userInfo: data.data.user
+                    };
+                    localStorage.setItem('paymentConnections', JSON.stringify(paymentConnections));
+                    
+                    console.log('支付宝登录成功，用户信息:', data.data.user);
+                    showSuccess();
+                    
+                    // 3秒后自动跳转
+                    setTimeout(() => {
+                        redirectToApp();
+                    }, 3000);
+                } else {
+                    console.error('支付宝登录失败:', data.message);
+                    showError(data.message || '支付宝登录失败');
+                }
+                
+            } catch (error) {
+                console.error('处理支付宝回调失败:', error);
+                
+                // 检查是否是网络错误
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showError('网络连接失败，请检查后端服务是否启动');
+                } else {
+                    showError('处理回调时发生错误：' + error.message);
+                }
+            }
+        }
+        
+        // 页面加载完成后处理OAuth2回调
+        document.addEventListener('DOMContentLoaded', function() {
+            const { authCode, error } = getUrlParams();
+            
+            if (error) {
+                showError('授权失败：' + error);
+                return;
+            }
+            
+            if (!authCode) {
+                showError('缺少授权码');
+                return;
+            }
+            
+            handleOAuthCallback();
+        });
+    </script>
+</body>
+</html>

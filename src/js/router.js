@@ -131,17 +131,36 @@ class Router {
     renderPage(pageName) {
         const container = document.getElementById('page-container');
         
-        // 创建页面实例
-        const pageInstance = new this.pages[pageName](this.app);
-        
-        // 渲染页面
-        container.innerHTML = pageInstance.render();
-        
-        // 初始化页面事件
-        pageInstance.initEvents();
-        
-        // 更新页面数据
-        pageInstance.updateData();
+        try {
+            // 创建页面实例
+            const pageInstance = new this.pages[pageName](this.app);
+            
+            // 渲染页面
+            container.innerHTML = pageInstance.render();
+            
+            // 初始化页面事件
+            if (typeof pageInstance.initEvents === 'function') {
+                pageInstance.initEvents();
+            }
+            
+            // 更新页面数据
+            if (typeof pageInstance.updateData === 'function') {
+                pageInstance.updateData();
+            }
+        } catch (error) {
+            console.error(`渲染页面 ${pageName} 时发生错误:`, error);
+            // 显示错误页面而不是弹出错误提示
+            container.innerHTML = `
+                <div class="page active" style="padding: 20px; text-align: center;">
+                    <div style="color: #e53e3e; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3>页面加载失败</h3>
+                    <p style="color: #718096; margin: 20px 0;">页面暂时无法访问，请稍后重试</p>
+                    <button class="btn btn-primary" onclick="window.location.reload()">刷新页面</button>
+                </div>
+            `;
+        }
     }
 
     // 获取当前页面

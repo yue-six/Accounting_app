@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝OAuth2前端功能测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1677FF 0%, #1890FF 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            color: #1677FF;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .test-button {
+            background: #1677FF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .test-button:hover {
+            background: #0958d9;
+        }
+        
+        .test-button:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        
+        .error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        
+        .info {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #1890ff;
+        }
+        
+        .code {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status.ready {
+            background: #52c41a;
+            color: white;
+        }
+        
+        .status.error {
+            background: #ff4d4f;
+            color: white;
+        }
+        
+        .status.warning {
+            background: #faad14;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>支付宝OAuth2前端功能测试</h1>
+        
+        <div class="test-section">
+            <h2>1. 支付宝OAuth服务类测试</h2>
+            <button class="test-button" onclick="testAlipayOAuthService()">测试支付宝OAuth服务类</button>
+            <div id="service-test-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. 授权链接生成测试</h2>
+            <button class="test-button" onclick="testAuthUrlGeneration()">生成授权链接</button>
+            <div id="auth-url-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. 状态参数管理测试</h2>
+            <button class="test-button" onclick="testStateManagement()">测试状态参数管理</button>
+            <div id="state-test-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. 回调参数检查测试</h2>
+            <button class="test-button" onclick="testCallbackCheck()">检查当前页面回调参数</button>
+            <div id="callback-test-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. 完整登录流程测试</h2>
+            <button class="test-button" onclick="testFullLoginFlow()">启动完整登录流程</button>
+            <div class="code">
+// 完整登录流程：
+// 1. 生成授权URL
+// 2. 保存状态参数
+// 3. 跳转到支付宝授权页面
+// 4. 用户授权后返回回调页面
+// 5. 处理回调并获取用户信息
+            </div>
+            <div id="login-test-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>6. 当前状态信息</h2>
+            <button class="test-button" onclick="showCurrentStatus()">显示当前状态</button>
+            <div id="status-result" class="result"></div>
+        </div>
+    </div>
+
+    <script src="/src/js/alipay-oauth.js"></script>
+    <script>
+        // 测试支付宝OAuth服务类
+        function testAlipayOAuthService() {
+            const resultEl = document.getElementById('service-test-result');
+            resultEl.innerHTML = '';
+            resultEl.className = 'result info';
+            
+            try {
+                if (!window.alipayOAuth) {
+                    throw new Error('支付宝OAuth服务类未加载');
+                }
+                
+                const service = window.alipayOAuth;
+                const testResults = [];
+                
+                // 测试配置
+                testResults.push('✅ 服务类加载成功');
+                testResults.push(`📱 AppID: ${service.config.aconst redirectUri = 'https://warm-halva-bafc60.netlify.app/alipay-callback.html';
+`);
+                testResults.push(`🔗 授权URL: ${service.config.authorizeUrl}`);
+                testResults.push(`🎯 授权范围: ${service.config.scope}`);
+                
+                // 测试方法存在性
+                const methods = ['generateAuthUrl', 'generateState', 'saveOAuthState', 'validateState', 'startOAuthLogin'];
+                methods.forEach(method => {
+                    if (typeof service[method] === 'function') {
+                        testResults.push(`✅ 方法 ${method} 存在`);
+                    } else {
+                        testResults.push(`❌ 方法 ${method} 不存在`);
+                    }
+                });
+                
+                resultEl.innerHTML = testResults.join('\n');
+                resultEl.className = 'result success';
+                
+            } catch (error) {
+                resultEl.innerHTML = `❌ 测试失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 测试授权链接生成
+        function testAuthUrlGeneration() {
+            const resultEl = document.getElementById('auth-url-result');
+            resultEl.innerHTML = '';
+            resultEl.className = 'result info';
+            
+            try {
+                if (!window.alipayOAuth) {
+                    throw new Error('支付宝OAuth服务类未加载');
+                }
+                
+                const service = window.alipayOAuth;
+                const redirectUri = window.location.origin + '/alipay-callback.html';
+                const state = service.generateState();
+                
+                // 生成授权URL
+                const authUrl = service.generateAuthUrl(redirectUri, state);
+                
+                const testResults = [];
+                testResults.push('✅ 授权链接生成成功');
+                testResults.push(`🔗 回调地址: ${redirectUri}`);
+                testResults.push(`🔑 State参数: ${state}`);
+                testResults.push(`🌐 完整授权URL:`);
+                testResults.push(authUrl);
+                
+                // 验证URL格式
+                const url = new URL(authUrl);
+                const params = new URLSearchParams(url.search);
+                
+                testResults.push('\n📋 URL参数验证:');
+                testResults.push(`✅ app_id: ${params.get('app_id')}`);
+                testResults.push(`✅ scope: ${params.get('scope')}`);
+                testResults.push(`✅ redirect_uri: ${decodeURIComponent(params.get('redirect_uri'))}`);
+                testResults.push(`✅ state: ${params.get('state')}`);
+                
+                resultEl.innerHTML = testResults.join('\n');
+                resultEl.className = 'result success';
+                
+            } catch (error) {
+                resultEl.innerHTML = `❌ 测试失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 测试状态参数管理
+        function testStateManagement() {
+            const resultEl = document.getElementById('state-test-result');
+            resultEl.innerHTML = '';
+            resultEl.className = 'result info';
+            
+            try {
+                if (!window.alipayOAuth) {
+                    throw new Error('支付宝OAuth服务类未加载');
+                }
+                
+                const service = window.alipayOAuth;
+                const testResults = [];
+                
+                // 生成测试状态
+                const testState = service.generateState();
+                const testRedirect = window.location.href;
+                
+                // 保存状态
+                service.saveOAuthState(testState, testRedirect);
+                testResults.push('✅ 状态参数保存成功');
+                testResults.push(`🔑 测试State: ${testState}`);
+                testResults.push(`🔗 测试重定向: ${testRedirect}`);
+                
+                // 验证状态
+                const isValid = service.validateState(testState);
+                testResults.push(isValid ? '✅ 状态参数验证成功' : '❌ 状态参数验证失败');
+                
+                // 获取重定向URL
+                const redirectUrl = service.getSavedRedirectUrl();
+                testResults.push(`🔗 保存的重定向URL: ${redirectUrl}`);
+                
+                // 清除状态
+                service.clearOAuthState();
+                testResults.push('✅ 状态参数清除成功');
+                
+                // 验证清除后状态
+                const isValidAfterClear = service.validateState(testState);
+                testResults.push(isValidAfterClear ? '❌ 状态清除失败' : '✅ 状态清除验证成功');
+                
+                resultEl.innerHTML = testResults.join('\n');
+                resultEl.className = 'result success';
+                
+            } catch (error) {
+                resultEl.innerHTML = `❌ 测试失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 测试回调参数检查
+        function testCallbackCheck() {
+            const resultEl = document.getElementById('callback-test-result');
+            resultEl.innerHTML = '';
+            resultEl.className = 'result info';
+            
+            try {
+                if (!window.alipayOAuth) {
+                    throw new Error('支付宝OAuth服务类未加载');
+                }
+                
+                const service = window.alipayOAuth;
+                const callbackParams = service.checkForOAuthCallback();
+                
+                if (callbackParams) {
+                    const testResults = [];
+                    testResults.push('🎯 检测到回调参数:');
+                    testResults.push(`🔑 授权码: ${callbackParams.authCode}`);
+                    testResults.push(`🔒 State参数: ${callbackParams.state}`);
+                    if (callbackParams.error) {
+                        testResults.push(`❌ 错误: ${callbackParams.error}`);
+                        testResults.push(`📝 错误描述: ${callbackParams.errorDescription}`);
+                    }
+                    
+                    resultEl.innerHTML = testResults.join('\n');
+                    resultEl.className = callbackParams.error ? 'result error' : 'result success';
+                } else {
+                    resultEl.innerHTML = 'ℹ️ 当前页面未检测到支付宝回调参数';
+                    resultEl.className = 'result info';
+                }
+                
+            } catch (error) {
+                resultEl.innerHTML = `❌ 测试失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 测试完整登录流程
+        function testFullLoginFlow() {
+            const resultEl = document.getElementById('login-test-result');
+            resultEl.innerHTML = '';
+            resultEl.className = 'result info';
+            
+            try {
+                if (!window.alipayOAuth) {
+                    throw new Error('支付宝OAuth服务类未加载');
+                }
+                
+                const service = window.alipayOAuth;
+                const redirectUri = window.location.origin + '/alipay-callback.html';
+                
+                const testResults = [];
+                testResults.push('🚀 开始完整登录流程测试...');
+                
+                // 1. 生成授权URL
+                const authUrl = service.generateAuthUrl(redirectUri);
+                testResults.push('✅ 授权URL生成成功');
+                
+                // 2. 保存状态参数
+                const state = service.generateState();
+                service.saveOAuthState(state, window.location.href);
+                testResults.push('✅ 状态参数保存成功');
+                
+                // 3. 验证状态参数
+                const isValid = service.validateState(state);
+                testResults.push(isValid ? '✅ 状态参数验证成功' : '❌ 状态参数验证失败');
+                
+                // 4. 显示授权URL（不实际跳转）
+                testResults.push('\n🌐 生成的授权URL:');
+                testResults.push(authUrl);
+                
+                testResults.push('\n📋 测试总结:');
+                testResults.push('✅ 授权链接拼接功能正常');
+                testResults.push('✅ 状态参数管理功能正常');
+                testResults.push('✅ 回调处理准备就绪');
+                testResults.push('\n💡 提示: 实际使用时调用 startOAuthLogin() 方法会自动跳转');
+                
+                resultEl.innerHTML = testResults.join('\n');
+                resultEl.className = 'result success';
+                
+            } catch (error) {
+                resultEl.innerHTML = `❌ 完整登录流程测试失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 显示当前状态信息
+        function showCurrentStatus() {
+            const resultEl = document.getElementById('status-result');
+            resultEl.innerHTML = '';
+            resultEl.className = 'result info';
+            
+            try {
+                const statusInfo = [];
+                
+                // 检查服务类状态
+                statusInfo.push('🔧 支付宝OAuth服务类状态:');
+                if (window.alipayOAuth) {
+                    statusInfo.push('✅ 服务类已加载');
+                    statusInfo.push(`📱 AppID: ${window.alipayOAuth.config.appId}`);
+                } else {
+                    statusInfo.push('❌ 服务类未加载');
+                }
+                
+                // 检查存储状态
+                statusInfo.push('\n💾 存储状态:');
+                const sessionState = sessionStorage.getItem('alipay_oauth_state');
+                const localState = localStorage.getItem('alipay_oauth_state');
+                
+                if (sessionState) {
+                    statusInfo.push(`✅ SessionStorage: 有状态参数 (${sessionState.substring(0, 20)}...)`);
+                } else {
+                    statusInfo.push('ℹ️ SessionStorage: 无状态参数');
+                }
+                
+                if (localState) {
+                    statusInfo.push(`✅ LocalStorage: 有状态参数 (${localState.substring(0, 20)}...)`);
+                } else {
+                    statusInfo.push('ℹ️ LocalStorage: 无状态参数');
+                }
+                
+                // 检查回调参数
+                statusInfo.push('\n🎯 当前页面回调参数:');
+                const urlParams = new URLSearchParams(window.location.search);
+                const authCode = urlParams.get('auth_code');
+                const state = urlParams.get('state');
+                
+                if (authCode && state) {
+                    statusInfo.push('✅ 检测到回调参数');
+                    statusInfo.push(`🔑 授权码: ${authCode.substring(0, 20)}...`);
+                    statusInfo.push(`🔒 State参数: ${state}`);
+                } else {
+                    statusInfo.push('ℹ️ 无回调参数');
+                }
+                
+                resultEl.innerHTML = statusInfo.join('\n');
+                
+            } catch (error) {
+                resultEl.innerHTML = `❌ 获取状态失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('支付宝OAuth2前端功能测试页面已加载');
+            
+            // 自动检查服务类状态
+            setTimeout(() => {
+                if (window.alipayOAuth) {
+                    console.log('✅ 支付宝OAuth服务类加载成功');
+                } else {
+                    console.error('❌ 支付宝OAuth服务类加载失败');
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

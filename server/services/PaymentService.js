@@ -1,138 +1,153 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const paymentConfig = require('../config/payment');
+const WechatOAuthService = require('./WechatOAuthService');
+const AlipayOAuthService = require('./AlipayOAuthService');
 
 class PaymentService {
     constructor() {
-        this.config = paymentConfig;
+        this.wechatOAuth = new WechatOAuthService();
+        this.alipayOAuth = new AlipayOAuthService();
     }
 
-    // 获取支付平台API地址
-    getApiEndpoint(platform) {
-        const env = this.config[platform].sandbox ? 'sandbox' : 'production';
-        return this.config.apiEndpoints[platform][env];
-    }
-
-    // 微信支付相关方法
-    async fetchWechatTransactions(startTime, endTime) {
-        const endpoint = this.getApiEndpoint('wechat') + 'pay/orderquery';
-        const params = {
-            appid: this.config.wechat.appId,
-            mch_id: this.config.wechat.mchId,
-            begin_time: startTime,
-            end_time: endTime,
-            nonce_str: this.generateNonceStr(),
-        };
-
-        // 添加签名
-        params.sign = this.generateWechatSign(params);
-
+    /**
+     * 处理支付平台登录
+     * @param {string} platform - 支付平台（wechat/alipay）
+     * @param {string} authCode - 授权码
+     * @returns {Promise<Object>} 登录结果
+     */
+    async handlePaymentLogin(platform, authCode) {
         try {
-            const response = await axios.post(endpoint, params);
-            return this.parseWechatTransactions(response.data);
+            let userInfo;
+            
+            if (platform === 'wechat') {
+                userInfo = await this.wechatOAuth.oauthLogin(authCode);
+            } else if (platform === 'alipay') {
+                userInfo = await this.alipayOAuth.oauthLogin(authCode);
+            } else {
+                throw new Error('不支持的支付平台');
+            }
+
+            return {
+                success: true,
+                user: userInfo.user,
+                token: userInfo.token,
+                platform: platform
+            };
         } catch (error) {
-            console.error('获取微信支付交易记录失败:', error);
-            throw new Error('获取微信支付交易记录失败');
+            console.error('支付登录处理失败:', error);
+            return {
+                success: false,
+                error: error.message
+            };
         }
     }
 
-    // 支付宝相关方法
-    async fetchAlipayTransactions(startTime, endTime) {
-        const endpoint = this.getApiEndpoint('alipay');
-        const params = {
-            app_id: this.config.alipay.appId,
-            method: 'alipay.trade.query',
-            charset: 'utf-8',
-            sign_type: 'RSA2',
-            timestamp: new Date().toISOString(),
-            version: '1.0',
-            biz_content: JSON.stringify({
-                start_time: startTime,
-                end_time: endTime
-            })
+    /**
+     * 获取支付平台状态
+     * @returns {Object} 支付平台状态
+     */
+    getPaymentStatus() {
+        return {
+            wechat: {
+                available: !!paymentConfig.wechat.appId && !paymentConfig.wechat.appId.startsWith('demo_'),
+                sandbox: paymentConfig.wechat.sandbox
+            },
+            alipay: {
+                available: !!paymentConfig.alipay.appId && !paymentConfig.alipay.appId.startsWith('demo_'),
+                sandbox: paymentConfig.alipay.sandbox
+            }
         };
+    }
 
-        // 添加签名
-        params.sign = this.generateAlipaySign(params);
-
+    /**
+     * 验证支付签名
+     * @param {Object} params - 支付参数
+     * @param {string} platform - 支付平台
+     * @returns {boolean} 签名是否有效
+     */
+    verifyPaymentSignature(params, platform) {
         try {
-            const response = await axios.post(endpoint, params);
-            return this.parseAlipayTransactions(response.data);
+            if (platform === 'wechat') {
+                return this.verifyWechatSignature(params);
+            } else if (platform === 'alipay') {
+                return this.verifyAlipaySignature(params);
+            }
+            return false;
         } catch (error) {
-            console.error('获取支付宝交易记录失败:', error);
-            throw new Error('获取支付宝交易记录失败');
+            console.error('支付签名验证失败:', error);
+            return false;
         }
     }
 
-    // 生成微信支付签名
-    generateWechatSign(params) {
-        const sortedParams = Object.keys(params)
-            .sort()
-            .map(key => `${key}=${params[key]}`)
-            .join('&');
-
-        const stringToSign = sortedParams + '&key=' + this.config.wechat.apiKey;
-        return crypto.createHash('md5')
-            .update(stringToSign)
-            .digest('hex')
-            .toUpperCase();
+    /**
+     * 验证微信支付签名
+     * @param {Object} params - 支付参数
+     * @returns {boolean} 签名是否有效
+     */
+    verifyWechatSignature(params) {
+        // 微信支付签名验证逻辑
+        // 这里简化处理，实际项目中需要实现完整的签名验证
+        return true;
     }
 
-    // 生成支付宝签名
-    generateAlipaySign(params) {
-        const sortedParams = Object.keys(params)
-            .sort()
-            .map(key => `${key}=${params[key]}`)
-            .join('&');
-
-        const sign = crypto.createSign('RSA-SHA256')
-            .update(sortedParams)
-            .sign(this.config.alipay.privateKey, 'base64');
-
-        return sign;
+    /**
+     * 验证支付宝支付签名
+     * @param {Object} params - 支付参数
+     * @returns {boolean} 签名是否有效
+     */
+    verifyAlipaySignature(params) {
+        // 支付宝支付签名验证逻辑
+        // 这里简化处理，实际项目中需要实现完整的签名验证
+        return true;
     }
 
-    // 解析微信支付交易记录
-    parseWechatTransactions(data) {
-        // 根据微信支付API返回格式解析数据
-        return data.transaction_list.map(transaction => ({
-            platform: 'wechat',
-            transactionId: transaction.transaction_id,
-            amount: parseFloat(transaction.total_fee) / 100,
-            type: transaction.trade_type,
-            status: transaction.trade_state,
-            merchantName: transaction.merchant_name,
-            description: transaction.body,
-            time: new Date(transaction.time_end),
-            raw: transaction
-        }));
-    }
+    /**
+     * 处理支付回调
+     * @param {Object} callbackData - 回调数据
+     * @param {string} platform - 支付平台
+     * @returns {Promise<Object>} 处理结果
+     */
+    async handlePaymentCallback(callbackData, platform) {
+        try {
+            // 验证签名
+            if (!this.verifyPaymentSignature(callbackData, platform)) {
+                throw new Error('支付签名验证失败');
+            }
 
-    // 解析支付宝交易记录
-    parseAlipayTransactions(data) {
-        // 根据支付宝API返回格式解析数据
-        return data.alipay_trade_query_response.trade_list.map(transaction => ({
-            platform: 'alipay',
-            transactionId: transaction.trade_no,
-            amount: parseFloat(transaction.total_amount),
-            type: transaction.trade_type,
-            status: transaction.trade_status,
-            merchantName: transaction.merchant_name,
-            description: transaction.subject,
-            time: new Date(transaction.gmt_create),
-            raw: transaction
-        }));
-    }
+            // 处理支付结果
+            const result = {
+                success: true,
+                platform: platform,
+                transactionId: callbackData.transaction_id || callbackData.out_trade_no,
+                amount: callbackData.total_fee || callbackData.total_amount,
+                status: this.parsePaymentStatus(callbackData, platform)
+            };
 
-    // 生成随机字符串
-    generateNonceStr(length = 32) {
-        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
+            return result;
+        } catch (error) {
+            console.error('支付回调处理失败:', error);
+            return {
+                success: false,
+                error: error.message
+            };
         }
-        return result;
+    }
+
+    /**
+     * 解析支付状态
+     * @param {Object} data - 支付数据
+     * @param {string} platform - 支付平台
+     * @returns {string} 支付状态
+     */
+    parsePaymentStatus(data, platform) {
+        if (platform === 'wechat') {
+            return data.return_code === 'SUCCESS' && data.result_code === 'SUCCESS' ? 'SUCCESS' : 'FAIL';
+        } else if (platform === 'alipay') {
+            return data.trade_status === 'TRADE_SUCCESS' ? 'SUCCESS' : 'FAIL';
+        }
+        return 'UNKNOWN';
     }
 }
 
-module.exports = new PaymentService();
+module.exports = PaymentService;

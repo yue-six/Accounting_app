@@ -45,11 +45,6 @@ class AccountingApp {
         
         await this.loadData();
         
-        // 如果没有数据，设置演示数据
-        if (this.transactions.length === 0) {
-            this.setupMockData();
-        }
-        
         this.initInputManager();
         
         // 初始化完成后，更新页面显示
@@ -116,45 +111,7 @@ class AccountingApp {
         }
     }
 
-    // 设置模拟数据（演示用）
-    setupMockData() {
-        if (this.transactions.length === 0) {
-            const mockTransactions = [
-                {
-                    id: this.generateId(),
-                    type: 'expense',
-                    amount: 28,
-                    category: 'food',
-                    description: '早餐',
-                    merchant: '麦当劳',
-                    date: new Date().toISOString(),
-                    time: '08:30'
-                },
-                {
-                    id: this.generateId(),
-                    type: 'income',
-                    amount: 8000,
-                    category: 'salary',
-                    description: '工资收入',
-                    merchant: '公司转账',
-                    date: new Date(Date.now() - 86400000).toISOString(),
-                    time: '09:00'
-                },
-                {
-                    id: this.generateId(),
-                    type: 'expense',
-                    amount: 6,
-                    category: 'transport',
-                    description: '地铁交通',
-                    merchant: '北京地铁',
-                    date: new Date().toISOString(),
-                    time: '18:15'
-                }
-            ];
-            this.transactions = mockTransactions;
-            this.saveData();
-        }
-    }
+
 
     // 生成唯一ID
     generateId() {
@@ -308,54 +265,57 @@ class AccountingApp {
         try {
             // 首先尝试从后端API删除
             const token = this.getToken();
-            if (!token) {
-                throw new Error('未登录或登录已过期');
-            }
-
-            try {
-                const response = await fetch(`/api/transactions/${transaction.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                // 检查是否是网络错误
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('交易记录不存在');
-                    } else if (response.status === 401 || response.status === 403) {
-                        throw new Error('未登录或登录已过期');
+            
+            if (token) {
+                try {
+                    const response = await fetch(`/api/transactions/${transaction.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    // 检查是否是网络错误
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            console.warn('交易记录不存在，执行本地删除');
+                        } else if (response.status === 401 || response.status === 403) {
+                            console.warn('未登录或登录已过期，执行本地删除');
+                        } else {
+                            console.warn('服务器错误，执行本地删除:', response.status);
+                        }
+                        // 网络错误时继续执行本地删除
                     } else {
-                        throw new Error('服务器错误，请稍后重试');
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // 后端删除成功，更新本地数据
+                            this.transactions.splice(index, 1);
+                            await this.saveData();
+                            return true;
+                        } else {
+                            console.warn('后端删除失败，执行本地删除:', result.message);
+                        }
                     }
+                } catch (networkError) {
+                    // 处理网络错误，尝试本地删除
+                    console.warn('后端API不可用，执行本地删除:', networkError.message);
                 }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    // 后端删除成功，更新本地数据
-                    this.transactions.splice(index, 1);
-                    await this.saveData();
-                    return true;
-                } else {
-                    throw new Error(result.message || '删除失败');
-                }
-            } catch (networkError) {
-                // 处理网络错误，尝试本地删除
-                console.warn('后端API不可用，执行本地删除:', networkError);
-                this.transactions.splice(index, 1);
-                await this.saveData();
-                return true;
             }
+            
+            // 本地删除逻辑（无论后端是否成功都执行）
+            this.transactions.splice(index, 1);
+            await this.saveData();
+            return true;
+            
         } catch (error) {
             console.error('删除交易失败:', error);
             
             // 根据错误类型显示不同的错误信息
             if (error.message === '未登录或登录已过期') {
                 this.showToast('请先登录', 'error');
-                this.router.navigate('/login');
+                // 简化处理，不进行页面跳转
             } else {
                 this.showToast(error.message || '删除失败，请重试', 'error');
             }
@@ -543,6 +503,46 @@ class AccountingApp {
         }
     }
 
+    // 启动微信OAuth登录
+    startWechatOAuthLogin() {
+        // 直接跳转到微信登录页面，不检查协议
+        this.showPaymentLoginPage('wechat');
+    }
+
+    // 启动支付宝OAuth登录
+    startAlipayOAuthLogin() {
+        // 直接跳转到支付宝登录页面，不检查协议
+        this.showPaymentLoginPage('alipay');
+    }
+
+    // 显示微信登录页面
+    showWechatLogin() {
+        this.showPaymentLoginPage('wechat');
+    }
+
+    // 显示支付宝登录页面
+    showAlipayLogin() {
+        this.showPaymentLoginPage('alipay');
+    }
+
+    // 用户登出
+    logout() {
+        // 清除本地存储的认证信息
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('paymentConnections');
+        
+        // 更新支付状态为未连接
+        updatePaymentStatus('wechat', 'disconnected');
+        updatePaymentStatus('alipay', 'disconnected');
+        
+        this.showToast('已成功登出', 'success');
+        
+        // 刷新页面或重新初始化应用
+        if (typeof this.onLogout === 'function') {
+            this.onLogout();
+        }
+    }
+
     // 导出数据
     exportData() {
         const data = {
@@ -623,14 +623,14 @@ class AccountingApp {
                     </div>
                     
                     <div class="login-options">
-                        <button class="login-option-btn" onclick="window.accountingApp.simulatePaymentLogin('${paymentType}')">
+                        <button class="login-option-btn" onclick="window.accountingApp.executePaymentServiceLogin('${paymentType}')">
                             <i class="fas fa-mobile-alt"></i>
-                            <span>手机号登录</span>
+                            <span>${platformName}手机登录</span>
                         </button>
                         
-                        <button class="login-option-btn" onclick="window.accountingApp.simulatePaymentLogin('${paymentType}')">
+                        <button class="login-option-btn" onclick="window.accountingApp.executePaymentServiceLogin('${paymentType}')">
                             <i class="fas fa-user-circle"></i>
-                            <span>账号密码登录</span>
+                            <span>${platformName}账号登录</span>
                         </button>
                     </div>
                     
@@ -641,11 +641,6 @@ class AccountingApp {
                             我已阅读并同意《${platformName}服务协议》和《隐私政策》
                         </label>
                     </div>
-                    
-                    <button class="login-btn" onclick="window.accountingApp.simulatePaymentLogin('${paymentType}')" 
-                            style="background: ${buttonColor};">
-                        立即登录
-                    </button>
                 </div>
             </div>
         `;
@@ -661,29 +656,103 @@ class AccountingApp {
         this.currentPage = 'payment-login';
     }
 
-    // 模拟支付登录
-    simulatePaymentLogin(paymentType) {
-        const agreementCheckbox = document.getElementById('agreement-checkbox');
-        if (!agreementCheckbox || !agreementCheckbox.checked) {
-            this.showToast('请先同意服务协议和隐私政策', 'warning');
-            return;
-        }
-
+    // 执行支付服务登录 - 使用WechatOAuthService
+    async executePaymentServiceLogin(paymentType) {
         this.showToast(`正在连接${paymentType === 'wechat' ? '微信支付' : '支付宝'}...`, 'info');
         
-        setTimeout(() => {
-            const success = Math.random() > 0.2; // 80%成功率
-            
-            if (success) {
-                this.showToast(`${paymentType === 'wechat' ? '微信支付' : '支付宝'}连接成功！`, 'success');
-                updatePaymentStatus(paymentType, 'connected');
-                this.backToHome();
-            } else {
-                this.showToast(`${paymentType === 'wechat' ? '微信支付' : '支付宝'}连接失败，请重试`, 'error');
-                updatePaymentStatus(paymentType, 'disconnected');
+        try {
+            // 检查是否支持微信OAuth2登录
+            if (paymentType === 'wechat') {
+                // 检查微信配置是否可用
+                try {
+                    // 直接使用微信OAuth2登录，不检查后端状态
+                    if (typeof window.WechatOAuthLogin !== 'undefined') {
+                        // 微信配置可用，使用OAuth2登录
+                        const wechatOAuth = new window.WechatOAuthLogin(this);
+                        await wechatOAuth.startOAuthLogin();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('检查微信配置失败:', error);
+                }
+                
+                // 微信配置不可用，尝试直接跳转
+                try {
+                    const redirectUri = window.location.origin + '/wechat-callback.html';
+                    const state = 'wechat_login_' + Date.now();
+                    const authUrl = `https://open.weixin.qq.com/connect/qrconnect?appid=APPID&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=snsapi_login&state=${state}#wechat_redirect`;
+                    
+                    // 保存state到sessionStorage用于回调验证
+                    try { sessionStorage.setItem('wechat_oauth_state', state); } catch (e) { console.warn('无法写入 sessionStorage.wechat_oauth_state:', e); }
+                    
+                    window.location.href = authUrl;
+                    return;
+                } catch (error) {
+                    console.error('微信登录跳转失败:', error);
+                    this.showToast('微信服务暂不可用，请检查配置', 'error');
+                }
+                return;
             }
-        }, 2000);
+            
+            // 对于支付宝或其他支付方式，直接跳转到外部授权页面
+            if (paymentType === 'alipay') {
+                // 检查支付宝配置是否可用
+                try {
+                    // 使用支付宝OAuth服务类
+                    const redirectUri = window.location.origin + '/alipay-callback.html';
+                    
+                    if (window.alipayOAuth && typeof window.alipayOAuth.startOAuthLogin === 'function') {
+                        // 使用新的OAuth服务类
+                        const success = window.alipayOAuth.startOAuthLogin(redirectUri);
+                        if (success) {
+                            return;
+                        }
+                    }
+                    
+                    // 备选方案：直接构建授权URL
+                    const state = 'alipay_oauth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    
+                    // 保存state到sessionStorage用于回调验证
+                    try { 
+                        sessionStorage.setItem('alipay_oauth_state', state); 
+                        sessionStorage.setItem('alipay_oauth_redirect', window.location.href);
+                        sessionStorage.setItem('alipay_oauth_timestamp', Date.now().toString());
+                    } catch (e) { 
+                        console.warn('无法写入 sessionStorage:', e);
+                        // 使用localStorage作为备选方案
+                        try {
+                            localStorage.setItem('alipay_oauth_state', state);
+                            localStorage.setItem('alipay_oauth_redirect', window.location.href);
+                            localStorage.setItem('alipay_oauth_timestamp', Date.now().toString());
+                        } catch (e2) {
+                            console.error('无法写入 localStorage:', e2);
+                        }
+                    }
+                    
+                    // 支付宝配置可用，跳转到授权页面
+                    const alipayAuthUrl = `https://openauth.alipay.com/oauth2/publicAppAuthorize.htm?app_id=2021006103604761&scope=auth_user&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+                    
+                    console.log('支付宝授权URL:', alipayAuthUrl);
+                    window.location.href = alipayAuthUrl;
+                    return;
+                } catch (error) {
+                    console.error('支付宝登录跳转失败:', error);
+                    this.showToast('支付宝服务暂不可用，请检查配置', 'error');
+                }
+                return;
+            }
+            
+            // 其他支付方式提示暂不支持
+            this.showToast('该支付方式暂不支持，请使用微信支付', 'warning');
+            
+        } catch (error) {
+            console.error('支付登录失败:', error);
+            this.showToast(`${paymentType === 'wechat' ? '微信支付' : '支付宝'}连接失败：${error.message}`, 'error');
+            updatePaymentStatus(paymentType, 'disconnected');
+        }
     }
+
+
 
     // 返回首页
     backToHome() {
@@ -714,7 +783,7 @@ function connectWechatPay() {
         return;
     }
     
-    // 跳转到微信支付登录页面
+    // 显示微信支付登录页面
     app.showPaymentLoginPage('wechat');
 }
 
@@ -725,7 +794,7 @@ function connectAlipay() {
         return;
     }
     
-    // 跳转到支付宝登录页面
+    // 显示支付宝登录页面
     app.showPaymentLoginPage('alipay');
 }
 

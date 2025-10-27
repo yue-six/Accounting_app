@@ -325,14 +325,25 @@ class InputManager {
     }
 
     // 删除交易
-    deleteTransaction(index) {
+    async deleteTransaction(index) {
         if (confirm('确定要删除这条交易记录吗？')) {
-            this.app.deleteTransaction(index);
-            this.hideModal();
-            
-            // 更新页面数据
-            if (typeof homePage !== 'undefined') {
-                homePage.updateData();
+            try {
+                const success = await this.app.deleteTransaction(index);
+                if (success) {
+                    this.hideModal();
+                    
+                    // 更新页面数据
+                    if (typeof homePage !== 'undefined') {
+                        homePage.updateData();
+                    }
+                    
+                    this.app.showToast('删除成功', 'success');
+                } else {
+                    this.app.showToast('删除失败，请重试', 'error');
+                }
+            } catch (error) {
+                console.error('删除交易时发生错误:', error);
+                this.app.showToast('删除失败，请重试', 'error');
             }
         }
     }

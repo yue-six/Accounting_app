@@ -14,11 +14,11 @@ class LoginPage {
                 </div>
 
                 <div class="card" style="padding:16px;">
-                    <button id="btn-wechat" class="action-btn" style="width:100%;margin-bottom:12px;background:#09bb07;color:#fff;">
-                        <i class="fab fa-weixin"></i> 微信登录
+                    <button id="btn-wechat-phone" class="action-btn" style="width:100%;margin-bottom:12px;background:#667eea;color:#fff;">
+                        <i class="fas fa-mobile-alt"></i> 手机号登录
                     </button>
-                    <button id="btn-alipay" class="action-btn" style="width:100%;margin-bottom:12px;background:#1677ff;color:#fff;">
-                        <i class="fab fa-alipay"></i> 支付宝登录
+                    <button id="btn-wechat-account" class="action-btn" style="width:100%;margin-bottom:12px;background:#4fd1c5;color:#fff;">
+                        <i class="fas fa-user-circle"></i> 账号密码登录
                     </button>
                 </div>
 
@@ -32,7 +32,7 @@ class LoginPage {
                         <input id="code-input" type="text" placeholder="验证码（默认 123456）" maxlength="6" style="flex:1;">
                         <button id="btn-send-code" class="btn btn-secondary" style="white-space:nowrap;">获取验证码</button>
                     </div>
-                    <button id="btn-phone-login" class="btn btn-primary" style="width:100%;margin-top:12px;">登录</button>
+                    <button id="btn-direct-phone-login" class="btn btn-primary" style="width:100%;margin-top:12px;">登录</button>
                 </div>
 
                 <div style="text-align:center;color:#4a5568;font-size:12px;margin-top:12px;">
@@ -44,16 +44,16 @@ class LoginPage {
     }
 
     initEvents() {
-        const wechatBtn = document.getElementById('btn-wechat');
-        const alipayBtn = document.getElementById('btn-alipay');
+        const wechatPhoneBtn = document.getElementById('btn-wechat-phone');
+        const wechatAccountBtn = document.getElementById('btn-wechat-account');
         const sendCodeBtn = document.getElementById('btn-send-code');
-        const phoneLoginBtn = document.getElementById('btn-phone-login');
+        const directPhoneLoginBtn = document.getElementById('btn-direct-phone-login');
         const phoneInput = document.getElementById('phone-input');
         const codeInput = document.getElementById('code-input');
         const gotoRegister = document.getElementById('go-register');
 
-        if (wechatBtn) wechatBtn.addEventListener('click', () => this.simulateLogin('wechat'));
-        if (alipayBtn) alipayBtn.addEventListener('click', () => this.simulateLogin('alipay'));
+        if (wechatPhoneBtn) wechatPhoneBtn.addEventListener('click', () => this.showWechatLogin('phone'));
+        if (wechatAccountBtn) wechatAccountBtn.addEventListener('click', () => this.showWechatLogin('account'));
         if (sendCodeBtn) {
             sendCodeBtn.addEventListener('click', () => {
                 const phone = phoneInput.value.trim();
@@ -64,8 +64,8 @@ class LoginPage {
                 this.startCountdown(sendCodeBtn);
             });
         }
-        if (phoneLoginBtn) {
-            phoneLoginBtn.addEventListener('click', () => {
+        if (directPhoneLoginBtn) {
+            directPhoneLoginBtn.addEventListener('click', async () => {
                 const phone = phoneInput.value.trim();
                 const code = codeInput.value.trim();
                 if (!/^1\d{10}$/.test(phone)) { this.app.showToast('请输入有效的11位手机号', 'warning'); return; }
@@ -79,6 +79,10 @@ class LoginPage {
                 };
                 localStorage.setItem('auth_user', JSON.stringify(user));
                 this.app.showToast('登录成功', 'success');
+                
+                // 登录成功后，自动尝试连接支付服务
+                await this.executePaymentServiceAfterLogin();
+                
                 if (window.router) window.router.switchToPage('home');
             });
         }
@@ -95,15 +99,73 @@ class LoginPage {
         update();
     }
 
-    simulateLogin(provider) {
-        const user = { 
-            provider, 
-            nickname: provider === 'wechat' ? '微信用户' : '支付宝用户', 
-            phone: null,
-            token: 'demo_token_' + Date.now() // 添加模拟的token
-        };
-        localStorage.setItem('auth_user', JSON.stringify(user));
-        this.app.showToast('登录成功', 'success');
-        if (window.router) window.router.switchToPage('home');
+    showWechatLogin(loginType) {
+        this.app.showToast('正在启动微信OAuth2登录...', 'info');
+        // 统一委托给应用层启动微信登录，应用层实现包含更健壮的容错
+        try {
+            if (this.app && typeof this.app.startWechatOAuthLogin === 'function') {
+                const p = this.app.startWechatOAuthLogin();
+                if (p && typeof p.then === 'function') p.catch(err => {
+                    console.error('startWechatOAuthLogin rejected:', err);
+                    this.app.showToast && this.app.showToast('启动微信登录失败，请重试', 'error');
+                });
+                return;
+            } else if (window.accountingApp && typeof window.accountingApp.startWechatOAuthLogin === 'function') {
+                const p = window.accountingApp.startWechatOAuthLogin();
+                if (p && typeof p.then === 'function') p.catch(err => {
+                    console.error('window.accountingApp.startWechatOAuthLogin rejected:', err);
+                    this.app.showToast && this.app.showToast('启动微信登录失败，请重试', 'error');
+                });
+                return;
+            }
+
+            // 无可用的 OAuth 启动实现，提示用户并中止
+            console.error('无法找到启动微信登录的方法');
+            this.app.showToast('微信登录暂不可用，请稍后重试', 'error');
+            return;
+        } catch (e) {
+            console.error('showWechatLogin error:', e);
+            this.app.showToast('微信登录启动失败，请稍后重试', 'error');
+        }
+    }
+
+    // 启动微信OAuth2登录
+    startWechatOAuthLogin() {
+        // 委托给应用层的实现
+        try {
+            if (this.app && typeof this.app.startWechatOAuthLogin === 'function') {
+                this.app.startWechatOAuthLogin();
+            } else if (window.accountingApp && typeof window.accountingApp.startWechatOAuthLogin === 'function') {
+                window.accountingApp.startWechatOAuthLogin();
+            } else {
+                throw new Error('无法找到应用层的 startWechatOAuthLogin 方法');
+            }
+        } catch (error) {
+            console.error('启动微信OAuth2登录失败:', error);
+            this.app.showToast('微信登录启动失败，请稍后重试', 'error');
+        }
+    }
+
+    // 登录成功后执行支付服务
+    async executePaymentServiceAfterLogin() {
+        try {
+            // 检查支付服务是否可用
+            const response = await fetch('http://localhost:3000/api/payments/status');
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data.available) {
+                    this.app.showToast('支付服务已就绪', 'info');
+                    
+                    // 自动连接微信支付（可根据需要修改为其他支付方式）
+                    if (window.accountingApp) {
+                        await window.accountingApp.executePaymentServiceLogin('wechat');
+                    }
+                } else {
+                    console.log('支付服务配置不完整，跳过自动连接');
+                }
+            }
+        } catch (error) {
+            console.log('支付服务暂不可用，继续正常登录流程:', error.message);
+        }
     }
 }

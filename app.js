@@ -1,3 +1,396 @@
+// 支付宝OAuth服务类
+class AlipayOAuthService {
+    constructor() {
+        this.config = {
+            appId: '2021000116691234',
+            privateKey: '',
+            publicKey: ''
+        };
+        this.oauthConfig = {
+            authorizeUrl: 'https://openauth.alipay.com/oauth2/publicAppAuthorize.htm',
+            accessTokenUrl: 'https://openapi.alipay.com/gateway.do',
+            userInfoUrl: 'https://openapi.alipay.com/gateway.do'
+        };
+    }
+
+    /**
+     * 生成支付宝OAuth2授权URL
+     * @param {string} redirectUri - 回调地址
+     * @param {string} state - 状态参数（可选）
+     * @returns {string} 授权URL
+     */
+    generateAuthUrl(redirectUri, state = '') {
+        const params = new URLSearchParams({
+            app_id: this.config.appId,
+            // do not double-encode: URLSearchParams will encode values
+            redirect_uri: redirectUri,
+            response_type: 'code',
+            scope: 'auth_user',
+            state: state
+        });
+
+        return `${this.oauthConfig.authorizeUrl}?${params.toString()}`;
+    }
+
+    /**
+     * 使用授权码获取access_token
+     * @param {string} code - 授权码
+     * @returns {Promise<Object>} access_token信息
+     */
+    async getAccessToken(code) {
+        try {
+            // 检查是否为演示模式
+            if (this.config.appId.startsWith('demo_') || this.config.appId === 'demo_alipay_app_id') {
+                return {
+                    access_token: 'demo_alipay_access_token_' + Date.now(),
+                    expires_in: 7200,
+                    refresh_token: 'demo_alipay_refresh_token_' + Date.now(),
+                    user_id: 'demo_user_id_' + Date.now(),
+                    scope: 'auth_user'
+                };
+            }
+
+            // 实际环境中调用支付宝API
+            const response = await fetch(this.oauthConfig.accessTokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    app_id: this.config.appId,
+                    method: 'alipay.system.oauth.token',
+                    format: 'JSON',
+                    charset: 'utf-8',
+                    sign_type: 'RSA2',
+                    timestamp: new Date().toISOString(),
+                    version: '1.0',
+                    grant_type: 'authorization_code',
+                    code: code
+                })
+            });
+
+            const data = await response.json();
+            if (data.error_response) {
+                throw new Error(`获取access_token失败: ${data.error_response.msg}`);
+            }
+
+            return data.alipay_system_oauth_token_response;
+        } catch (error) {
+            console.error('获取支付宝access_token失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 获取用户信息
+     * @param {string} accessToken - access_token
+     * @returns {Promise<Object>} 用户信息
+     */
+    async getUserInfo(accessToken) {
+        try {
+            // 检查是否为演示模式
+            if (this.config.appId.startsWith('demo_') || this.config.appId === 'demo_alipay_app_id') {
+                return {
+                    user_id: 'demo_user_id_' + Date.now(),
+                    nick_name: '支付宝用户',
+                    avatar: 'https://tfs.alipayobjects.com/images/partner/T1BxhpXm0jXXXXXXXX',
+                    gender: 'M',
+                    province: '北京',
+                    city: '北京',
+                    country: '中国'
+                };
+            }
+
+            // 实际环境中调用支付宝API
+            const response = await fetch(this.oauthConfig.userInfoUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    app_id: this.config.appId,
+                    method: 'alipay.user.info.share',
+                    format: 'JSON',
+                    charset: 'utf-8',
+                    sign_type: 'RSA2',
+                    timestamp: new Date().toISOString(),
+                    version: '1.0',
+                    auth_token: accessToken
+                })
+            });
+
+            const data = await response.json();
+            if (data.error_response) {
+                throw new Error(`获取用户信息失败: ${data.error_response.msg}`);
+            }
+
+            return data.alipay_user_info_share_response;
+        } catch (error) {
+            console.error('获取支付宝用户信息失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 完整的OAuth2登录流程
+     * @param {string} code - 授权码
+     * @returns {Promise<Object>} 登录结果
+     */
+    async oauthLogin(code) {
+        try {
+            // 1. 获取access_token
+            const tokenInfo = await this.getAccessToken(code);
+            
+            // 2. 获取用户信息
+            const userInfo = await this.getUserInfo(tokenInfo.access_token);
+            
+            // 3. 返回完整的登录信息
+            return {
+                success: true,
+                data: {
+                    user: {
+                        user_id: userInfo.user_id,
+                        nickname: userInfo.nick_name,
+                        avatar: userInfo.avatar,
+                        gender: userInfo.gender,
+                        province: userInfo.province,
+                        city: userInfo.city,
+                        country: userInfo.country
+                    },
+                    tokenInfo: {
+                        access_token: tokenInfo.access_token,
+                        expires_in: tokenInfo.expires_in,
+                        refresh_token: tokenInfo.refresh_token,
+                        scope: tokenInfo.scope
+                    }
+                }
+            };
+        } catch (error) {
+            console.error('支付宝OAuth2登录失败:', error);
+            return {
+                success: false,
+                message: error.message
+            };
+        }
+    }
+}
+
+// 微信OAuth服务类
+class WechatOAuthService {
+    constructor() {
+        this.config = {
+            appId: 'demo_wechat_app_id',
+            appSecret: 'demo_wechat_app_secret'
+        };
+        this.oauthConfig = {
+            authorizeUrl: 'https://open.weixin.qq.com/connect/qrconnect',
+            accessTokenUrl: 'https://api.weixin.qq.com/sns/oauth2/access_token',
+            userInfoUrl: 'https://api.weixin.qq.com/sns/userinfo'
+        };
+    }
+
+    /**
+     * 生成微信OAuth2授权URL
+     * @param {string} redirectUri - 回调地址
+     * @param {string} state - 状态参数（可选）
+     * @returns {string} 授权URL
+     */
+    generateAuthUrl(redirectUri, state = '') {
+        const params = new URLSearchParams({
+            appid: this.config.appId,
+            redirect_uri: redirectUri,
+            response_type: 'code',
+            scope: 'snsapi_login',
+            state: state
+        });
+
+        return `${this.oauthConfig.authorizeUrl}?${params.toString()}#wechat_redirect`;
+    }
+
+    /**
+     * 使用授权码获取access_token
+     * @param {string} code - 授权码
+     * @returns {Promise<Object>} access_token信息
+     */
+    async getAccessToken(code) {
+        try {
+            // 检查是否为演示模式
+            if (this.config.appId.startsWith('demo_') || this.config.appId === 'demo_wechat_app_id') {
+                return {
+                    access_token: 'demo_access_token_' + Date.now(),
+                    expires_in: 7200,
+                    refresh_token: 'demo_refresh_token_' + Date.now(),
+                    openid: 'demo_openid_' + Date.now(),
+                    scope: 'snsapi_login',
+                    unionid: 'demo_unionid_' + Date.now()
+                };
+            }
+
+            // 实际环境中调用微信API
+            const response = await fetch(this.oauthConfig.accessTokenUrl, {
+                method: 'GET',
+                params: {
+                    appid: this.config.appId,
+                    secret: this.config.appSecret,
+                    code: code,
+                    grant_type: 'authorization_code'
+                }
+            });
+
+            const data = await response.json();
+            if (data.errcode) {
+                throw new Error(`获取access_token失败: ${data.errmsg}`);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('获取微信access_token失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 获取用户信息
+     * @param {string} accessToken - access_token
+     * @param {string} openid - 用户openid
+     * @returns {Promise<Object>} 用户信息
+     */
+    async getUserInfo(accessToken, openid) {
+        try {
+            // 检查是否为演示模式
+            if (this.config.appId.startsWith('demo_') || this.config.appId === 'demo_wechat_app_id') {
+                return {
+                    openid: openid,
+                    nickname: '微信用户',
+                    sex: 1,
+                    province: '北京',
+                    city: '北京',
+                    country: '中国',
+                    headimgurl: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+                    privilege: [],
+                    unionid: openid.replace('demo_openid_', 'demo_unionid_')
+                };
+            }
+
+            // 实际环境中调用微信API
+            const response = await fetch(this.oauthConfig.userInfoUrl, {
+                method: 'GET',
+                params: {
+                    access_token: accessToken,
+                    openid: openid,
+                    lang: 'zh_CN'
+                }
+            });
+
+            const data = await response.json();
+            if (data.errcode) {
+                throw new Error(`获取用户信息失败: ${data.errmsg}`);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('获取微信用户信息失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 完整的OAuth2登录流程
+     * @param {string} code - 授权码
+     * @returns {Promise<Object>} 登录结果
+     */
+    async oauthLogin(code) {
+        try {
+            // 1. 获取access_token
+            const tokenInfo = await this.getAccessToken(code);
+            
+            // 2. 获取用户信息
+            const userInfo = await this.getUserInfo(tokenInfo.access_token, tokenInfo.openid);
+            
+            // 3. 返回完整的登录信息
+            return {
+                success: true,
+                data: {
+                    user: {
+                        openid: userInfo.openid,
+                        unionid: userInfo.unionid,
+                        nickname: userInfo.nickname,
+                        avatar: userInfo.headimgurl,
+                        gender: userInfo.sex,
+                        province: userInfo.province,
+                        city: userInfo.city,
+                        country: userInfo.country
+                    },
+                    tokenInfo: {
+                        access_token: tokenInfo.access_token,
+                        expires_in: tokenInfo.expires_in,
+                        refresh_token: tokenInfo.refresh_token,
+                        scope: tokenInfo.scope
+                    }
+                }
+            };
+        } catch (error) {
+            console.error('微信OAuth2登录失败:', error);
+            return {
+                success: false,
+                message: error.message
+            };
+        }
+    }
+
+    /**
+     * 验证access_token是否有效
+     * @param {string} accessToken - access_token
+     * @param {string} openid - 用户openid
+     * @returns {Promise<boolean>} 是否有效
+     */
+    async validateAccessToken(accessToken, openid) {
+        try {
+            const response = await fetch('https://api.weixin.qq.com/sns/auth', {
+                method: 'GET',
+                params: {
+                    access_token: accessToken,
+                    openid: openid
+                }
+            });
+
+            const data = await response.json();
+            return data.errcode === 0;
+        } catch (error) {
+            console.error('验证access_token失败:', error);
+            return false;
+        }
+    }
+
+    /**
+     * 刷新access_token
+     * @param {string} refreshToken - refresh_token
+     * @returns {Promise<Object>} 新的token信息
+     */
+    async refreshAccessToken(refreshToken) {
+        try {
+            const response = await fetch('https://api.weixin.qq.com/sns/oauth2/refresh_token', {
+                method: 'GET',
+                params: {
+                    appid: this.config.appId,
+                    grant_type: 'refresh_token',
+                    refresh_token: refreshToken
+                }
+            });
+
+            const data = await response.json();
+            if (data.errcode) {
+                throw new Error(`刷新access_token失败: ${data.errmsg}`);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('刷新微信access_token失败:', error);
+            throw error;
+        }
+    }
+}
+
 // 记账应用核心功能实现
 class AccountingApp {
     constructor() {
@@ -15,6 +408,14 @@ class AccountingApp {
         this.budgets = {};
         this.userMode = 'student';
         
+        // OAuth服务
+        this.wechatOAuth = new WechatOAuthService();
+        this.alipayOAuth = new AlipayOAuthService();
+        
+        // 用户状态管理
+        this.currentUser = null;
+        this.isLoggedIn = false;
+        
         this.init();
     }
 
@@ -24,6 +425,10 @@ class AccountingApp {
         this.setupEventListeners();
         this.updateUI();
         this.setupMockData();
+        
+        // 初始化用户状态
+        this.updateUserInfo();
+        this.checkLoginStatus();
     }
 
     // 加载本地数据
@@ -34,6 +439,13 @@ class AccountingApp {
             this.transactions = data.transactions || [];
             this.budgets = data.budgets || {};
             this.userMode = data.userMode || 'student';
+        }
+        
+        // 加载用户登录状态
+        const userData = localStorage.getItem('auth_user');
+        if (userData) {
+            this.currentUser = JSON.parse(userData);
+            this.isLoggedIn = true;
         }
     }
 
@@ -85,6 +497,30 @@ class AccountingApp {
             });
         });
 
+        // 微信登录按钮
+        const wechatLoginBtn = document.getElementById('wechat-login-btn');
+        if (wechatLoginBtn) {
+            wechatLoginBtn.addEventListener('click', () => {
+                this.showWechatLogin();
+            });
+        }
+
+        // 支付宝登录按钮
+        const alipayLoginBtn = document.getElementById('alipay-login-btn');
+        if (alipayLoginBtn) {
+            alipayLoginBtn.addEventListener('click', () => {
+                this.showAlipayLogin();
+            });
+        }
+
+        // 用户登出按钮
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.logout();
+            });
+        }
+
         // 触摸滑动支持
         this.setupSwipeSupport();
     }
@@ -114,30 +550,32 @@ class AccountingApp {
         });
     }
 
-    // 页面切换功能
+    // 页面切换功能（已由路由系统接管，保留兼容性）
     switchPage(pageId) {
-        // 隐藏所有页面
-        document.querySelectorAll('.page').forEach(page => {
-            page.classList.remove('active');
-        });
+        // 将页面ID转换为路由名称
+        let routeName = pageId;
+        if (pageId === 'home-page') routeName = 'home';
+        else if (pageId === 'analysis-page') routeName = 'analysis';
+        else if (pageId === 'profile-page') routeName = 'profile';
         
-        // 显示目标页面
-        document.getElementById(pageId).classList.add('active');
-        
-        // 更新导航栏状态
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        // 设置当前导航项为激活状态
-        const navItems = document.querySelectorAll('.nav-item');
-        if (pageId === 'home-page') navItems[0].classList.add('active');
-        else if (pageId === 'analysis-page') navItems[1].classList.add('active');
-        else if (pageId === 'profile-page') navItems[2].classList.add('active');
-        
-        // 如果是分析页面，初始化图表
-        if (pageId === 'analysis-page') {
-            setTimeout(() => this.updateCharts(), 100);
+        // 使用路由系统切换页面
+        if (window.router && typeof window.router.switchToPage === 'function') {
+            window.router.switchToPage(routeName);
+        } else {
+            console.warn('路由系统未初始化，使用兼容模式');
+            // 兼容模式：简单的页面切换
+            try {
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                
+                const targetPage = document.getElementById(pageId);
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                }
+            } catch (error) {
+                console.error('页面切换失败:', error);
+            }
         }
     }
 
@@ -750,6 +1188,328 @@ class AccountingApp {
                 document.body.removeChild(toast);
             }
         }, 2000);
+    }
+
+    // 显示微信登录弹窗
+    showWechatLogin() {
+        // 直接启动微信OAuth登录，不显示弹窗
+        this.startWechatOAuthLogin();
+    }
+
+    // 启动微信OAuth登录
+    async startWechatOAuthLogin() {
+        this.showToast('正在启动微信登录...');
+        
+        try {
+            // 生成授权URL（更加容错）
+            const redirectUri = window.location.origin + '/wechat-callback.html';
+            const state = 'wechat_login_' + Date.now();
+
+            let authUrl = null;
+            try {
+                authUrl = this.wechatOAuth.generateAuthUrl(redirectUri, state);
+            } catch (e) {
+                console.warn('generateAuthUrl threw, will fallback to manual build:', e);
+            }
+
+            // 备用构建：如果 generateAuthUrl 未返回合法字符串，则手动构建
+            if (!authUrl || typeof authUrl !== 'string') {
+                try {
+                    const params = new URLSearchParams({
+                        appid: this.wechatOAuth.config.appId || this.wechatOAuth.config.appId,
+                        redirect_uri: redirectUri,
+                        response_type: 'code',
+                        scope: 'snsapi_login',
+                        state: state
+                    });
+                    authUrl = `${this.wechatOAuth.oauthConfig.authorizeUrl}?${params.toString()}#wechat_redirect`;
+                } catch (e) {
+                    console.error('手动构建微信授权URL失败:', e);
+                    throw e;
+                }
+            }
+
+            // 保存state用于验证（容错处理）
+            try { sessionStorage.setItem('wechat_oauth_state', state); } catch (e) { console.warn('无法写入 sessionStorage.wechat_oauth_state:', e); }
+
+            // 跳转到微信授权页面
+            window.location.href = authUrl;
+            
+        } catch (error) {
+            console.error('启动微信登录失败:', error);
+            this.showToast('启动微信登录失败，请重试');
+        }
+    }
+
+    // 处理微信OAuth回调
+    async handleWechatOAuthCallback(code, state) {
+        try {
+            // 验证state参数
+            const savedState = sessionStorage.getItem('wechat_oauth_state');
+            if (state !== savedState) {
+                throw new Error('状态参数验证失败');
+            }
+            
+            this.showToast('正在验证登录信息...', 'info');
+            
+            // 调用微信OAuth登录
+            const result = await this.wechatOAuth.oauthLogin(code);
+            
+            if (result.success) {
+                // 保存用户信息
+                this.currentUser = {
+                    provider: 'wechat',
+                    ...result.data.user,
+                    tokenInfo: result.data.tokenInfo,
+                    loginTime: new Date().toISOString()
+                };
+                
+                this.isLoggedIn = true;
+                
+                // 保存到本地存储
+                localStorage.setItem('auth_user', JSON.stringify(this.currentUser));
+                
+                this.showToast('登录成功！', 'success');
+                
+                // 更新UI显示用户信息
+                this.updateUserInfo();
+                
+                // 清除state
+                sessionStorage.removeItem('wechat_oauth_state');
+                
+                // 跳转到首页
+                setTimeout(() => {
+                    if (window.router) {
+                        window.router.switchToPage('home');
+                    }
+                }, 1000);
+                
+            } else {
+                this.showToast('登录失败：' + result.message, 'error');
+            }
+            
+        } catch (error) {
+            console.error('微信OAuth回调处理失败:', error);
+            this.showToast('登录失败，请重试', 'error');
+        }
+    }
+
+    // 显示支付宝登录弹窗
+    showAlipayLogin() {
+        // 直接启动支付宝OAuth登录，不显示弹窗
+        this.startAlipayOAuthLogin();
+    }
+
+    // 启动支付宝OAuth登录
+    async startAlipayOAuthLogin() {
+        this.showToast('正在启动支付宝登录...');
+        
+        try {
+            // 生成授权URL（容错）
+            const redirectUri = window.location.origin + '/alipay-callback.html';
+            const state = 'alipay_login_' + Date.now();
+
+            let authUrl = null;
+            try {
+                authUrl = this.alipayOAuth.generateAuthUrl(redirectUri, state);
+            } catch (e) {
+                console.warn('Alipay generateAuthUrl threw, fallback to manual build:', e);
+            }
+
+            if (!authUrl || typeof authUrl !== 'string') {
+                try {
+                    const params = new URLSearchParams({
+                        app_id: this.alipayOAuth.config.appId,
+                        redirect_uri: redirectUri,
+                        response_type: 'code',
+                        scope: 'auth_user',
+                        state: state
+                    });
+                    authUrl = `${this.alipayOAuth.oauthConfig.authorizeUrl}?${params.toString()}`;
+                } catch (e) {
+                    console.error('手动构建支付宝授权URL失败:', e);
+                    throw e;
+                }
+            }
+
+            try { sessionStorage.setItem('alipay_oauth_state', state); } catch (e) { console.warn('无法写入 sessionStorage.alipay_oauth_state:', e); }
+
+            window.location.href = authUrl;
+            
+        } catch (error) {
+            console.error('启动支付宝登录失败:', error);
+            this.showToast('启动支付宝登录失败，请重试');
+        }
+    }
+
+    // 处理支付宝OAuth回调
+    async handleAlipayOAuthCallback(code, state) {
+        try {
+            // 验证state参数
+            const savedState = sessionStorage.getItem('alipay_oauth_state');
+            if (state !== savedState) {
+                throw new Error('状态参数验证失败');
+            }
+            
+            this.showToast('正在验证登录信息...', 'info');
+            
+            // 调用支付宝OAuth登录
+            const result = await this.alipayOAuth.oauthLogin(code);
+            
+            if (result.success) {
+                // 保存用户信息
+                this.currentUser = {
+                    provider: 'alipay',
+                    ...result.data.user,
+                    tokenInfo: result.data.tokenInfo,
+                    loginTime: new Date().toISOString()
+                };
+                
+                this.isLoggedIn = true;
+                
+                // 保存到本地存储
+                localStorage.setItem('auth_user', JSON.stringify(this.currentUser));
+                
+                this.showToast('登录成功！', 'success');
+                
+                // 更新UI显示用户信息
+                this.updateUserInfo();
+                
+                // 清除state
+                sessionStorage.removeItem('alipay_oauth_state');
+                
+                // 跳转到首页
+                setTimeout(() => {
+                    if (window.router) {
+                        window.router.switchToPage('home');
+                    }
+                }, 1000);
+                
+            } else {
+                this.showToast('登录失败：' + result.message, 'error');
+            }
+            
+        } catch (error) {
+            console.error('支付宝OAuth回调处理失败:', error);
+            this.showToast('登录失败，请重试', 'error');
+        }
+    }
+
+    // 用户登出
+    logout() {
+        if (confirm('确定要退出登录吗？')) {
+            this.currentUser = null;
+            this.isLoggedIn = false;
+            
+            // 清除本地存储
+            localStorage.removeItem('auth_user');
+            
+            this.showToast('已退出登录');
+            this.updateUserInfo();
+        }
+    }
+
+    // 更新用户信息显示
+    updateUserInfo() {
+        const userInfoElement = document.getElementById('user-info');
+        const wechatLoginBtn = document.getElementById('wechat-login-btn');
+        const alipayLoginBtn = document.getElementById('alipay-login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (this.isLoggedIn && this.currentUser) {
+            // 显示用户信息
+            if (userInfoElement) {
+                const providerColor = this.currentUser.provider === 'wechat' ? '#09bb07' : '#1677ff';
+                const providerName = this.currentUser.provider === 'wechat' ? '微信' : '支付宝';
+                const providerIcon = this.currentUser.provider === 'wechat' ? 'fab fa-weixin' : 'fab fa-alipay';
+                
+                userInfoElement.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 32px; height: 32px; background: ${providerColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">
+                            ${this.currentUser.nickname ? this.currentUser.nickname.charAt(0) : providerName.charAt(0)}
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; font-weight: 600;">${this.currentUser.nickname || providerName + '用户'}</div>
+                            <div style="font-size: 0.7rem; color: #666;">
+                                <i class="${providerIcon}" style="margin-right: 4px;"></i>
+                                ${providerName}登录
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 隐藏登录按钮，显示登出按钮
+            if (wechatLoginBtn) wechatLoginBtn.style.display = 'none';
+            if (alipayLoginBtn) alipayLoginBtn.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+            
+        } else {
+            // 显示登录按钮
+            if (userInfoElement) {
+                userInfoElement.innerHTML = `
+                    <div style="text-align: center; color: #666;">
+                        <i class="fas fa-user" style="font-size: 1.5rem; margin-bottom: 8px; display: block;"></i>
+                        <div style="font-size: 0.9rem;">未登录</div>
+                    </div>
+                `;
+            }
+            
+            // 显示登录按钮，隐藏登出按钮
+            if (wechatLoginBtn) wechatLoginBtn.style.display = 'block';
+            if (alipayLoginBtn) alipayLoginBtn.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+        
+        // 更新首页支付连接状态
+        this.updatePaymentConnectionStatus();
+    }
+
+    // 更新支付连接状态
+    updatePaymentConnectionStatus() {
+        // 如果首页存在，更新支付连接状态
+        if (window.homePage && typeof window.homePage.updatePaymentStatus === 'function') {
+            try {
+                window.homePage.updatePaymentStatus();
+            } catch (error) {
+                console.error('更新支付连接状态失败:', error);
+            }
+        }
+        
+        // 同时更新我的页面的用户信息显示
+        if (window.profilePage && typeof window.profilePage.updateData === 'function') {
+            try {
+                window.profilePage.updateData();
+            } catch (error) {
+                console.error('更新我的页面用户信息失败:', error);
+            }
+        }
+    }
+
+    // 检查用户登录状态
+    checkLoginStatus() {
+        if (this.isLoggedIn && this.currentUser) {
+            // 检查token是否过期（简单检查）
+            const loginTime = new Date(this.currentUser.loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+            
+            // 如果超过24小时，提示重新登录
+            if (hoursDiff > 24) {
+                this.showToast('登录已过期，请重新登录', 'warning');
+                this.logout();
+            }
+        }
+    }
+
+    // 获取当前用户信息
+    getCurrentUser() {
+        return this.currentUser;
+    }
+
+    // 检查是否已登录
+    isUserLoggedIn() {
+        return this.isLoggedIn;
     }
 }
 

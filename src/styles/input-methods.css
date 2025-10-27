@@ -182,6 +182,35 @@
     color: #718096;
 }
 
+/* 拍照记账页面样式 */
+.photo-input-btn {
+    background: linear-gradient(145deg, rgba(102, 126, 234, 0.15), rgba(102, 126, 234, 0.08));
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.photo-input-btn i {
+    color: var(--primary);
+    text-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.photo-input-btn:hover {
+    background: linear-gradient(145deg, rgba(102, 126, 234, 0.2), rgba(102, 126, 234, 0.12));
+}
+
+.upload-input-btn {
+    background: linear-gradient(145deg, rgba(159, 122, 234, 0.15), rgba(159, 122, 234, 0.08));
+    border-color: rgba(159, 122, 234, 0.3);
+}
+
+.upload-input-btn i {
+    color: #9f7aea;
+    text-shadow: 0 2px 8px rgba(159, 122, 234, 0.3);
+}
+
+.upload-input-btn:hover {
+    background: linear-gradient(145deg, rgba(159, 122, 234, 0.2), rgba(159, 122, 234, 0.12));
+}
+
 /* 拍照界面 */
 .photo-capture-container {
     text-align: center;
