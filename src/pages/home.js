@@ -7,11 +7,14 @@ class HomePage {
 
     // 渲染页面
     render() {
+        // 获取当前用户模式
+        const userMode = this.getCurrentUserMode();
+        
         return `
             <div class="page active" id="home-page">
                 <!-- 本月概览 -->
                 <div class="card">
-                    <h3><i class="fas fa-chart-line"></i> 本月收支</h3>
+                    <h3><i class="fas fa-chart-line"></i> ${this.getModeTitle('monthlyOverview')}</h3>
                     <div class="stats-grid" id="monthly-stats">
                         <div class="stat-item">
                             <div class="stat-value" id="monthly-income">¥0</div>
@@ -55,6 +58,9 @@ class HomePage {
                         </button>
                     </div>
                 </div>
+
+                <!-- 模式特定内容 -->
+                ${this.renderModeSpecificContent(userMode)}
 
                 <!-- 最新交易 -->
                 <div class="card">
@@ -129,6 +135,124 @@ class HomePage {
         }).join('');
     }
 
+    // 获取当前用户模式
+    getCurrentUserMode() {
+        // 从router获取当前模式，如果不存在则使用默认值
+        if (window.router && typeof window.router.getCurrentUserMode === 'function') {
+            return window.router.getCurrentUserMode();
+        }
+        // 从app获取当前模式
+        if (this.app && this.app.userMode) {
+            return this.app.userMode;
+        }
+        // 默认模式
+        return 'student';
+    }
+    
+    // 根据用户模式获取对应标题
+    getModeTitle(key) {
+        const userMode = this.getCurrentUserMode();
+        const titles = {
+            'student': {
+                'monthlyOverview': '本月收支',
+                'modeSpecificTitle': '学习预算追踪'
+            },
+            'family': {
+                'monthlyOverview': '家庭收支',
+                'modeSpecificTitle': '家庭财务管理'
+            },
+            'freelancer': {
+                'monthlyOverview': '业务收支',
+                'modeSpecificTitle': '自由职业财务管理'
+            }
+        };
+        
+        return titles[userMode] && titles[userMode][key] ? titles[userMode][key] : titles['student'][key];
+    }
+    
+    // 渲染模式特定的内容
+    renderModeSpecificContent(mode) {
+        switch(mode) {
+            case 'student':
+                return `
+                    <div class="card mode-specific-content student-mode">
+                        <h3><i class="fas fa-graduation-cap"></i> 学习预算追踪</h3>
+                        <div class="mode-content">
+                            <div class="mode-stats">
+                                <div class="mode-stat-item">
+                                    <div class="stat-icon"><i class="fas fa-book"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="study-budget">¥0</div>
+                                        <div class="stat-label">学习预算</div>
+                                    </div>
+                                </div>
+                                <div class="mode-stat-item">
+                                    <div class="stat-icon"><i class="fas fa-piggy-bank"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="scholarship-savings">¥0</div>
+                                        <div class="stat-label">奖学金储蓄</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mode-tip">设置学习预算，追踪学习支出，合理规划奖学金使用</p>
+                        </div>
+                    </div>
+                `;
+            case 'family':
+                return `
+                    <div class="card mode-specific-content family-mode">
+                        <h3><i class="fas fa-home"></i> 家庭财务管理</h3>
+                        <div class="mode-content">
+                            <div class="mode-stats">
+                                <div class="mode-stat-item">
+                                    <div class="stat-icon"><i class="fas fa-utensils"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="family-expense">¥0</div>
+                                        <div class="stat-label">家庭支出</div>
+                                    </div>
+                                </div>
+                                <div class="mode-stat-item">
+                                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="member-count">0</div>
+                                        <div class="stat-label">成员数量</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mode-tip">管理家庭共同账户，追踪各项家庭支出，合理规划家庭预算</p>
+                        </div>
+                    </div>
+                `;
+            case 'freelancer':
+                return `
+                    <div class="card mode-specific-content freelancer-mode">
+                        <h3><i class="fas fa-briefcase"></i> 自由职业财务管理</h3>
+                        <div class="mode-content">
+                            <div class="mode-stats">
+                                <div class="mode-stat-item">
+                                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="client-income">¥0</div>
+                                        <div class="stat-label">客户收入</div>
+                                    </div>
+                                </div>
+                                <div class="mode-stat-item">
+                                    <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="tax-savings">¥0</div>
+                                        <div class="stat-label">税费储蓄</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mode-tip">追踪项目收入，管理税费，优化自由职业财务管理</p>
+                        </div>
+                    </div>
+                `;
+            default:
+                return '';
+        }
+    }
+    
     // 初始化事件
     initEvents() {
         console.log('主页事件初始化开始...');
@@ -144,16 +268,93 @@ class HomePage {
             console.log('开始绑定事件...');
             this.bindQuickActionEvents();
             this.bindTransactionEvents();
+            // 初始化模式特定事件
+            this.initModeSpecificEvents();
             console.log('事件绑定完成');
         }, 200);
 
         // 加载本月统计数据
         this.loadMonthlyStats();
+        // 加载模式特定数据
+        this.loadModeSpecificData();
 
         // 更新数据库状态显示
         this.updateDatabaseStatus();
         
         console.log('主页事件初始化完成');
+    }
+    
+    // 初始化模式特定事件
+    initModeSpecificEvents() {
+        const userMode = this.getCurrentUserMode();
+        
+        // 根据不同模式绑定特定事件
+        switch(userMode) {
+            case 'student':
+                // 学生模式特定事件
+                break;
+            case 'family':
+                // 家庭模式特定事件
+                break;
+            case 'freelancer':
+                // 自由职业者模式特定事件
+                break;
+        }
+    }
+    
+    // 加载模式特定数据
+    loadModeSpecificData() {
+        const userMode = this.getCurrentUserMode();
+        
+        // 根据不同模式加载特定数据
+        switch(userMode) {
+            case 'student':
+                this.loadStudentModeData();
+                break;
+            case 'family':
+                this.loadFamilyModeData();
+                break;
+            case 'freelancer':
+                this.loadFreelancerModeData();
+                break;
+        }
+    }
+    
+    // 加载学生模式数据
+    loadStudentModeData() {
+        // 这里可以从app中获取学习相关数据并更新UI
+        // 示例：设置学习预算和奖学金储蓄数据
+        setTimeout(() => {
+            const studyBudgetEl = document.getElementById('study-budget');
+            const scholarshipSavingsEl = document.getElementById('scholarship-savings');
+            
+            if (studyBudgetEl) studyBudgetEl.textContent = '¥1000';
+            if (scholarshipSavingsEl) scholarshipSavingsEl.textContent = '¥5000';
+        }, 500);
+    }
+    
+    // 加载家庭模式数据
+    loadFamilyModeData() {
+        // 这里可以从app中获取家庭相关数据并更新UI
+        setTimeout(() => {
+            const familyExpenseEl = document.getElementById('family-expense');
+            const memberCountEl = document.getElementById('member-count');
+            
+            if (familyExpenseEl) familyExpenseEl.textContent = '¥8000';
+            if (memberCountEl) memberCountEl.textContent = '4';
+        }, 500);
+    }
+    
+    // 加载自由职业者模式数据
+    loadFreelancerModeData() {
+        // 这里可以从app中获取自由职业相关数据并更新UI
+        setTimeout(() => {
+            const clientIncomeEl = document.getElementById('client-income');
+            const taxSavingsEl = document.getElementById('tax-savings');
+            
+            if (clientIncomeEl) clientIncomeEl.textContent = '¥15000';
+            if (taxSavingsEl) taxSavingsEl.textContent = '¥3000';
+        }, 500);
     }
     
     // 绑定快速记账按钮事件

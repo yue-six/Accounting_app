@@ -204,8 +204,1728 @@ body {
     margin-bottom: 16px;
     box-shadow: var(--shadow);
     border: 1px solid rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ==================== 学生模式样式美化 ==================== */
+.student-mode-page {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e9f0ff 100%);
+    min-height: 100%;
+}
+
+#student-mode-page .page-header {
+    text-align: center;
+    padding: 25px 0 35px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: var(--border-radius);
+    margin-bottom: 25px;
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+
+#student-mode-page .page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+#student-mode-page .page-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+#student-mode-page .page-header h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 2;
+    letter-spacing: 0.5px;
+}
+
+#student-mode-page .page-header h2 i {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+#student-mode-page .page-header p {
+    font-size: 0.95rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 2;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* 学生模式卡片特殊样式 */
+.student-mode-page .card {
+    transform: translateY(0) scale(1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.student-mode-page .card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.25), 0 4px 20px rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.student-mode-page .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
+    z-index: 0;
+}
+
+.student-mode-page .card:hover::before {
+    left: 100%;
+}
+
+.student-mode-page .card h3 {
+    color: #2d3748;
+    margin-bottom: 18px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.student-mode-page .card h3 i {
+    color: #667eea;
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 学生模式统计项美化 */
+.student-mode-page .stat-item {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+.student-mode-page .stat-item:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: rgba(102, 126, 234, 0.4);
+}
+
+.student-mode-page .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+/* 学生模式按钮美化 */
+.student-mode-page .btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.student-mode-page .btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.student-mode-page .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.student-mode-page .btn-secondary {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    color: #667eea;
+    backdrop-filter: blur(10px);
+}
+
+.student-mode-page .btn-secondary:hover {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+}
+
+/* ==================== 家庭模式样式美化 ==================== */
+.family-mode-page {
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    min-height: 100%;
+}
+
+#family-mode-page .page-header {
+    text-align: center;
+    padding: 25px 0 35px;
+    background: linear-gradient(135deg, #f56565, #ed8936);
+    color: white;
+    border-radius: var(--border-radius);
+    margin-bottom: 25px;
+    box-shadow: 0 15px 40px rgba(245, 101, 101, 0.3);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+
+#family-mode-page .page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+#family-mode-page .page-header h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 2;
+    letter-spacing: 0.5px;
+}
+
+#family-mode-page .page-header h2 i {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+#family-mode-page .page-header p {
+    font-size: 0.95rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 2;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* 家庭模式卡片特殊样式 */
+.family-mode-page .card {
+    transform: translateY(0) scale(1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(245, 101, 101, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.family-mode-page .card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(245, 101, 101, 0.25), 0 4px 20px rgba(245, 101, 101, 0.15);
+    border-color: rgba(245, 101, 101, 0.3);
+}
+
+.family-mode-page .card h3 {
+    color: #2d3748;
+    margin-bottom: 18px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.family-mode-page .card h3 i {
+    color: #f56565;
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, #f56565, #ed8936);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 家庭模式统计项美化 */
+.family-mode-page .stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(245, 101, 101, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.family-mode-page .stat-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: rgba(245, 101, 101, 0.4);
+}
+
+.family-mode-page .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f56565, #ed8936);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(245, 101, 101, 0.2);
+}
+
+/* ==================== 自由职业者模式样式美化 ==================== */
+.freelancer-mode-page {
+    background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+    min-height: 100%;
+}
+
+#freelancer-mode-page .page-header {
+    text-align: center;
+    padding: 25px 0 35px;
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    border-radius: var(--border-radius);
+    margin-bottom: 25px;
+    box-shadow: 0 15px 40px rgba(72, 187, 120, 0.3);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+
+#freelancer-mode-page .page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+#freelancer-mode-page .page-header h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 2;
+    letter-spacing: 0.5px;
+}
+
+#freelancer-mode-page .page-header h2 i {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+#freelancer-mode-page .page-header p {
+    font-size: 0.95rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 2;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* 自由职业者模式卡片特殊样式 */
+.freelancer-mode-page .card {
+    transform: translateY(0) scale(1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(72, 187, 120, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.freelancer-mode-page .card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(72, 187, 120, 0.25), 0 4px 20px rgba(72, 187, 120, 0.15);
+    border-color: rgba(72, 187, 120, 0.3);
+}
+
+.freelancer-mode-page .card h3 {
+    color: #2d3748;
+    margin-bottom: 18px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.freelancer-mode-page .card h3 i {
+    color: #48bb78;
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 自由职业者模式统计项美化 */
+.freelancer-mode-page .stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(72, 187, 120, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.freelancer-mode-page .stat-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: rgba(72, 187, 120, 0.4);
+}
+
+.freelancer-mode-page .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(72, 187, 120, 0.2);
+}
+
+/* 通用模式样式增强 */
+.overview-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* 输入框美化增强 */
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.9rem;
+}
+
+.input-group input, .input-group select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.input-group input:focus, .input-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: scale(1.01);
+}
+
+/* 进度条美化增强 */
+.progress-bar {
+    height: 10px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 10px 0;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+/* 新增动画效果 */
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+    40%, 43% { transform: translate3d(0,-8px,0); }
+    70% { transform: translate3d(0,-4px,0); }
+    90% { transform: translate3d(0,-2px,0); }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==================== 高级美化效果 ==================== */
+
+/* 学生模式 - 青春活力主题 */
+.student-mode-page .card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.student-mode-page .card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.student-mode-page .card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.student-mode-page .card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.student-mode-page .budget-allocation {
+    animation: slideInLeft 0.8s ease-out;
+}
+
+.student-mode-page .part-time-summary {
+    animation: slideInRight 0.8s ease-out;
+}
+
+/* 学生模式特殊图标效果 */
+.student-mode-page .fa-graduation-cap {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
+}
+
+.student-mode-page .fa-chart-pie {
+    background: linear-gradient(135deg, #f56565, #ed8936);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.student-mode-page .fa-briefcase {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.student-mode-page .fa-certificate {
+    background: linear-gradient(135deg, #9f7aea, #805ad5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 家庭模式 - 温馨和谐主题 */
+.family-mode-page .card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.family-mode-page .card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.family-mode-page .card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.family-mode-page .card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.family-mode-page .family-overview {
+    animation: slideInLeft 0.8s ease-out;
+}
+
+.family-mode-page .family-members {
+    animation: slideInRight 0.8s ease-out;
+}
+
+/* 家庭模式特殊图标效果 */
+.family-mode-page .fa-home {
+    background: linear-gradient(135deg, #f56565, #ed8936);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(245, 101, 101, 0.3));
+}
+
+.family-mode-page .fa-chart-line {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.family-mode-page .fa-users {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.family-mode-page .fa-plus-circle {
+    background: linear-gradient(135deg, #9f7aea, #805ad5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 自由职业者模式 - 专业商务主题 */
+.freelancer-mode-page .card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.freelancer-mode-page .card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.freelancer-mode-page .card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.freelancer-mode-page .card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.freelancer-mode-page .cash-flow-overview {
+    animation: slideInLeft 0.8s ease-out;
+}
+
+.freelancer-mode-page .smart-classification {
+    animation: slideInRight 0.8s ease-out;
+}
+
+/* 自由职业者模式特殊图标效果 */
+.freelancer-mode-page .fa-briefcase {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(72, 187, 120, 0.3));
+}
+
+.freelancer-mode-page .fa-chart-line {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.freelancer-mode-page .fa-plus-circle {
+    background: linear-gradient(135deg, #f56565, #ed8936);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.freelancer-mode-page .fa-calculator {
+    background: linear-gradient(135deg, #9f7aea, #805ad5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 高级交互效果 */
+.card:hover {
+    position: relative;
+    z-index: 10;
+}
+
+.card:hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* 渐变边框效果 */
+.card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--primary), var(--secondary), var(--success), var(--warning));
+    border-radius: calc(var(--border-radius) + 2px);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover::before {
+    opacity: 0.3;
+}
+
+/* 微光效果 */
+@keyframes gentleGlow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    50% { box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+}
+
+.card {
+    animation: gentleGlow 3s ease-in-out infinite;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* 加载动画 */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 成功/错误状态动画 */
+.success-animation {
+    animation: successPulse 0.6s ease;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.error-animation {
+    animation: errorShake 0.5s ease;
+}
+
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* 响应式优化 */
+@media (max-width: 360px) {
+    .card {
+        padding: 15px;
+        margin-bottom: 12px;
+    }
+    
+    .page-header {
+        padding: 20px 0 25px;
+    }
+    
+    .page-header h2 {
+        font-size: 1.4rem;
+    }
+    
+    .stat-value {
+        font-size: 1.4rem;
+    }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+    
+    .btn {
+        border: 2px solid;
+    }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== 最终美化优化 ==================== */
+
+/* 学生模式 - 青春活力主题增强 */
+.student-mode-page {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e9f0ff 50%, #dbeafe 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.student-mode-page .card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    box-shadow: 
+        0 8px 32px rgba(102, 126, 234, 0.1),
+        0 2px 8px rgba(102, 126, 234, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.student-mode-page .budget-item {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.9), 
+        rgba(248, 249, 255, 0.7));
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.08);
+}
+
+/* 家庭模式 - 温馨和谐主题增强 */
+.family-mode-page {
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 50%, #feb2b2 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+}
+
+.family-mode-page .card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(245, 101, 101, 0.2);
+    box-shadow: 
+        0 8px 32px rgba(245, 101, 101, 0.1),
+        0 2px 8px rgba(245, 101, 101, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.family-mode-page .member-item {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.9), 
+        rgba(255, 245, 245, 0.7));
+    border: 1px solid rgba(245, 101, 101, 0.25);
+    box-shadow: 0 2px 12px rgba(245, 101, 101, 0.08);
+}
+
+/* 自由职业者模式 - 专业商务主题增强 */
+.freelancer-mode-page {
+    background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 50%, #9ae6b4 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+}
+
+.freelancer-mode-page .card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(72, 187, 120, 0.2);
+    box-shadow: 
+        0 8px 32px rgba(72, 187, 120, 0.1),
+        0 2px 8px rgba(72, 187, 120, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.freelancer-mode-page .cash-flow-overview {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.9), 
+        rgba(240, 255, 244, 0.7));
+    border: 1px solid rgba(72, 187, 120, 0.25);
+    box-shadow: 0 2px 12px rgba(72, 187, 120, 0.08);
+}
+
+/* 图标美化增强 */
+.card h3 i {
+    position: relative;
+    padding: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮美化增强 */
+.btn {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--dark);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 输入框美化增强 */
+.input-group input, .input-group select {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.input-group input:focus, .input-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+/* 统计卡片美化增强 */
+.stat-card {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.9), 
+        rgba(255, 255, 255, 0.7));
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* 进度条美化增强 */
+.progress-bar {
+    height: 12px;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 12px 0;
+    position: relative;
+    backdrop-filter: blur(5px);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 最终微调 */
+.page {
+    padding-bottom: 20px;
+}
+
+.card:last-child {
+    margin-bottom: 0;
+}
+
+/* 确保所有元素都有平滑的过渡 */
+* {
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 优化移动端触摸体验 */
+@media (hover: none) and (pointer: coarse) {
+    .card:hover {
+        transform: none;
+    }
+    
+    .btn:hover {
+        transform: none;
+    }
+    
+    .stat-card:hover {
+        transform: none;
+    }
+}
+
+/* 深色模式支持预备 */
+@media (prefers-color-scheme: dark) {
+    .student-mode-page {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+    
+    .family-mode-page {
+        background: linear-gradient(135deg, #2d1a1a 0%, #4a2a2a 100%);
+    }
+    
+    .freelancer-mode-page {
+        background: linear-gradient(135deg, #1a2d1a 0%, #2a4a2a 100%);
+    }
+}
+
+/* 学生模式卡片特殊样式 */
+.student-mode-page .card {
+    transform: translateY(0);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.student-mode-page .card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover), 0 4px 20px rgba(102, 126, 234, 0.15);
+}
+
+.student-mode-page .card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+    z-index: 0;
+}
+
+.student-mode-page .card:hover::after {
+    left: 100%;
+}
+
+/* 统计项美化 */
+.student-mode-page .stat-item {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.student-mode-page .stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    border-color: var(--primary);
+}
+
+.student-mode-page .stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 预算分配项样式 */
+.allocation-item {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.allocation-item:hover {
+    background: white;
+    transform: translateX(2px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+/* 进度条美化 */
+.progress-bar {
+    height: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+/* 兼职项目样式 */
+.part-time-item {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.part-time-item .job-info h4 {
+    color: var(--primary);
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+}
+
+/* 考试目标样式 */
+.exam-goal-item {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.exam-goal-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+}
+
+.exam-goal-item.completed::before {
+    background: linear-gradient(180deg, var(--success), #2d9cdb);
+}
+
+.exam-goal-item.urgent::before {
+    background: linear-gradient(180deg, var(--warning), #f2994a);
+}
+
+.auto-save-icon {
+    color: var(--success);
+    font-size: 0.9rem;
+    margin-left: 5px;
+}
+
+/* 按钮美化 */
+.student-mode-page .btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+.student-mode-page .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: none;
+    color: white;
+}
+
+.student-mode-page .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.student-mode-page .btn-secondary {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    color: var(--primary);
+}
+
+.student-mode-page .btn-secondary:hover {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+/* 模板按钮样式 */
+.template-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.template-buttons .btn {
+    font-size: 0.85rem;
+    padding: 10px 8px;
+    text-align: center;
+}
+
+/* 按钮点击涟漪效果 */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ==================== 模式特定交互效果 ==================== */
+
+/* 学生模式 - 学习主题动画 */
+.student-mode-page .card:hover h3 i {
+    animation: bounce 0.6s ease;
+}
+
+.student-mode-page .budget-item {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,249,255,0.8));
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.student-mode-page .budget-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.4);
+}
+
+/* 家庭模式 - 温馨家庭主题 */
+.family-mode-page .card:hover h3 i {
+    animation: pulse 0.8s ease;
+}
+
+.family-mode-page .family-members-list {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.family-mode-page .member-item {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,245,245,0.8));
+    border: 1px solid rgba(245, 101, 101, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.family-mode-page .member-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 6px 20px rgba(245, 101, 101, 0.15);
+    border-color: rgba(245, 101, 101, 0.4);
+}
+
+/* 自由职业者模式 - 专业商务主题 */
+.freelancer-mode-page .card:hover h3 i {
+    animation: bounce 0.6s ease;
+}
+
+.freelancer-mode-page .cash-flow-overview {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,255,244,0.8));
+    border: 1px solid rgba(72, 187, 120, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(5px);
+}
+
+.freelancer-mode-page .cash-flow-alert {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(254,252,232,0.9));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+    backdrop-filter: blur(5px);
+}
+
+/* 智能记账表单美化 */
+.quick-transaction-form {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+/* 分类标签样式 */
+.category-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #6c757d;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 统计卡片特殊状态 */
+.stat-card.warning {
+    border-color: rgba(245, 101, 101, 0.5);
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(254,215,215,0.8));
+}
+
+.stat-card.positive {
+    border-color: rgba(72, 187, 120, 0.5);
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(198,246,213,0.8));
+}
+
+.stat-card.negative {
+    border-color: rgba(245, 101, 101, 0.5);
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(254,215,215,0.8));
+}
+
+/* 趋势指示器 */
+.stat-trend {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.stat-trend.positive {
+    color: #48bb78;
+}
+
+.stat-trend.negative {
+    color: #f56565;
+}
+
+/* 警告文本样式 */
+.stat-warning {
+    font-size: 0.75rem;
+    color: #f56565;
+    margin-top: 5px;
+    font-weight: 600;
+}
+
+/* 比较文本样式 */
+.stat-comparison {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* 安全/警告文本 */
+.warning-text {
+    color: #f56565;
+    font-weight: 600;
+}
+
+.safe-text {
+    color: #48bb78;
+    font-weight: 600;
+}
+
+/* 分类网格样式 */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.category-item {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.category-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-2px);
+}
+
+/* 利润表样式 */
+.profit-statement {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+.statement-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.statement-item.total {
+    border-bottom: none;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+/* 抵扣清单样式 */
+.deduction-list {
+    max-height: 200px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+.deduction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.deduction-item:last-child {
+    border-bottom: none;
+}
+
+/* 发票管理样式 */
+.invoice-item {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.invoice-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* 税务报告样式 */
+.tax-report-item {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.tax-report-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* 现金流预警样式 */
+.cash-flow-alert {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(254,252,232,0.9));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+    backdrop-filter: blur(5px);
+}
+
+.alert-content {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.alert-content strong {
+    color: #2d3748;
+    font-weight: 700;
+}
+
+/* 按钮组样式 */
+.transaction-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.tax-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 400px) {
+    .overview-stats {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .category-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .transaction-actions, .tax-actions {
+        flex-direction: column;
+    }
+}
+
+/* 动画定义 */
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateX(-20px); 
+    }
+    to { 
+        opacity: 1;
+        transform: translateX(0); 
+    }
+}
+
+/* 预算分配项动画 */
+.budget-item {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* 延迟动画 */
+.card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+/* 输入框美化 */
+.student-mode-page input[type="number"] {
+    border: 2px solid rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.student-mode-page input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: scale(1.01);
+}
+
+/* 卡片 */
+.student-mode-page .card
 
 .card:active {
     transform: scale(0.98);
@@ -1288,4 +3008,396 @@ input:checked + .slider:before {
 
 .login-btn:active {
     transform: translateY(0);
+}
+
+/* 家庭模式专用样式 */
+.family-mode-page .family-overview {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.family-mode-page .overview-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.family-mode-page .stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.family-mode-page .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.family-mode-page .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.family-mode-page .stat-trend {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.family-mode-page .stat-trend.positive {
+    background: rgba(79, 209, 197, 0.2);
+    color: #4fd1c5;
+}
+
+.family-mode-page .stat-trend.negative {
+    background: rgba(245, 101, 101, 0.2);
+    color: #f56565;
+}
+
+.family-mode-page .stat-comparison {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.family-mode-page .family-health {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.family-mode-page .health-indicators {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.family-mode-page .health-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.family-mode-page .health-label {
+    width: 80px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.family-mode-page .health-bar {
+    flex: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.family-mode-page .health-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.family-mode-page .health-fill.good {
+    background: var(--success);
+}
+
+.family-mode-page .health-fill.warning {
+    background: var(--warning);
+}
+
+.family-mode-page .health-fill.danger {
+    background: var(--danger);
+}
+
+.family-mode-page .health-value {
+    width: 40px;
+    text-align: right;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.family-mode-page .family-suggestions {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.family-mode-page .suggestion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.family-mode-page .suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.family-mode-page .suggestion-item.high {
+    background: rgba(245, 101, 101, 0.1);
+    border-left: 3px solid var(--warning);
+}
+
+.family-mode-page .suggestion-item.medium {
+    background: rgba(255, 193, 7, 0.1);
+    border-left: 3px solid #ffc107;
+}
+
+.family-mode-page .suggestion-item.low {
+    background: rgba(79, 209, 197, 0.1);
+    border-left: 3px solid var(--success);
+}
+
+.family-mode-page .members-overview {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+}
+
+.family-mode-page .overview-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.family-mode-page .stat-item {
+    text-align: center;
+}
+
+.family-mode-page .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.family-mode-page .stat-label {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-top: 4px;
+}
+
+.family-mode-page .current-user {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+}
+
+.family-mode-page .user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.family-mode-page .user-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.family-mode-page .user-role {
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+.family-mode-page .members-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.family-mode-page .tab-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.family-mode-page .tab-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.family-mode-page .tab-content {
+    display: none;
+}
+
+.family-mode-page .tab-content.active {
+    display: block;
+}
+
+.family-mode-page .family-members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.family-mode-page .member-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.family-mode-page .member-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+.family-mode-page .member-info {
+    flex: 1;
+}
+
+.family-mode-page .member-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.family-mode-page .member-role {
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+.family-mode-page .member-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.family-mode-page .quick-transaction {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.family-mode-page .transaction-type-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.family-mode-page .quick-amounts {
+    margin-bottom: 16px;
+}
+
+.family-mode-page .amount-label {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: #718096;
+}
+
+.family-mode-page .amount-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.family-mode-page .amount-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.family-mode-page .amount-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.family-mode-page .transaction-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.family-mode-page .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.family-mode-page .input-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.family-mode-page .input-group input,
+.family-mode-page .input-group select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.family-mode-page .category-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.family-mode-page .category-tag {
+    padding: 4px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.family-mode-page .category-tag.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.family-mode-page .transaction-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.family-mode-page .member-analysis {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.family-mode-page .permission-management {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
 }

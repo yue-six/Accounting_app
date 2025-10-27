@@ -1,216 +1,188 @@
-# 智能记账应用 - 数据库配置指南
+# 数据库设置指南
 
-## 数据库设计完成情况
+## 概述
+本应用支持三种用户模式：学生模式、家庭模式、自由职业者模式。每种模式都有专门的数据库表结构来支持其独特功能。
 
-✅ **数据库架构设计已完成**
-- 用户模型 (User.js) - 用户管理和认证
-- 交易模型 (Transaction.js) - 收入和支出记录
-- 分类模型 (Category.js) - 交易分类管理
-- 预算模型 (Budget.js) - 预算设置和跟踪
+## 数据库初始化步骤
 
-✅ **数据库连接配置已完成**
-- MongoDB连接配置 (server/config/database.js)
-- 环境变量配置 (server/.env)
-- 连接池管理和错误处理
-- 健康检查和索引优化
+### 1. 执行数据库脚本
 
-✅ **API路由和业务逻辑已完成**
-- 完整的RESTful API设计
-- 数据验证和错误处理
-- 认证和授权中间件
-- 统计分析和报表功能
+使用以下任一方法执行数据库初始化脚本：
 
-## 当前状态
+#### 方法一：使用Supabase SQL编辑器
+1. 登录到您的Supabase项目控制台
+2. 进入 "SQL Editor" 页面
+3. 复制 `supabase-setup-enhanced.sql` 文件中的全部内容
+4. 粘贴到SQL编辑器中并执行
 
-❌ **MongoDB服务未运行**
-由于网络连接问题，无法通过Docker自动启动MongoDB服务。
-
-## 解决方案
-
-### 方案一：安装本地MongoDB（推荐）
-
-1. **下载 MongoDB Community Server**
-   - 访问: https://www.mongodb.com/try/download/community
-   - 选择 Windows 版本下载 MSI 安装包
-
-2. **安装步骤**
-   - 运行安装程序
-   - 选择 "Complete" 完整安装
-   - 选择 "Install MongoDB as a Service"
-   - 使用默认设置完成安装
-
-3. **启动 MongoDB 服务**
-   ```powershell
-   # 以管理员身份运行 PowerShell
-   Start-Service MongoDB
-   ```
-
-4. **验证安装**
-   ```powershell
-   # 检查服务状态
-   Get-Service MongoDB
-   
-   # 测试连接
-   mongosh --eval "db.adminCommand('ping')"
-   ```
-
-### 方案二：使用 MongoDB Atlas（云服务）
-
-1. **注册 MongoDB Atlas 账户**
-   - 访问: https://www.mongodb.com/cloud/atlas
-   - 创建免费集群
-
-2. **获取连接字符串**
-   ```env
-   # 修改 server/.env 文件
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/accounting_app
-   ```
-
-### 方案三：等待网络恢复后使用Docker
-
-当网络连接恢复后，可以运行：
+#### 方法二：使用命令行工具
 ```bash
-# 拉取MongoDB镜像
-docker pull mongo:latest
+# 安装Supabase CLI
+npm install -g supabase
 
-# 启动MongoDB容器
-docker run -d --name mongodb -p 27017:27017 -v mongodb_data:/data/db mongo:latest
+# 登录到您的Supabase账户
+supabase login
+
+# 连接到您的项目
+supabase link --project-ref juqdiilsszktanogfqvm
+
+# 执行SQL脚本
+supabase db push
 ```
 
-## 数据库初始化
+### 2. 验证数据库设置
 
-一旦MongoDB服务运行，执行以下命令：
+执行完成后，检查以下表是否成功创建：
 
-```bash
-cd server
-npm run init-db
-```
+- ✅ `profiles` - 用户资料表
+- ✅ `categories` - 分类表
+- ✅ `transactions` - 交易记录表
+- ✅ `budgets` - 预算表
+- ✅ `student_mode_settings` - 学生模式设置表
+- ✅ `family_mode_settings` - 家庭模式设置表
+- ✅ `family_transactions` - 家庭交易记录表
+- ✅ `freelancer_mode_settings` - 自由职业者模式设置表
+- ✅ `business_transactions` - 商业交易记录表
+- ✅ `invoices` - 发票管理表
+- ✅ `tax_reports` - 税务报告表
+- ✅ `cash_flow_alerts` - 现金流预警表
 
-## 项目文件结构
+## 数据库表结构说明
 
-```
-server/
-├── config/
-│   └── database.js          # 数据库连接配置
-├── models/
-│   ├── User.js              # 用户模型
-│   ├── Transaction.js       # 交易模型
-│   ├── Category.js          # 分类模型
-│   └── Budget.js            # 预算模型
-├── routes/
-│   ├── auth.js              # 认证路由
-│   ├── transactions.js      # 交易路由
-│   ├── categories.js        # 分类路由
-│   ├── budgets.js           # 预算路由
-│   └── stats.js            # 统计路由
-├── scripts/
-│   └── init-db.js          # 数据库初始化脚本
-└── server.js               # 主服务器文件
-```
+### 核心表结构
 
-## 核心数据模型说明
+#### 1. profiles表（用户资料）
+- `id` - 用户ID（关联auth.users）
+- `username` - 用户名
+- `full_name` - 全名
+- `avatar_url` - 头像URL
+- `user_mode` - 用户模式（student/family/freelancer）
 
-### 1. 用户模型 (User)
-- 用户注册和登录
-- 个人资料管理
-- 偏好设置（货币、语言、主题）
-- 用户统计和活动记录
+#### 2. categories表（分类）
+- `id` - 分类ID
+- `name` - 分类名称
+- `color` - 分类颜色
+- `icon` - 分类图标
+- `user_id` - 用户ID（null表示系统默认分类）
 
-### 2. 交易模型 (Transaction)
-- 收入和支出记录
-- 分类关联和标签
-- 支付方式和位置信息
-- 定期交易支持
+#### 3. transactions表（交易记录）
+- `id` - 交易ID
+- `user_id` - 用户ID
+- `type` - 交易类型（income/expense）
+- `amount` - 金额
+- `category` - 分类
+- `description` - 描述
+- `date` - 日期
 
-### 3. 分类模型 (Category)
-- 收入和支出分类
-- 默认分类和自定义分类
-- 图标和颜色配置
-- 分类统计和分析
+### 学生模式专用表
 
-### 4. 预算模型 (Budget)
-- 按分类设置预算
-- 多种周期支持（日/周/月/年）
-- 预算进度跟踪
-- 超预算提醒
+#### student_mode_settings表
+- `monthly_allowance` - 月度生活费
+- `part_time_job_income` - 兼职收入
+- `study_expenses_budget` - 学习支出预算
+- `living_expenses_budget` - 生活支出预算
+- `savings_goal` - 储蓄目标
 
-## API端点文档
+### 家庭模式专用表
 
-### 认证相关
-- `POST /api/auth/register` - 用户注册
-- `POST /api/auth/login` - 用户登录
-- `GET /api/auth/me` - 获取当前用户信息
+#### family_mode_settings表
+- `family_name` - 家庭名称
+- `family_members` - 家庭成员列表（JSON格式）
+- `shared_budget` - 共享预算
+- `monthly_income` - 月度收入
 
-### 交易管理
-- `GET /api/transactions` - 获取交易列表（支持分页和筛选）
-- `POST /api/transactions` - 创建交易
-- `PUT /api/transactions/:id` - 更新交易
-- `DELETE /api/transactions/:id` - 删除交易（软删除）
+#### family_transactions表
+- `family_id` - 家庭ID
+- `member_id` - 成员ID
+- `type` - 交易类型
+- `amount` - 金额
+- `category` - 分类
 
-### 分类管理
-- `GET /api/categories` - 获取分类列表
-- `POST /api/categories` - 创建分类
-- `PUT /api/categories/:id` - 更新分类
-- `DELETE /api/categories/:id` - 删除分类
+### 自由职业者模式专用表
 
-### 预算管理
-- `GET /api/budgets` - 获取预算列表
-- `POST /api/budgets` - 创建预算
-- `PUT /api/budgets/:id` - 更新预算
-- `DELETE /api/budgets/:id` - 删除预算
+#### freelancer_mode_settings表
+- `business_name` - 业务名称
+- `tax_id` - 税号
+- `min_operating_funds` - 最低运营资金
+- `business_categories` - 业务分类（JSON格式）
 
-### 统计分析
-- `GET /api/stats/summary` - 获取统计摘要
-- `GET /api/stats/categories` - 获取分类统计
+#### business_transactions表
+- `freelancer_id` - 自由职业者ID
+- `transaction_type` - 交易类型（business_income/business_cost/personal_expense）
+- `invoice_number` - 发票号码
+- `is_tax_deductible` - 是否可抵扣
 
-## 安全特性
+#### invoices表
+- `invoice_number` - 发票号码
+- `title` - 发票标题
+- `amount` - 金额
+- `date` - 日期
+- `is_tax_deductible` - 是否可抵扣
 
-- 🔐 密码加密存储（bcryptjs）
-- 🔑 JWT令牌认证
-- 🛡️ 请求频率限制
-- ✅ 输入数据验证
-- 🌐 CORS安全配置
+#### tax_reports表
+- `quarter` - 季度
+- `year` - 年份
+- `total_income` - 总收入
+- `total_cost` - 总成本
+- `net_profit` - 净利润
+- `deductible_cost` - 可抵扣成本
+
+#### cash_flow_alerts表
+- `alert_type` - 预警类型
+- `message` - 预警消息
+- `is_active` - 是否活跃
+
+## 安全策略
+
+所有表都启用了行级安全策略（RLS），确保：
+- 用户只能访问自己的数据
+- 数据隔离和隐私保护
+- 安全的数据库操作
 
 ## 性能优化
 
-- 📊 数据库索引优化
-- 🔄 连接池管理
-- 📦 响应压缩
-- 📄 查询分页支持
-
-## 下一步操作
-
-1. **安装MongoDB服务**（选择上述任一方案）
-2. **启动MongoDB服务**
-3. **初始化数据库**: `cd server && npm run init-db`
-4. **启动应用服务器**: `cd server && npm run dev`
-5. **访问应用**: http://localhost:3000
+数据库已创建以下索引来优化查询性能：
+- 交易记录的用户ID和日期索引
+- 家庭交易的日期索引
+- 商业交易的日期索引
+- 发票和税务报告的相关索引
 
 ## 故障排除
 
 ### 常见问题
 
-1. **连接被拒绝**
-   - 检查MongoDB服务是否运行
-   - 验证端口27017是否被占用
+1. **表不存在错误**
+   - 确保已执行完整的SQL脚本
+   - 检查表名拼写是否正确
 
-2. **认证失败**
-   - 检查连接字符串格式
-   - 验证用户名和密码
+2. **权限错误**
+   - 确保RLS策略已正确设置
+   - 检查用户认证状态
 
-3. **权限问题**
-   - 确保数据目录有写入权限
-   - 以管理员身份运行服务
+3. **连接错误**
+   - 验证Supabase项目URL和密钥
+   - 检查网络连接
 
-### 技术支持
+### 测试数据库连接
 
-如果遇到问题，请参考：
-- MongoDB官方文档: https://docs.mongodb.com
-- 项目文档: README.md
-- 安装指南: server/scripts/setup-mongodb.md
+应用启动时会自动测试数据库连接。如果连接失败，应用将回退到本地存储模式。
+
+## 数据迁移
+
+如果从旧版本迁移数据：
+
+1. 备份现有数据
+2. 执行新的数据库脚本
+3. 使用数据迁移工具导入数据
+4. 验证数据完整性
+
+## 技术支持
+
+如有数据库相关问题，请参考：
+- Supabase官方文档
+- 应用内置的错误日志
+- 开发者技术支持
 
 ---
 
-**数据库设计已完成！** 🎉
-
-您现在拥有一个完整的、生产就绪的记账应用数据库架构。只需要安装并启动MongoDB服务，就可以开始使用应用了。
+**注意**：在生产环境部署前，请务必备份数据并测试所有功能。

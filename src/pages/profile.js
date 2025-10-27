@@ -10,18 +10,18 @@ class ProfilePage {
 
     // 加载用户模式设置
     loadModeSettings() {
-        const mode = this.app.userMode;
+        const mode = this.getCurrentUserMode();
         if (!mode) return;
 
         try {
             switch(mode) {
-                case '学生模式':
+                case 'student':
                     this.studentSettings = JSON.parse(localStorage.getItem('student_mode_settings') || '{}');
                     break;
-                case '家庭模式':
+                case 'family':
                     this.familySettings = JSON.parse(localStorage.getItem('family_mode_settings') || '{}');
                     break;
-                case '自由职业':
+                case 'freelancer':
                     this.freelancerSettings = JSON.parse(localStorage.getItem('freelancer_mode_settings') || '{}');
                     break;
             }
@@ -82,6 +82,18 @@ class ProfilePage {
                                 <i class="fas fa-chevron-right"></i>
                             </div>
                         </li>
+                        <li class="menu-item" onclick="window.router && window.router.switchToPage('savings-goals')">
+                            <div class="menu-icon">
+                                <i class="fas fa-piggy-bank"></i>
+                            </div>
+                            <div class="menu-content">
+                                <div class="menu-title">储蓄目标</div>
+                                <div class="menu-desc">管理您的储蓄计划和进度</div>
+                            </div>
+                            <div class="menu-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </li>
                         <li class="menu-item" onclick="profilePage.showNotifications()">
                             <div class="menu-icon">
                                 <i class="fas fa-bell"></i>
@@ -124,16 +136,16 @@ class ProfilePage {
                 <!-- 用户模式 -->
                 <div class="card">
                     <h3><i class="fas fa-user-tag"></i> 用户模式</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                        <div class="mode-btn ${this.app.userMode === '学生模式' ? 'active' : ''}" onclick="profilePage.setUserMode('学生模式')">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+                        <div class="mode-btn ${this.getCurrentUserMode() === 'student' ? 'active' : ''}" onclick="profilePage.setUserMode('student')">
                             <div>学生模式</div>
                             <small style="font-size: 0.8em; color: #718096;">生活费分配 · 兼职收入</small>
                         </div>
-                        <div class="mode-btn ${this.app.userMode === '家庭模式' ? 'active' : ''}" onclick="profilePage.setUserMode('家庭模式')">
+                        <div class="mode-btn ${this.getCurrentUserMode() === 'family' ? 'active' : ''}" onclick="profilePage.setUserMode('family')">
                             <div>家庭模式</div>
                             <small style="font-size: 0.8em; color: #718096;">多人共享 · 家庭开支</small>
                         </div>
-                        <div class="mode-btn ${this.app.userMode === '自由职业' ? 'active' : ''}" onclick="profilePage.setUserMode('自由职业')">
+                        <div class="mode-btn ${this.getCurrentUserMode() === 'freelancer' ? 'active' : ''}" onclick="profilePage.setUserMode('freelancer')">
                             <div>自由职业</div>
                             <small style="font-size: 0.8em; color: #718096;">经营收支 · 税务申报</small>
                         </div>
@@ -249,32 +261,40 @@ class ProfilePage {
         this.updateSavingsSuggestions();
     }
 
+    // 获取当前用户模式
+    getCurrentUserMode() {
+        return localStorage.getItem('userMode') || 'student';
+    }
+
     // 设置用户模式
     setUserMode(mode) {
-        this.app.setUserMode(mode);
+        // 保存到本地存储
+        localStorage.setItem('userMode', mode);
         
         // 更新UI
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.remove('active');
-            if (btn.querySelector('div').textContent.trim() === mode) {
-                btn.classList.add('active');
-            }
         });
-
-        // 根据不同模式显示特定功能
-        switch(mode) {
-            case '学生模式':
-                this.showStudentModeSettings();
-                break;
-            case '家庭模式':
-                this.showFamilyModeSettings();
-                break;
-            case '自由职业':
-                this.showFreelancerModeSettings();
-                break;
+        
+        // 激活当前选中的模式按钮
+        const activeBtn = document.querySelector(`.mode-btn[onclick*="${mode}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
         }
         
         this.updateData();
+    }
+
+
+
+    // 获取模式显示名称
+    getModeDisplayName(mode) {
+        const modeNames = {
+            'student': '学生模式',
+            'family': '家庭模式',
+            'freelancer': '自由职业模式'
+        };
+        return modeNames[mode] || '未知模式';
     }
 
     // 显示学生模式设置
@@ -945,6 +965,63 @@ class ProfilePage {
         }
     }
 
+    // 设置用户模式
+    setUserMode(mode) {
+        // 验证模式有效性
+        const validModes = ['student', 'family', 'freelancer'];
+        if (!validModes.includes(mode)) {
+            console.error('无效的用户模式:', mode);
+            return;
+        }
+
+        try {
+            // 调用router的switchUserMode方法来切换用户模式
+            if (window.router && typeof window.router.switchUserMode === 'function') {
+                window.router.switchUserMode(mode);
+                
+                // 更新按钮的激活状态
+                this.updateModeButtons(mode);
+            } else {
+                // 降级处理：如果router不存在，则直接设置应用的用户模式
+                if (this.app && typeof this.app.setUserMode === 'function') {
+                    this.app.setUserMode(mode);
+                    this.updateModeButtons(mode);
+                    
+                    // 如果是直接设置的，手动重新渲染页面以应用新模式
+                    if (window.router && typeof window.router.reloadCurrentPageWithMode === 'function') {
+                        window.router.reloadCurrentPageWithMode();
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('切换用户模式时出错:', error);
+            // 显示错误提示
+            if (this.app && typeof this.app.showToast === 'function') {
+                this.app.showToast('模式切换失败，请重试', 'error');
+            }
+        }
+    }
+    
+    // 更新模式按钮的激活状态
+    updateModeButtons(selectedMode) {
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        modeButtons.forEach(button => {
+            button.classList.remove('active');
+            // 通过按钮内容判断对应的模式
+            const buttonText = button.textContent.toLowerCase();
+            if ((selectedMode === 'student' && buttonText.includes('学生')) ||
+                (selectedMode === 'family' && buttonText.includes('家庭')) ||
+                (selectedMode === 'freelancer' && buttonText.includes('自由职业'))) {
+                button.classList.add('active');
+            }
+        });
+    }
+    
+    // 获取当前用户模式
+    getCurrentUserMode() {
+        return this.app.userMode || localStorage.getItem('user_mode') || 'student';
+    }
+    
     // 退出登录
     logout() {
         try {
