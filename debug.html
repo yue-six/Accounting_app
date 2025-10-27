@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试页面</title>
+</head>
+<body>
+    <h1>JavaScript错误检查</h1>
+    <div id="status">正在检查...</div>
+    
+    <script>
+        // 检查全局变量
+        function checkGlobal(name) {
+            return typeof window[name] !== 'undefined';
+        }
+        
+        // 测试页面加载
+        window.addEventListener('load', function() {
+            const status = document.getElementById('status');
+            
+            // 检查关键全局变量
+            const globals = ['AccountingApp', 'Router', 'StudentModePage', 'FamilyModePage', 'FreelancerModePage'];
+            const results = [];
+            
+            globals.forEach(global => {
+                const exists = checkGlobal(global);
+                results.push(`${global}: ${exists ? '✓' : '✗'}`);
+            });
+            
+            status.innerHTML = results.join('<br>');
+        });
+        
+        // 捕获错误
+        window.addEventListener('error', function(e) {
+            console.error('全局错误:', e.error);
+            document.getElementById('status').innerHTML += '<br><br>错误: ' + e.message;
+        });
+    </script>
+    
+    <!-- 加载核心应用组件 -->
+    <script src="src/js/app.js"></script>
+    <script src="src/js/router.js"></script>
+    
+    <!-- 加载页面组件 -->
+    <script src="src/pages/home.js"></script>
+    <script src="src/pages/analysis.js"></script>
+    <script src="src/pages/profile.js"></script>
+    <script src="src/pages/login.js"></script>
+    <script src="src/pages/register.js"></script>
+    
+    <!-- 加载用户模式页面组件 -->
+    <script src="src/pages/student-mode.js"></script>
+    <script src="src/pages/family-mode.js"></script>
+    <script src="src/pages/freelancer-mode.js"></script>
+</body>
+</html>

@@ -947,6 +947,11 @@ class ProfilePage {
 
     // 显示模态框
     showModal(title, content) {
+        // 如果已经有模态框，先关闭它
+        if (this.currentModal) {
+            this.hideModal();
+        }
+        
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.style.cssText = `
@@ -964,22 +969,57 @@ class ProfilePage {
         `;
 
         modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>${title}</h3>
-                    <button class="modal-close" onclick="profilePage.hideModal()">×</button>
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px 20px 0 20px;
+                    border-bottom: 1px solid #e2e8f0;
+                    margin-bottom: 0;
+                ">
+                    <h3 style="margin: 0; font-size: 1.2rem; color: #2d3748;">${title}</h3>
+                    <button class="modal-close" style="
+                        background: none;
+                        border: none;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        color: #718096;
+                        padding: 5px;
+                        line-height: 1;
+                    " onclick="profilePage.hideModal()">×</button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="padding: 20px;">
                     ${content}
                 </div>
             </div>
         `;
 
+        // 添加点击外部关闭功能
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 this.hideModal();
             }
         });
+
+        // 添加ESC键关闭功能
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                this.hideModal();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+        // 保存事件处理器以便后续移除
+        modal._escapeHandler = handleEscape;
 
         document.body.appendChild(modal);
         this.currentModal = modal;
@@ -988,6 +1028,10 @@ class ProfilePage {
     // 隐藏模态框
     hideModal() {
         if (this.currentModal) {
+            // 移除ESC键事件监听器
+            if (this.currentModal._escapeHandler) {
+                document.removeEventListener('keydown', this.currentModal._escapeHandler);
+            }
             document.body.removeChild(this.currentModal);
             this.currentModal = null;
         }

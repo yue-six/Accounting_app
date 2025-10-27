@@ -32,6 +32,9 @@ class Router {
         this.pages.profile = ProfilePage;
         this.pages.login = LoginPage;
         this.pages.register = RegisterPage;
+        
+        // 用户模式页面（整合版）
+        this.pages['user-mode'] = UserModePage;
     }
 
     // 设置导航事件
