@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账应用功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #4fd1c5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #38b2ac;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .status.info {
+            background: #bee3f8;
+            color: #1a365d;
+        }
+        .log {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>记账应用功能测试</h1>
+    
+    <div class="test-section">
+        <h2>核心功能测试</h2>
+        <button class="test-button" onclick="testAppInit()">测试应用初始化</button>
+        <button class="test-button" onclick="testDataManager()">测试数据管理</button>
+        <button class="test-button" onclick="testInputManager()">测试输入管理器</button>
+        <div id="core-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>输入方式测试</h2>
+        <button class="test-button" onclick="testVoiceRecognition()">测试语音识别</button>
+        <button class="test-button" onclick="testQRScanner()">测试二维码扫描</button>
+        <button class="test-button" onclick="testPhotoRecognition()">测试照片识别</button>
+        <div id="input-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>数据库连接测试</h2>
+        <button class="test-button" onclick="testDatabaseConnection()">测试数据库连接</button>
+        <div id="db-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>控制台日志</h2>
+        <div id="console-log" class="log"></div>
+    </div>
+
+    <script>
+        let logContainer = document.getElementById('console-log');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logEntry.style.color = type === 'error' ? '#fc8181' : 
+                                 type === 'success' ? '#68d391' : '#90cdf4';
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // 测试应用初始化
+        function testAppInit() {
+            log('开始测试应用初始化...');
+            try {
+                if (typeof AccountingApp === 'undefined') {
+                    throw new Error('AccountingApp类未定义');
+                }
+                
+                const app = new AccountingApp();
+                app.init();
+                
+                if (app.transactions && app.categories) {
+                    updateStatus('core-status', '✓ 应用初始化成功', 'success');
+                    log('应用初始化测试通过', 'success');
+                } else {
+                    throw new Error('应用数据初始化失败');
+                }
+            } catch (error) {
+                updateStatus('core-status', '✗ 应用初始化失败: ' + error.message, 'error');
+                log('应用初始化失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试数据管理
+        function testDataManager() {
+            log('开始测试数据管理...');
+            try {
+                const app = new AccountingApp();
+                app.init();
+                
+                // 测试添加交易
+                const transaction = app.addTransaction({
+                    type: 'expense',
+                    amount: 25,
+                    category: 'food',
+                    description: '测试交易',
+                    merchant: '测试商户'
+                });
+                
+                if (transaction.id) {
+                    updateStatus('core-status', '✓ 数据管理功能正常', 'success');
+                    log('数据管理测试通过，交易ID: ' + transaction.id, 'success');
+                } else {
+                    throw new Error('交易添加失败');
+                }
+            } catch (error) {
+                updateStatus('core-status', '✗ 数据管理测试失败: ' + error.message, 'error');
+                log('数据管理测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试输入管理器
+        function testInputManager() {
+            log('开始测试输入管理器...');
+            try {
+                if (typeof InputManager === 'undefined') {
+                    throw new Error('InputManager类未定义');
+                }
+                
+                const app = new AccountingApp();
+                app.init();
+                
+                if (app.inputManager) {
+                    updateStatus('core-status', '✓ 输入管理器初始化成功', 'success');
+                    log('输入管理器测试通过', 'success');
+                } else {
+                    throw new Error('输入管理器初始化失败');
+                }
+            } catch (error) {
+                updateStatus('core-status', '✗ 输入管理器测试失败: ' + error.message, 'error');
+                log('输入管理器测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试语音识别
+        function testVoiceRecognition() {
+            log('开始测试语音识别...');
+            try {
+                if (typeof VoiceRecognition === 'undefined') {
+                    throw new Error('VoiceRecognition类未定义');
+                }
+                
+                updateStatus('input-status', '✓ 语音识别模块加载成功', 'success');
+                log('语音识别模块测试通过', 'success');
+            } catch (error) {
+                updateStatus('input-status', '✗ 语音识别测试失败: ' + error.message, 'error');
+                log('语音识别测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试二维码扫描
+        function testQRScanner() {
+            log('开始测试二维码扫描...');
+            try {
+                if (typeof QRScanner === 'undefined') {
+                    throw new Error('QRScanner类未定义');
+                }
+                
+                updateStatus('input-status', '✓ 二维码扫描模块加载成功', 'success');
+                log('二维码扫描模块测试通过', 'success');
+            } catch (error) {
+                updateStatus('input-status', '✗ 二维码扫描测试失败: ' + error.message, 'error');
+                log('二维码扫描测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试照片识别
+        function testPhotoRecognition() {
+            log('开始测试照片识别...');
+            try {
+                if (typeof PhotoRecognition === 'undefined') {
+                    throw new Error('PhotoRecognition类未定义');
+                }
+                
+                updateStatus('input-status', '✓ 照片识别模块加载成功', 'success');
+                log('照片识别模块测试通过', 'success');
+            } catch (error) {
+                updateStatus('input-status', '✗ 照片识别测试失败: ' + error.message, 'error');
+                log('照片识别测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试数据库连接
+        function testDatabaseConnection() {
+            log('开始测试数据库连接...');
+            try {
+                // 检查数据库配置文件是否存在
+                fetch('server/config/database.js')
+                    .then(response => {
+                        if (response.ok) {
+                            updateStatus('db-status', '✓ 数据库配置文件存在', 'success');
+                            log('数据库配置文件检查通过', 'success');
+                        } else {
+                            throw new Error('数据库配置文件不存在');
+                        }
+                    })
+                    .catch(error => {
+                        updateStatus('db-status', '✗ 数据库连接测试失败: ' + error.message, 'error');
+                        log('数据库连接测试失败: ' + error.message, 'error');
+                    });
+            } catch (error) {
+                updateStatus('db-status', '✗ 数据库连接测试失败: ' + error.message, 'error');
+                log('数据库连接测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 页面加载时自动运行基础测试
+        window.addEventListener('load', function() {
+            log('测试页面加载完成', 'info');
+            log('访问 http://localhost:8000 查看主应用', 'info');
+            log('访问 http://localhost:8000/test.html 返回此测试页面', 'info');
+        });
+    </script>
+
+    <!-- 加载应用脚本 -->
+    <script src="src/js/app.js"></script>
+    <script src="src/js/voice-recognition.js"></script>
+    <script src="src/js/qr-scanner.js"></script>
+    <script src="src/js/photo-recognition.js"></script>
+    <script src="src/js/input-manager.js"></script>
+</body>
+</html>
