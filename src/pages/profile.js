@@ -80,18 +80,7 @@ class ProfilePage {
                                 <i class="fas fa-chevron-right"></i>
                             </div>
                         </li>
-                        <li class="menu-item" onclick="window.router && window.router.switchToPage('savings-goals')">
-                            <div class="menu-icon">
-                                <i class="fas fa-piggy-bank"></i>
-                            </div>
-                            <div class="menu-content">
-                                <div class="menu-title">储蓄目标</div>
-                                <div class="menu-desc">管理您的储蓄计划和进度</div>
-                            </div>
-                            <div class="menu-arrow">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                        </li>
+
                         <li class="menu-item" onclick="profilePage.showNotifications()">
                             <div class="menu-icon">
                                 <i class="fas fa-bell"></i>
@@ -147,19 +136,7 @@ class ProfilePage {
                     </div>
                 </div>
 
-                <!-- 目标储蓄 -->
-                <div class="card">
-                    <h3><i class="fas fa-piggy-bank"></i> 目标储蓄</h3>
-                    <div class="savings-summary" id="savings-summary" style="margin-bottom: 15px; padding: 10px; background: #e6fffa; border-radius: 8px;">
-                        <!-- 储蓄建议将通过 JavaScript 动态生成 -->
-                    </div>
-                    <div class="savings-goals" id="savings-goals-list">
-                        <!-- 储蓄目标列表将通过 JavaScript 动态生成 -->
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="profilePage.showAddSavingsGoal()">
-                        <i class="fas fa-plus"></i> 添加储蓄目标
-                    </button>
-                </div>
+
 
                 <!-- 数据管理 -->
                 <div class="card">
@@ -180,17 +157,7 @@ class ProfilePage {
                     </div>
                 </div>
 
-                <!-- 应用信息 -->
-                <div class="card">
-                    <h3><i class="fas fa-info-circle"></i> 应用信息</h3>
-                    <div style="color: #718096; font-size: 0.9rem; line-height: 1.5;">
-                        <p><strong>版本:</strong> 1.0.0</p>
-                        <p><strong>数据统计:</strong></p>
-                        <p>交易记录: <span id="transaction-count">${this.app.transactions.length}</span> 条</p>
-                        <p>最后更新: <span id="last-update">${new Date().toLocaleTimeString('zh-CN')}</span></p>
-                        <p>用户模式: <span id="user-mode">${this.app.userMode}</span></p>
-                    </div>
-                </div>
+
             </div>
         `;
     }
@@ -208,29 +175,14 @@ class ProfilePage {
             });
         });
 
-        // 初始化储蓄目标列表
-        this.updateSavingsGoalsList();
-
         // 加载用户模式设置
         this.loadModeSettings();
 
-        // 更新用户模式显示
-        const userModeEl = document.getElementById('user-mode');
-        if (userModeEl) {
-            userModeEl.textContent = this.app.userMode || '未设置';
-        }
+
     }
 
     // 更新数据
     updateData() {
-        // 更新应用信息
-        const transactionCount = document.getElementById('transaction-count');
-        const lastUpdate = document.getElementById('last-update');
-        const userMode = document.getElementById('user-mode');
-        if (transactionCount) transactionCount.textContent = this.app.transactions.length;
-        if (lastUpdate) lastUpdate.textContent = new Date().toLocaleTimeString('zh-CN');
-        if (userMode) userMode.textContent = this.app.userMode;
-
         // 同步登录用户信息到头像区
         try {
             const user = JSON.parse(localStorage.getItem('auth_user') || 'null');
@@ -240,9 +192,6 @@ class ProfilePage {
             if (contactEl) contactEl.textContent = user?.phone || (user?.provider ? `第三方：${user.provider}` : '--');
         } catch (e) {}
 
-        // 更新储蓄目标列表
-        this.updateSavingsGoalsList();
-
         // 更新用户模式按钮状态
         document.querySelectorAll('.mode-btn').forEach(btn => {
             const mode = btn.querySelector('div')?.textContent.trim() || btn.textContent.trim();
@@ -251,9 +200,6 @@ class ProfilePage {
 
         // 加载并显示当前模式的设置
         this.loadModeSettings();
-
-        // 计算并显示每日/每月储蓄建议
-        this.updateSavingsSuggestions();
     }
 
     // 获取当前用户模式
@@ -378,11 +324,44 @@ class ProfilePage {
 
     // 导出数据
     exportData() {
+        this.showModal('导出数据', `
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">数据导出</h4>
+                    <p style="color: #718096; font-size: 0.9rem;">将您的记账数据导出为JSON文件，方便备份和迁移。</p>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="profilePage.confirmExportData()">确认导出</button>
+                    <button class="btn btn-secondary" onclick="profilePage.hideModal()">取消</button>
+                </div>
+            </div>
+        `);
+    }
+
+    // 确认导出数据
+    confirmExportData() {
         this.app.exportData();
+        this.hideModal();
     }
 
     // 导入数据
     importData() {
+        this.showModal('导入数据', `
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">数据导入</h4>
+                    <p style="color: #718096; font-size: 0.9rem;">从JSON文件导入记账数据，恢复您的备份。</p>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="profilePage.selectImportFile()">选择文件</button>
+                    <button class="btn btn-secondary" onclick="profilePage.hideModal()">取消</button>
+                </div>
+            </div>
+        `);
+    }
+
+    // 选择导入文件
+    selectImportFile() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
@@ -399,6 +378,7 @@ class ProfilePage {
                         this.app.saveData();
                         this.updateData();
                         this.app.showToast('数据导入成功！');
+                        this.hideModal();
                     } catch (error) {
                         this.app.showToast('导入失败：文件格式错误');
                     }
@@ -411,10 +391,25 @@ class ProfilePage {
 
     // 清除数据
     clearData() {
-        if (confirm('确定要清除所有数据吗？此操作不可撤销！')) {
-            this.app.clearData();
-            this.updateData();
-        }
+        this.showModal('清除数据', `
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">清除确认</h4>
+                    <p style="color: #718096; font-size: 0.9rem;">确定要清除所有数据吗？此操作不可撤销！</p>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-warning" onclick="profilePage.confirmClearData()">确认清除</button>
+                    <button class="btn btn-secondary" onclick="profilePage.hideModal()">取消</button>
+                </div>
+            </div>
+        `);
+    }
+
+    // 确认清除数据
+    confirmClearData() {
+        this.app.clearData();
+        this.updateData();
+        this.hideModal();
     }
 
     // 显示设置
@@ -685,204 +680,7 @@ class ProfilePage {
         membersContainer.appendChild(memberItem);
     }
 
-    // 显示添加储蓄目标对话框
-    showAddSavingsGoal() {
-        this.showModal('添加储蓄目标', `
-            <div style="padding: 20px;">
-                <div class="input-group">
-                    <label>目标名称</label>
-                    <input type="text" id="goal-name" placeholder="如：旅游基金、购房首付">
-                </div>
-                <div class="input-group">
-                    <label>目标金额</label>
-                    <input type="number" id="goal-amount" placeholder="请输入金额">
-                </div>
-                <div class="input-group">
-                    <label>截止日期</label>
-                    <input type="date" id="goal-deadline">
-                </div>
-                <div class="input-group">
-                    <label>自动储蓄</label>
-                    <div style="display: flex; align-items: center;">
-                        <label class="switch" style="margin-right: 10px;">
-                            <input type="checkbox" id="auto-save">
-                            <span class="slider"></span>
-                        </label>
-                        <span>从收入中自动划转</span>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>储蓄比例</label>
-                    <input type="number" id="save-ratio" placeholder="收入储蓄比例" max="100" min="0">
-                </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="profilePage.saveSavingsGoal()">保存</button>
-                    <button class="btn btn-secondary" onclick="profilePage.hideModal()">取消</button>
-                </div>
-            </div>
-        `);
-    }
 
-    // 保存储蓄目标
-    saveSavingsGoal() {
-        const name = document.getElementById('goal-name').value;
-        const amount = document.getElementById('goal-amount').value;
-        const deadline = document.getElementById('goal-deadline').value;
-        const autoSave = document.getElementById('auto-save').checked;
-        const saveRatio = document.getElementById('save-ratio').value;
-
-        if (!name || !amount || !deadline) {
-            this.app.showToast('请填写完整信息');
-            return;
-        }
-
-        // 获取现有目标
-        let goals = JSON.parse(localStorage.getItem('savings_goals') || '[]');
-        
-        // 添加新目标
-        goals.push({
-            id: Date.now(),
-            name,
-            amount: parseFloat(amount),
-            deadline,
-            autoSave,
-            saveRatio: parseFloat(saveRatio),
-            currentAmount: 0,
-            createdAt: new Date().toISOString()
-        });
-
-        // 保存到本地存储
-        localStorage.setItem('savings_goals', JSON.stringify(goals));
-
-        this.app.showToast('储蓄目标已添加');
-        this.hideModal();
-        this.updateSavingsGoalsList();
-    }
-
-    // 更新储蓄目标列表
-    updateSavingsGoalsList() {
-        const container = document.getElementById('savings-goals-list');
-        if (!container) return;
-
-        const goals = JSON.parse(localStorage.getItem('savings_goals') || '[]');
-        
-        container.innerHTML = goals.map(goal => {
-            const progress = (goal.currentAmount / goal.amount) * 100;
-            const deadline = new Date(goal.deadline);
-            const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
-            
-            return `
-                <div class="savings-goal-item" style="margin-bottom: 15px; padding: 15px; background: #f7fafc; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4 style="margin: 0;">${goal.name}</h4>
-                        <button class="btn btn-danger" onclick="profilePage.deleteSavingsGoal(${goal.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <div class="progress" style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-                            <div class="progress-bar" style="width: ${progress}%; background: #4fd1c5; height: 100%;"></div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.9em; color: #718096;">
-                            <span>¥${goal.currentAmount} / ¥${goal.amount}</span>
-                            <span>${Math.round(progress)}%</span>
-                        </div>
-                    </div>
-                    <div style="font-size: 0.9em; color: #718096;">
-                        <div>截止日期: ${new Date(goal.deadline).toLocaleDateString()}</div>
-                        <div>剩余天数: ${daysLeft}天</div>
-                        ${goal.autoSave ? `<div>自动储蓄: ${goal.saveRatio}%</div>` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('') || '<div style="text-align: center; color: #718096;">暂无储蓄目标</div>';
-    }
-
-    // 删除储蓄目标
-    deleteSavingsGoal(goalId) {
-        if (!confirm('确定要删除这个储蓄目标吗？')) return;
-
-        let goals = JSON.parse(localStorage.getItem('savings_goals') || '[]');
-        goals = goals.filter(goal => goal.id !== goalId);
-        localStorage.setItem('savings_goals', JSON.stringify(goals));
-
-        this.app.showToast('储蓄目标已删除');
-        this.updateSavingsGoalsList();
-        this.updateSavingsSuggestions();
-    }
-
-    // 更新储蓄建议
-    updateSavingsSuggestions() {
-        const summaryContainer = document.getElementById('savings-summary');
-        if (!summaryContainer) return;
-
-        const goals = JSON.parse(localStorage.getItem('savings_goals') || '[]');
-        if (goals.length === 0) {
-            summaryContainer.innerHTML = `
-                <div style="text-align: center; color: #718096;">
-                    <i class="fas fa-lightbulb" style="color: #4fd1c5;"></i> 
-                    添加一个储蓄目标，开启你的理财计划
-                </div>
-            `;
-            return;
-        }
-
-        // 计算总目标金额和当前总储蓄
-        const totalGoal = goals.reduce((sum, goal) => sum + goal.amount, 0);
-        const totalSaved = goals.reduce((sum, goal) => sum + goal.currentAmount, 0);
-
-        // 计算所有目标的每月所需储蓄
-        let monthlyTotal = 0;
-        goals.forEach(goal => {
-            const deadline = new Date(goal.deadline);
-            const monthsLeft = Math.max(1, Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24 * 30)));
-            const remainingAmount = goal.amount - goal.currentAmount;
-            monthlyTotal += remainingAmount / monthsLeft;
-        });
-
-        // 获取月收入（从用户模式设置中）
-        let monthlyIncome = 0;
-        switch(this.app.userMode) {
-            case '学生模式':
-                const studentSettings = JSON.parse(localStorage.getItem('student_mode_settings') || '{}');
-                monthlyIncome = parseFloat(studentSettings.monthlyAllowance || 0) + parseFloat(studentSettings.partTimeGoal || 0);
-                break;
-            case '家庭模式':
-                const familySettings = JSON.parse(localStorage.getItem('family_mode_settings') || '{}');
-                monthlyIncome = parseFloat(familySettings.familyBudget || 0);
-                break;
-
-        }
-
-        // 计算建议的储蓄比例
-        const suggestedSavingRatio = monthlyIncome > 0 ? (monthlyTotal / monthlyIncome * 100).toFixed(1) : 0;
-
-        summaryContainer.innerHTML = `
-            <div style="margin-bottom: 10px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>总目标金额</span>
-                    <span>¥${totalGoal.toFixed(2)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>已储蓄金额</span>
-                    <span>¥${totalSaved.toFixed(2)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>建议月储蓄</span>
-                    <span>¥${monthlyTotal.toFixed(2)}</span>
-                </div>
-                ${monthlyIncome > 0 ? `
-                <div style="display: flex; justify-content: space-between;">
-                    <span>建议储蓄比例</span>
-                    <span>${suggestedSavingRatio}%</span>
-                </div>` : ''}
-            </div>
-            <div style="font-size: 0.9em; color: #718096; text-align: center;">
-                <i class="fas fa-info-circle"></i> 
-                建议每日储蓄 ¥${(monthlyTotal / 30).toFixed(2)}
-            </div>
-        `;
-    }
 
     // 保存隐私设置（示例方法）
     savePrivacySettings() {
@@ -908,51 +706,72 @@ class ProfilePage {
         this.hideModal();
     }
 
-    // 显示模态框
+    // 显示模态框（手机模式）
     showModal(title, content) {
+        // 如果已有弹窗，先关闭
+        if (this.currentModal) {
+            this.hideModal();
+        }
+        
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-        `;
-
+        modal.className = 'mobile-modal-overlay';
+        
         modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="mobile-modal-container">
+                <div class="mobile-modal-header">
                     <h3>${title}</h3>
-                    <button class="modal-close" onclick="profilePage.hideModal()">×</button>
+                    <button class="mobile-modal-close" onclick="profilePage.hideModal()">×</button>
                 </div>
-                <div class="modal-body">
+                <div class="mobile-modal-body">
                     ${content}
                 </div>
             </div>
         `;
 
+        // 点击遮罩层关闭
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 this.hideModal();
             }
         });
 
-        document.body.appendChild(modal);
+        // 将弹窗添加到手机模拟器的app-container中
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer) {
+            appContainer.appendChild(modal);
+        } else {
+            // 如果找不到app-container，则添加到phone-frame中
+            const phoneFrame = document.querySelector('.phone-frame');
+            if (phoneFrame) {
+                phoneFrame.appendChild(modal);
+            } else {
+                // 如果都找不到，则添加到body中作为降级处理
+                document.body.appendChild(modal);
+            }
+        }
+        
         this.currentModal = modal;
+        
+        // 阻止页面滚动
+        document.body.style.overflow = 'hidden';
     }
 
-    // 隐藏模态框
+    // 隐藏模态框（手机模式）
     hideModal() {
         if (this.currentModal) {
-            document.body.removeChild(this.currentModal);
-            this.currentModal = null;
+            // 添加关闭动画
+            this.currentModal.classList.add('closing');
+            
+            // 恢复页面滚动
+            document.body.style.overflow = '';
+            
+            // 延迟移除元素，让动画完成
+            setTimeout(() => {
+                if (this.currentModal && this.currentModal.parentNode) {
+                    this.currentModal.parentNode.removeChild(this.currentModal);
+                }
+                this.currentModal = null;
+            }, 300);
         }
     }
 
@@ -1014,11 +833,28 @@ class ProfilePage {
     
     // 退出登录
     logout() {
+        this.showModal('退出登录', `
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">确认退出</h4>
+                    <p style="color: #718096; font-size: 0.9rem;">确定要退出当前登录吗？您将需要重新登录。</p>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-warning" onclick="profilePage.confirmLogout()">确认退出</button>
+                    <button class="btn btn-secondary" onclick="profilePage.hideModal()">取消</button>
+                </div>
+            </div>
+        `);
+    }
+
+    // 确认退出登录
+    confirmLogout() {
         try {
             localStorage.removeItem('auth_user');
         } catch (e) {}
         this.app.showToast('已退出登录', 'success');
         if (window.router) window.router.switchToPage('login');
+        this.hideModal();
     }
 }
 
