@@ -265,25 +265,45 @@ function initPaymentSync(app) {
 
 // 连接微信支付
 function connectWechatPay() {
-    if (paymentSyncManager) {
-        paymentSyncManager.updatePaymentStatus('wechat', 'connected');
-    }
-    
-    const app = window.accountingApp;
-    if (app) {
-        app.showPaymentLoginPage('wechat');
+    // 使用 OAuth 弹窗流程（优先使用真实 AppID，否则进入 demo 流程）
+    try {
+        const redirectUri = window.location.origin + '/wechat-callback.html';
+        const state = 'wechat_oauth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('wechat_oauth_state', state);
+        sessionStorage.setItem('wechat_oauth_redirect', window.location.pathname || '/');
+
+        // 如果你已在服务端或前端配置了真实 APPID，可以替换下面的 APPID
+        const appId = (window.PAYMENT_CONFIG && window.PAYMENT_CONFIG.wechat && window.PAYMENT_CONFIG.wechat.appId) || 'APPID';
+        const authUrl = `https://open.weixin.qq.com/connect/qrconnect?appid=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=snsapi_login&state=${encodeURIComponent(state)}#wechat_redirect`;
+
+        window.open(authUrl, 'wechat_oauth', 'width=600,height=700');
+
+        if (paymentSyncManager) paymentSyncManager.updatePaymentStatus('wechat', 'connected');
+    } catch (e) {
+        console.error('connectWechatPay error:', e);
+        const app = window.accountingApp;
+        if (app) app.showPaymentLoginPage('wechat');
     }
 }
 
 // 连接支付宝
 function connectAlipay() {
-    if (paymentSyncManager) {
-        paymentSyncManager.updatePaymentStatus('alipay', 'connected');
-    }
-    
-    const app = window.accountingApp;
-    if (app) {
-        app.showPaymentLoginPage('alipay');
+    try {
+        const redirectUri = window.location.origin + '/alipay-callback.html';
+        const state = 'alipay_oauth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('alipay_oauth_state', state);
+        sessionStorage.setItem('alipay_oauth_redirect', window.location.pathname || '/');
+
+        const appId = (window.PAYMENT_CONFIG && window.PAYMENT_CONFIG.alipay && window.PAYMENT_CONFIG.alipay.appId) || 'APPID';
+        const authUrl = `https://openauth.alipay.com/oauth2/publicAppAuthorize.htm?app_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=auth_user&state=${encodeURIComponent(state)}`;
+
+        window.open(authUrl, 'alipay_oauth', 'width=600,height=700');
+
+        if (paymentSyncManager) paymentSyncManager.updatePaymentStatus('alipay', 'connected');
+    } catch (e) {
+        console.error('connectAlipay error:', e);
+        const app = window.accountingApp;
+        if (app) app.showPaymentLoginPage('alipay');
     }
 }
 

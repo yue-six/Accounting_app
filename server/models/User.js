@@ -128,9 +128,15 @@ const userSchema = new mongoose.Schema({
       default: 'active'
     },
     createdAt: { type: Date, default: Date.now },
+<<<<<<< Updated upstream
     completedAt: Date
   },
 
+=======
+      completedAt: Date
+    }
+    ],
+>>>>>>> Stashed changes
   statistics: {
     totalIncome: { type: Number, default: 0 },
     totalExpense: { type: Number, default: 0 },

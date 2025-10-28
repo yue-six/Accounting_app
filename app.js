@@ -425,10 +425,14 @@ class AccountingApp {
         this.setupEventListeners();
         this.updateUI();
         this.setupMockData();
+<<<<<<< Updated upstream
         
         // 初始化用户状态
         this.updateUserInfo();
         this.checkLoginStatus();
+=======
+        this.initPaymentLoginManager();
+>>>>>>> Stashed changes
     }
 
     // 加载本地数据
@@ -1190,14 +1194,33 @@ class AccountingApp {
         }, 2000);
     }
 
+<<<<<<< Updated upstream
     // 显示微信登录弹窗
     showWechatLogin() {
         // 直接启动微信OAuth登录，不显示弹窗
         this.startWechatOAuthLogin();
+=======
+    // 支付登录管理器实例
+    paymentLoginManager: null,
+
+    // 初始化支付登录管理器
+    initPaymentLoginManager() {
+        try {
+            if (typeof window.PaymentLoginManager !== 'undefined') {
+                this.paymentLoginManager = new window.PaymentLoginManager(this);
+                console.log('支付登录管理器初始化成功');
+            } else {
+                console.warn('支付登录管理器未找到，支付连接功能将不可用');
+            }
+        } catch (error) {
+            console.error('初始化支付登录管理器失败:', error);
+        }
+>>>>>>> Stashed changes
     }
 
     // 启动微信OAuth登录
     async startWechatOAuthLogin() {
+<<<<<<< Updated upstream
         this.showToast('正在启动微信登录...');
         
         try {
@@ -1511,6 +1534,23 @@ class AccountingApp {
     isUserLoggedIn() {
         return this.isLoggedIn;
     }
+=======
+        if (this.paymentLoginManager) {
+            this.paymentLoginManager.startWechatLogin();
+        } else {
+            this.showToast('支付登录管理器未初始化，请刷新页面重试');
+        }
+    }
+
+    // 启动支付宝OAuth登录
+    async startAlipayOAuthLogin() {
+        if (this.paymentLoginManager) {
+            this.paymentLoginManager.startAlipayLogin();
+        } else {
+            this.showToast('支付登录管理器未初始化，请刷新页面重试');
+        }
+    }
+>>>>>>> Stashed changes
 }
 
 // 初始化应用

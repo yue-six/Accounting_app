@@ -447,6 +447,107 @@ class HomePage {
             }, 50);
         }
     }
+<<<<<<< Updated upstream
+=======
+
+    // 更新支付连接状态
+    updatePaymentStatus() {
+        // 检查用户登录状态
+        const userData = localStorage.getItem('auth_user');
+        const isLoggedIn = !!userData;
+        
+        if (isLoggedIn) {
+            try {
+                const user = JSON.parse(userData);
+                const provider = user.provider;
+                
+                // 根据登录的支付平台更新状态
+                if (provider === 'wechat') {
+                    this.setPaymentStatus('wechat', 'connected');
+                    this.setPaymentStatus('alipay', 'disconnected');
+                } else if (provider === 'alipay') {
+                    this.setPaymentStatus('wechat', 'disconnected');
+                    this.setPaymentStatus('alipay', 'connected');
+                } else {
+                    // 其他登录方式，都显示为未连接
+                    this.setPaymentStatus('wechat', 'disconnected');
+                    this.setPaymentStatus('alipay', 'disconnected');
+                }
+            } catch (error) {
+                console.error('解析用户数据失败:', error);
+                this.setPaymentStatus('wechat', 'disconnected');
+                this.setPaymentStatus('alipay', 'disconnected');
+            }
+        } else {
+            // 未登录状态
+            this.setPaymentStatus('wechat', 'disconnected');
+            this.setPaymentStatus('alipay', 'disconnected');
+        }
+    }
+
+    // 设置单个支付平台状态
+    setPaymentStatus(paymentType, status) {
+        const statusDot = document.getElementById(`${paymentType}-status-dot`);
+        const statusText = document.getElementById(`${paymentType}-status-text`);
+        
+        if (statusDot && statusText) {
+            if (status === 'connected') {
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = '已连接';
+                statusDot.style.animation = 'pulse 2s infinite';
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = '未连接';
+                statusDot.style.animation = 'none';
+            }
+        }
+    }
+    
+    // 更新模式特定内容
+    updateModeSpecificContent() {
+        const userMode = this.getCurrentUserMode();
+        const modeContent = document.querySelector('.mode-specific-content');
+        
+        if (modeContent) {
+            // 根据用户模式更新特定内容
+            switch(userMode) {
+                case 'student':
+                    this.updateStudentModeContent();
+                    break;
+                case 'family':
+                    this.updateFamilyModeContent();
+                    break;
+                case 'freelancer':
+                    this.updateFreelancerModeContent();
+                    break;
+            }
+        }
+    }
+    
+    // 更新学生模式特定内容
+    updateStudentModeContent() {
+        const studyBudget = document.getElementById('study-budget');
+        const scholarshipSavings = document.getElementById('scholarship-savings');
+        
+        if (studyBudget) {
+            // 这里可以添加学生模式特定的预算计算逻辑
+            studyBudget.textContent = '¥0';
+        }
+        
+        if (scholarshipSavings) {
+            // 这里可以添加奖学金储蓄计算逻辑
+            scholarshipSavings.textContent = '¥0';
+        }
+    }
+    
+    // 更新家庭模式特定内容
+    updateFamilyModeContent() {
+        // 家庭模式特定内容更新逻辑
+        console.log('更新家庭模式内容');
+    }
+    
+
+>>>>>>> Stashed changes
 
     // 初始化输入管理器
     initInputManager() {
@@ -872,7 +973,13 @@ class HomePage {
             ">
                 <div style="font-size: 4rem; margin-bottom: 20px; animation: pulse 1.5s infinite;">🎤</div>
                 <div style="font-size: 1.2rem; margin-bottom: 10px;">正在聆听...</div>
+<<<<<<< Updated upstream
                 <div style="color: #e0f2fe; font-size: 0.9rem;">请说出您的记账内容</div>
+=======
+                <div style="color: #e0f2fe; font-size: 0.9rem;">
+                    请说出您的记账内容
+                </div>
+>>>>>>> Stashed changes
                 <div style="margin-top: 20px; color: #b3e0ff; font-size: 0.8rem;">
                     例如："早餐花了15元" 或 "收到工资8000元"
                 </div>
@@ -977,6 +1084,11 @@ class HomePage {
         `);
     }
 
+    // 检查摄像头支持
+    checkCameraSupport() {
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    }
+
     // 模拟拍照输入
     simulatePhotoInput() {
         const examples = [
@@ -1036,11 +1148,14 @@ class HomePage {
         this.app.showToast(`已添加支出记录：${example.description} ¥${Math.abs(example.amount)}`, 'success');
     }
 
+<<<<<<< Updated upstream
     // 检查摄像头支持
     checkCameraSupport() {
         return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     }
 
+=======
+>>>>>>> Stashed changes
     // 开始真实拍照输入
     startRealPhotoInput() {
         if (!this.checkCameraSupport()) {
@@ -1669,6 +1784,98 @@ class HomePage {
         });
         element.classList.add('active');
         this.app.showToast(`${platform === 'wechat' ? '微信支付' : '支付宝'}同步已启用`);
+    }
+
+    // 连接微信支付
+    connectWechatPay() {
+        // 委托给应用实例启动微信OAuth登录（应用层包含更健壮的实现）
+        try {
+            if (this.app && typeof this.app.startWechatOAuthLogin === 'function') {
+                const p = this.app.startWechatOAuthLogin();
+                if (p && typeof p.then === 'function') p.catch(err => {
+                    console.error('startWechatOAuthLogin rejected:', err);
+                    this.app.showToast && this.app.showToast('启动微信登录失败，请重试');
+                });
+            } else if (window.accountingApp && typeof window.accountingApp.startWechatOAuthLogin === 'function') {
+                const p = window.accountingApp.startWechatOAuthLogin();
+                if (p && typeof p.then === 'function') p.catch(err => {
+                    console.error('window.accountingApp.startWechatOAuthLogin rejected:', err);
+                    this.app.showToast && this.app.showToast('启动微信登录失败，请重试');
+                });
+            } else {
+                console.error('无法找到启动微信登录的方法');
+                this.app.showToast && this.app.showToast('启动微信登录失败，请重试');
+            }
+        } catch (e) {
+            console.error('connectWechatPay error:', e);
+            this.app.showToast && this.app.showToast('启动微信登录失败，请重试');
+        }
+    }
+
+    // 连接支付宝
+    connectAlipay() {
+        // 委托给应用实例启动支付宝OAuth登录（应用层包含更健壮的实现）
+        try {
+            if (this.app && typeof this.app.startAlipayOAuthLogin === 'function') {
+                const p = this.app.startAlipayOAuthLogin();
+                if (p && typeof p.then === 'function') p.catch(err => {
+                    console.error('startAlipayOAuthLogin rejected:', err);
+                    this.app.showToast && this.app.showToast('启动支付宝登录失败，请重试');
+                });
+            } else if (window.accountingApp && typeof window.accountingApp.startAlipayOAuthLogin === 'function') {
+                const p = window.accountingApp.startAlipayOAuthLogin();
+                if (p && typeof p.then === 'function') p.catch(err => {
+                    console.error('window.accountingApp.startAlipayOAuthLogin rejected:', err);
+                    this.app.showToast && this.app.showToast('启动支付宝登录失败，请重试');
+                });
+            } else {
+                console.error('无法找到启动支付宝登录的方法');
+                this.app.showToast && this.app.showToast('启动支付宝登录失败，请重试');
+            }
+        } catch (e) {
+            console.error('connectAlipay error:', e);
+            this.app.showToast && this.app.showToast('启动支付宝登录失败，请重试');
+        }
+    }
+
+    // 启动微信OAuth登录
+    async startWechatOAuthLogin() {
+        try {
+            // 生成授权URL
+            const redirectUri = window.location.origin + '/wechat-callback.html';
+            const state = 'wechat_login_' + Date.now();
+            const authUrl = this.app.wechatOAuth.generateAuthUrl(redirectUri, state);
+            
+            // 保存state用于验证
+            sessionStorage.setItem('wechat_oauth_state', state);
+            
+            // 跳转到微信授权页面
+            window.location.href = authUrl;
+            
+        } catch (error) {
+            console.error('启动微信登录失败:', error);
+            this.app.showToast('启动微信登录失败，请重试');
+        }
+    }
+
+    // 启动支付宝OAuth登录
+    async startAlipayOAuthLogin() {
+        try {
+            // 生成授权URL
+            const redirectUri = window.location.origin + '/alipay-callback.html';
+            const state = 'alipay_login_' + Date.now();
+            const authUrl = this.app.alipayOAuth.generateAuthUrl(redirectUri, state);
+            
+            // 保存state用于验证
+            sessionStorage.setItem('alipay_oauth_state', state);
+            
+            // 跳转到支付宝授权页面
+            window.location.href = authUrl;
+            
+        } catch (error) {
+            console.error('启动支付宝登录失败:', error);
+            this.app.showToast('启动支付宝登录失败，请重试');
+        }
     }
 
     // 编辑交易
