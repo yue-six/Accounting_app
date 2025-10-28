@@ -120,12 +120,13 @@ class HomePage {
             const category = this.app.categories.find(c => c.id === transaction.category);
             const isToday = new Date(transaction.date).toDateString() === new Date().toDateString();
             const displayDate = isToday ? transaction.time : new Date(transaction.date).toLocaleDateString('zh-CN');
+            const categoryName = category ? category.name : '未分类';
             
             return `
                 <div class="transaction-item" data-index="${index}">
                     <div class="transaction-info">
                         <div class="transaction-title">${transaction.description}</div>
-                        <div class="transaction-detail">${transaction.merchant} · ${category.name} · ${displayDate}</div>
+                        <div class="transaction-detail">${transaction.merchant} · ${categoryName} · ${displayDate}</div>
                     </div>
                     <div class="transaction-amount ${transaction.type}">
                         ${transaction.type === 'income' ? '+' : '-'}¥${transaction.amount}
@@ -161,10 +162,7 @@ class HomePage {
                 'monthlyOverview': '家庭收支',
                 'modeSpecificTitle': '家庭财务管理'
             },
-            'freelancer': {
-                'monthlyOverview': '业务收支',
-                'modeSpecificTitle': '自由职业财务管理'
-            }
+
         };
         
         return titles[userMode] && titles[userMode][key] ? titles[userMode][key] : titles['student'][key];
@@ -225,7 +223,7 @@ class HomePage {
                 `;
             case 'freelancer':
                 return `
-                    <div class="card mode-specific-content freelancer-mode">
+                    <div class="card mode-specific-content">
                         <h3><i class="fas fa-briefcase"></i> 自由职业财务管理</h3>
                         <div class="mode-content">
                             <div class="mode-stats">
@@ -296,9 +294,7 @@ class HomePage {
             case 'family':
                 // 家庭模式特定事件
                 break;
-            case 'freelancer':
-                // 自由职业者模式特定事件
-                break;
+
         }
     }
     
@@ -314,9 +310,7 @@ class HomePage {
             case 'family':
                 this.loadFamilyModeData();
                 break;
-            case 'freelancer':
-                this.loadFreelancerModeData();
-                break;
+
         }
     }
     
@@ -588,7 +582,55 @@ class HomePage {
                 this.bindTransactionEvents();
             }, 50);
         }
+        
+        // 更新模式特定内容
+        this.updateModeSpecificContent();
     }
+    
+    // 更新模式特定内容
+    updateModeSpecificContent() {
+        const userMode = this.getCurrentUserMode();
+        const modeContent = document.querySelector('.mode-specific-content');
+        
+        if (modeContent) {
+            // 根据用户模式更新特定内容
+            switch(userMode) {
+                case 'student':
+                    this.updateStudentModeContent();
+                    break;
+                case 'family':
+                    this.updateFamilyModeContent();
+                    break;
+                case 'freelancer':
+                    this.updateFreelancerModeContent();
+                    break;
+            }
+        }
+    }
+    
+    // 更新学生模式特定内容
+    updateStudentModeContent() {
+        const studyBudget = document.getElementById('study-budget');
+        const scholarshipSavings = document.getElementById('scholarship-savings');
+        
+        if (studyBudget) {
+            // 这里可以添加学生模式特定的预算计算逻辑
+            studyBudget.textContent = '¥0';
+        }
+        
+        if (scholarshipSavings) {
+            // 这里可以添加奖学金储蓄计算逻辑
+            scholarshipSavings.textContent = '¥0';
+        }
+    }
+    
+    // 更新家庭模式特定内容
+    updateFamilyModeContent() {
+        // 家庭模式特定内容更新逻辑
+        console.log('更新家庭模式内容');
+    }
+    
+
 
     // 初始化输入管理器
     initInputManager() {

@@ -16,7 +16,7 @@ const envConfig = {
     // 功能开关
     features: {
         voiceRecognition: true,
-        qrScanner: false, // 已移除扫码功能
+        qrScanner: true, // 启用扫码功能
         photoRecognition: true,
         supabaseIntegration: true
     }

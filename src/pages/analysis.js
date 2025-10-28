@@ -64,8 +64,8 @@ class AnalysisPage {
             return `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 1.2rem;">${category.icon}</span>
-                        <span style="font-weight: 500;">${category.name}</span>
+                        <span style="font-size: 1.2rem;">${category ? category.icon : '📦'}</span>
+                        <span style="font-weight: 500;">${category ? category.name : '未分类'}</span>
                     </div>
                     <div style="text-align: right;">
                         <div style="font-weight: 600; color: #f56565;">¥${amount}</div>
@@ -331,6 +331,49 @@ class AnalysisPage {
     // 导出报表
     exportReport() {
         this.app.showToast('报表导出功能开发中...');
+    }
+    
+    // 检查预算提醒
+    checkBudgetAlert() {
+        if (!this.app.budgets.monthly) return;
+        
+        const monthlyStats = this.app.getMonthlyStats();
+        const expenseRatio = monthlyStats.expense / this.app.budgets.monthly;
+        
+        // 避免重复提醒
+        let currentAlertLevel = null;
+        if (expenseRatio >= 1.0) {
+            currentAlertLevel = 'over';
+        } else if (expenseRatio >= 0.8) {
+            currentAlertLevel = 'warn';
+        }
+        
+        if (currentAlertLevel !== this.lastBudgetAlertLevel) {
+            this.lastBudgetAlertLevel = currentAlertLevel;
+            
+            if (currentAlertLevel === 'over') {
+                this.app.showToast('本月预算已超支！请控制支出', 'error');
+            } else if (currentAlertLevel === 'warn') {
+                this.app.showToast('本月预算即将用完，请注意控制支出', 'warning');
+            }
+        }
+    }
+    
+    // 获取预算进度百分比
+    getBudgetProgress() {
+        if (!this.app.budgets.monthly) return 0;
+        
+        const monthlyStats = this.app.getMonthlyStats();
+        const progress = (monthlyStats.expense / this.app.budgets.monthly) * 100;
+        return Math.min(progress, 100); // 不超过100%
+    }
+    
+    // 获取预算状态颜色
+    getBudgetStatusColor() {
+        const progress = this.getBudgetProgress();
+        if (progress >= 100) return '#e53e3e'; // 红色 - 超支
+        if (progress >= 80) return '#d69e2e'; // 黄色 - 警告
+        return '#38a169'; // 绿色 - 正常
     }
 }
 

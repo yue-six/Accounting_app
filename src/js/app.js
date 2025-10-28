@@ -338,6 +338,10 @@ class AccountingApp {
                     // 后端删除成功，更新本地数据
                     this.transactions.splice(index, 1);
                     await this.saveData();
+                    
+                    // 同步删除学生模式中的兼职收入记录
+                    this.syncDeletePartTimeJob(transaction);
+                    
                     return true;
                 } else {
                     throw new Error(result.message || '删除失败');
@@ -347,6 +351,10 @@ class AccountingApp {
                 console.warn('后端API不可用，执行本地删除:', networkError);
                 this.transactions.splice(index, 1);
                 await this.saveData();
+                
+                // 同步删除学生模式中的兼职收入记录
+                this.syncDeletePartTimeJob(transaction);
+                
                 return true;
             }
         } catch (error) {
@@ -355,13 +363,61 @@ class AccountingApp {
             // 根据错误类型显示不同的错误信息
             if (error.message === '未登录或登录已过期') {
                 this.showToast('请先登录', 'error');
-                this.router.navigate('/login');
+                // 使用正确的路由切换方法
+                if (window.router && typeof window.router.switchToPage === 'function') {
+                    window.router.switchToPage('login');
+                }
             } else {
                 this.showToast(error.message || '删除失败，请重试', 'error');
             }
             
             return false;
         }
+    }
+
+    // 同步删除学生模式中的兼职收入记录
+    syncDeletePartTimeJob(transaction) {
+        // 只处理兼职收入类型的交易记录
+        if (transaction.type === 'income' && transaction.category === '兼职收入') {
+            try {
+                // 获取学生模式的兼职收入记录
+                const partTimeJobs = JSON.parse(localStorage.getItem('student_part_time_jobs') || '[]');
+                
+                // 根据交易描述匹配兼职记录
+                const jobIndex = partTimeJobs.findIndex(job => {
+                    // 匹配逻辑：检查描述是否包含交易描述的关键信息
+                    const jobDescription = `${job.source} - ${job.description}`;
+                    return jobDescription.includes(transaction.description) ||
+                           transaction.description.includes(job.source) ||
+                           (job.amount === transaction.amount && 
+                            new Date(job.date).toDateString() === new Date(transaction.date).toDateString());
+                });
+                
+                if (jobIndex !== -1) {
+                    // 删除匹配的兼职记录
+                    partTimeJobs.splice(jobIndex, 1);
+                    localStorage.setItem('student_part_time_jobs', JSON.stringify(partTimeJobs));
+                    
+                    console.log('已同步删除对应的兼职收入记录');
+                    
+                    // 通知学生模式页面更新显示
+                    this.notifyStudentModeUpdate();
+                }
+            } catch (error) {
+                console.error('同步删除兼职收入记录失败:', error);
+            }
+        }
+    }
+
+    // 通知学生模式页面更新显示
+    notifyStudentModeUpdate() {
+        // 如果学生模式页面当前处于活动状态，刷新其显示
+        if (window.studentModePage && typeof window.studentModePage.refreshDisplay === 'function') {
+            window.studentModePage.refreshDisplay();
+        }
+        
+        // 触发自定义事件，通知其他组件更新
+        window.dispatchEvent(new CustomEvent('studentModeDataUpdated'));
     }
 
     // 获取今日统计

@@ -60,12 +60,14 @@ class StudentModePage {
                             </div>
                         </div>
                     </div>
+                    <div class="part-time-list" id="part-time-list">
+                        ${this.renderPartTimeJobs()}
+                    </div>
                     <div class="part-time-actions" style="margin-top: 15px;">
                         <button class="btn btn-primary" onclick="studentModePage.showAddPartTimeJob()">
                             <i class="fas fa-plus"></i> 添加兼职收入
                         </button>
                     </div>
-                </div>
                 </div>
 
                 <!-- 考证/学费储蓄计划 -->
@@ -362,7 +364,50 @@ class StudentModePage {
         studentModePage = this;
         this.loadStudentData();
         this.setupAnimationEvents();
+        this.setupDataSyncEvents();
         setTimeout(() => this.animatePage(), 100);
+    }
+
+    // 设置数据同步事件
+    setupDataSyncEvents() {
+        // 监听学生模式数据更新事件
+        window.addEventListener('studentModeDataUpdated', () => {
+            this.refreshDisplay();
+        });
+        
+        // 监听存储变化事件（用于跨标签页同步）
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'student_part_time_jobs') {
+                this.refreshDisplay();
+            }
+        });
+    }
+
+    // 刷新显示
+    refreshDisplay() {
+        // 重新加载数据
+        this.loadStudentData();
+        
+        // 刷新兼职收入管理板块
+        const partTimeSection = document.querySelector('.student-mode-page .part-time-summary');
+        if (partTimeSection) {
+            partTimeSection.innerHTML = `
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">¥${this.getMonthlyPartTimeIncome()}</div>
+                        <div class="stat-label">本月兼职收入</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 刷新兼职记录列表
+        const partTimeList = document.getElementById('part-time-list');
+        if (partTimeList) {
+            partTimeList.innerHTML = this.renderPartTimeJobs();
+        }
+        
+        console.log('学生模式页面数据已刷新');
     }
 
     // 页面动画效果
@@ -458,30 +503,40 @@ class StudentModePage {
 
     // 自定义预算比例
     customizeBudgetRatios() {
-        this.showModal('自定义预算比例', `
-            <div style="padding: 20px;">
+        this.showMobileModal('自定义预算比例', `
+            <div style="padding: 0;">
                 <div class="ratio-inputs">
                     ${Object.entries(this.budgetRatios).map(([key, ratio]) => `
-                        <div class="input-group">
-                            <label>${this.getCategoryName(key)}</label>
-                            <input type="number" id="ratio-${key}" value="${ratio}" min="0" max="100">
-                            <span>%</span>
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">${this.getCategoryName(key)}</label>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="number" id="ratio-${key}" value="${ratio}" min="0" max="100" 
+                                       style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                                <span style="color: #666;">%</span>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
-                <div class="total-check" id="total-check"></div>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="studentModePage.saveCustomRatios()">保存</button>
-                    <button class="btn btn-secondary" onclick="studentModePage.hideModal()">取消</button>
+                <div class="total-check" id="total-check" style="margin: 20px 0; padding: 10px; border-radius: 8px; text-align: center; font-weight: 500;"></div>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="studentModePage.saveCustomRatios()" 
+                            style="flex: 1; padding: 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500;">保存</button>
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" 
+                            style="flex: 1; padding: 12px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-size: 16px;">取消</button>
                 </div>
             </div>
         `);
 
         // 实时计算总比例
-        Object.keys(this.budgetRatios).forEach(key => {
-            document.getElementById(`ratio-${key}`).addEventListener('input', this.updateTotalRatio.bind(this));
-        });
-        this.updateTotalRatio();
+        setTimeout(() => {
+            Object.keys(this.budgetRatios).forEach(key => {
+                const input = document.getElementById(`ratio-${key}`);
+                if (input) {
+                    input.addEventListener('input', this.updateTotalRatio.bind(this));
+                }
+            });
+            this.updateTotalRatio();
+        }, 100);
     }
 
     // 更新总比例显示
@@ -517,17 +572,17 @@ class StudentModePage {
         localStorage.setItem('student_budget_ratios', JSON.stringify(this.budgetRatios));
         
         document.getElementById('budget-allocation').innerHTML = this.renderBudgetAllocation();
-        this.hideModal();
+        this.hideMobileModal();
         this.app.showToast('预算比例已保存');
     }
 
     // 显示添加兼职工作对话框
     showAddPartTimeJob() {
-        this.showModal('添加兼职记录', `
-            <div style="padding: 20px;">
-                <div class="input-group">
-                    <label>收入来源</label>
-                    <select id="job-source">
+        this.showMobileModal('添加兼职记录', `
+            <div style="padding: 0;">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">收入来源</label>
+                    <select id="job-source" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; background: white;">
                         <option value="家教">家教</option>
                         <option value="实习">实习</option>
                         <option value="线上兼职">线上兼职</option>
@@ -536,32 +591,74 @@ class StudentModePage {
                         <option value="其他">其他</option>
                     </select>
                 </div>
-                <div class="input-group">
-                    <label>工作描述</label>
-                    <input type="text" id="job-description" placeholder="如：小学数学家教、设计兼职等">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">工作描述</label>
+                    <input type="text" id="job-description" placeholder="如：小学数学家教、设计兼职等" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>税后金额</label>
-                    <input type="number" id="job-amount" placeholder="请输入金额">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">税后金额</label>
+                    <input type="number" id="job-amount" placeholder="请输入金额" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>到账时间</label>
-                    <input type="date" id="job-date" value="${new Date().toISOString().split('T')[0]}">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">到账时间</label>
+                    <input type="date" id="job-date" value="${new Date().toISOString().split('T')[0]}" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>状态</label>
-                    <select id="job-status">
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">状态</label>
+                    <select id="job-status" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; background: white;">
                         <option value="completed">已到账</option>
                         <option value="pending">待到账</option>
                         <option value="processing">处理中</option>
                     </select>
                 </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="studentModePage.savePartTimeJob()">保存</button>
-                    <button class="btn btn-secondary" onclick="studentModePage.hideModal()">取消</button>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="studentModePage.savePartTimeJob()" 
+                            style="flex: 1; padding: 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500;">保存</button>
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" 
+                            style="flex: 1; padding: 12px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-size: 16px;">取消</button>
                 </div>
             </div>
         `);
+    }
+
+    // 保存预算分配
+    saveBudgetAllocation() {
+        if (!this.settings.monthlyAllowance) {
+            this.app.showToast('请先设置每月生活费金额');
+            return;
+        }
+
+        // 保存当前的预算分配设置
+        const budgetAllocation = {
+            monthlyAllowance: this.settings.monthlyAllowance,
+            budgetRatios: this.budgetRatios,
+            lastUpdated: new Date().toISOString(),
+            allocations: {}
+        };
+
+        // 计算每个分类的预算金额
+        Object.keys(this.budgetRatios).forEach(key => {
+            const ratio = this.budgetRatios[key];
+            const amount = (parseFloat(this.settings.monthlyAllowance) * ratio / 100).toFixed(2);
+            budgetAllocation.allocations[key] = {
+                category: this.getCategoryName(key),
+                ratio: ratio,
+                budgetAmount: amount,
+                spentAmount: this.getSpentAmount(key),
+                remainingAmount: (amount - this.getSpentAmount(key)).toFixed(2)
+            };
+        });
+
+        this.budgetAllocations = budgetAllocation;
+        localStorage.setItem('student_budget_allocations', JSON.stringify(this.budgetAllocations));
+        
+        this.app.showToast('预算分配已保存');
+        
+        // 刷新预算分配显示
+        document.getElementById('budget-allocation').innerHTML = this.renderBudgetAllocation();
     }
 
     // 保存兼职工作
@@ -601,8 +698,13 @@ class StudentModePage {
             });
         }
 
+        // 更新兼职记录列表
         document.getElementById('part-time-list').innerHTML = this.renderPartTimeJobs();
-        this.hideModal();
+        
+        // 刷新兼职收入统计显示
+        this.refreshPartTimeDisplay();
+        
+        this.hideMobileModal();
         this.app.showToast('兼职记录已添加');
     }
 
@@ -630,36 +732,57 @@ class StudentModePage {
 
     // 显示添加考证目标对话框
     showAddExamGoal() {
-        this.showModal('自定义储蓄目标', `
-            <div style="padding: 20px;">
-                <div class="input-group">
-                    <label>目标名称</label>
-                    <input type="text" id="goal-name" placeholder="如：托福考试、学费储蓄等">
+        this.showMobileModal('自定义储蓄目标', `
+            <div style="padding: 0;">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">目标名称</label>
+                    <input type="text" id="goal-name" placeholder="如：托福考试、学费储蓄等" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>目标金额</label>
-                    <input type="number" id="goal-amount" placeholder="请输入金额">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">目标金额</label>
+                    <input type="number" id="goal-amount" placeholder="请输入金额" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>截止日期</label>
-                    <input type="date" id="goal-deadline">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">截止日期</label>
+                    <input type="date" id="goal-deadline" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>自动储蓄</label>
-                    <div style="display: flex; align-items: center;">
-                        <label class="switch" style="margin-right: 10px;">
-                            <input type="checkbox" id="goal-auto-save">
-                            <span class="slider"></span>
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 500; color: #333;">自动储蓄</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="color: #666;">从生活费中自动划扣</span>
+                        <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                            <input type="checkbox" id="goal-auto-save" 
+                                   style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                            <span class="slider:before" style="position: absolute; content: ''; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
                         </label>
-                        <span>从生活费中自动划扣</span>
                     </div>
                 </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="studentModePage.saveExamGoal()">保存</button>
-                    <button class="btn btn-secondary" onclick="studentModePage.hideModal()">取消</button>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="studentModePage.saveExamGoal()" 
+                            style="flex: 1; padding: 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500;">保存</button>
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" 
+                            style="flex: 1; padding: 12px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-size: 16px;">取消</button>
                 </div>
             </div>
         `);
+        
+        // 添加开关样式
+        setTimeout(() => {
+            const checkbox = document.getElementById('goal-auto-save');
+            const slider = checkbox.nextElementSibling;
+            
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    slider.style.backgroundColor = '#007AFF';
+                } else {
+                    slider.style.backgroundColor = '#ccc';
+                }
+            });
+        }, 100);
     }
 
     // 保存考证目标
@@ -688,7 +811,7 @@ class StudentModePage {
         localStorage.setItem('student_exam_goals', JSON.stringify(this.examGoals));
         
         document.getElementById('exam-goals-list').innerHTML = this.renderExamGoals();
-        this.hideModal();
+        this.hideMobileModal();
         this.app.showToast('储蓄目标已添加');
     }
 
@@ -698,21 +821,24 @@ class StudentModePage {
         if (!goal) return;
 
         const remaining = goal.amount - goal.currentAmount;
-        this.showModal('存钱到目标', `
-            <div style="padding: 20px;">
-                <div class="goal-info">
-                    <h4>${goal.name}</h4>
-                    <p>目标金额: ¥${goal.amount}</p>
-                    <p>已存金额: ¥${goal.currentAmount}</p>
-                    <p>还需: ¥${remaining.toFixed(2)}</p>
+        this.showMobileModal('存钱到目标', `
+            <div style="padding: 0;">
+                <div class="goal-info" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${goal.name}</h4>
+                    <p style="margin: 5px 0; color: #666; font-size: 14px;">目标金额: ¥${goal.amount}</p>
+                    <p style="margin: 5px 0; color: #666; font-size: 14px;">已存金额: ¥${goal.currentAmount}</p>
+                    <p style="margin: 5px 0; color: #007AFF; font-size: 14px; font-weight: 500;">还需: ¥${remaining.toFixed(2)}</p>
                 </div>
-                <div class="input-group">
-                    <label>存入金额</label>
-                    <input type="number" id="add-amount" placeholder="请输入金额" max="${remaining}">
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">存入金额</label>
+                    <input type="number" id="add-amount" placeholder="请输入金额" max="${remaining}" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="studentModePage.confirmAddToGoal('${goalId}')">确认存入</button>
-                    <button class="btn btn-secondary" onclick="studentModePage.hideModal()">取消</button>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="studentModePage.confirmAddToGoal('${goalId}')" 
+                            style="flex: 1; padding: 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500;">确认存入</button>
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" 
+                            style="flex: 1; padding: 12px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-size: 16px;">取消</button>
                 </div>
             </div>
         `);
@@ -742,7 +868,7 @@ class StudentModePage {
         });
 
         document.getElementById('exam-goals-list').innerHTML = this.renderExamGoals();
-        this.hideModal();
+        this.hideMobileModal();
         
         if (goal.currentAmount >= goal.amount) {
             this.app.showToast(`🎉 恭喜！${goal.name}目标已完成！`);
@@ -1026,40 +1152,67 @@ class StudentModePage {
         const goal = this.examGoals.find(g => g.id === goalId);
         if (!goal) return;
 
-        this.showModal('编辑储蓄目标', `
-            <div style="padding: 20px;">
-                <div class="input-group">
-                    <label>目标名称</label>
-                    <input type="text" id="edit-goal-name" value="${goal.name}" placeholder="如：托福考试、学费储蓄等">
+        this.showMobileModal('编辑储蓄目标', `
+            <div style="padding: 0;">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">目标名称</label>
+                    <input type="text" id="edit-goal-name" value="${goal.name}" placeholder="如：托福考试、学费储蓄等" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>目标金额</label>
-                    <input type="number" id="edit-goal-amount" value="${goal.amount}" placeholder="请输入金额">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">目标金额</label>
+                    <input type="number" id="edit-goal-amount" value="${goal.amount}" placeholder="请输入金额" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>当前已存</label>
-                    <input type="number" id="edit-goal-current" value="${goal.currentAmount}" placeholder="请输入当前金额" disabled>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">当前已存</label>
+                    <input type="number" id="edit-goal-current" value="${goal.currentAmount}" placeholder="请输入当前金额" disabled
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; background: #f5f5f5; color: #999;">
                 </div>
-                <div class="input-group">
-                    <label>截止日期</label>
-                    <input type="date" id="edit-goal-deadline" value="${goal.deadline}">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">截止日期</label>
+                    <input type="date" id="edit-goal-deadline" value="${goal.deadline}" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div class="input-group">
-                    <label>自动储蓄</label>
-                    <div style="display: flex; align-items: center;">
-                        <label class="switch" style="margin-right: 10px;">
-                            <input type="checkbox" id="edit-goal-auto-save" ${goal.autoSave ? 'checked' : ''}>
-                            <span class="slider"></span>
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 500; color: #333;">自动储蓄</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="color: #666;">从生活费中自动划扣</span>
+                        <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                            <input type="checkbox" id="edit-goal-auto-save" ${goal.autoSave ? 'checked' : ''} 
+                                   style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                            <span class="slider:before" style="position: absolute; content: ''; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
                         </label>
-                        <span>从生活费中自动划扣</span>
                     </div>
                 </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="studentModePage.saveEditGoal('${goalId}')">保存</button>
-                    <button class="btn btn-secondary" onclick="studentModePage.hideModal()">取消</button>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="studentModePage.saveEditGoal('${goalId}')" 
+                            style="flex: 1; padding: 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500;">保存</button>
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" 
+                            style="flex: 1; padding: 12px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-size: 16px;">取消</button>
                 </div>
             </div>
         `);
+        
+        // 添加开关样式
+        setTimeout(() => {
+            const checkbox = document.getElementById('edit-goal-auto-save');
+            const slider = checkbox.nextElementSibling;
+            
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    slider.style.backgroundColor = '#007AFF';
+                } else {
+                    slider.style.backgroundColor = '#ccc';
+                }
+            });
+            
+            // 初始化开关状态
+            if (checkbox.checked) {
+                slider.style.backgroundColor = '#007AFF';
+            }
+        }, 100);
     }
     
     // 保存编辑后的目标
@@ -1087,7 +1240,7 @@ class StudentModePage {
 
         localStorage.setItem('student_exam_goals', JSON.stringify(this.examGoals));
         document.getElementById('exam-goals-list').innerHTML = this.renderExamGoals();
-        this.hideModal();
+        this.hideMobileModal();
         this.app.showToast('储蓄目标已更新');
     }
 
@@ -1172,10 +1325,173 @@ class StudentModePage {
         return expensesByCategory;
     }
 
-    // 模态框方法
-    showModal(title, content) {
+    // 手机模式弹窗系统
+    showMobileModal(title, content, options = {}) {
+        const {
+            fullScreen = false,
+            showCloseButton = true,
+            animation = 'slideUp'
+        } = options;
+        
+        // 清理之前的弹窗
+        this.hideMobileModal();
+        
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'mobile-modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: ${fullScreen ? 'stretch' : 'center'};
+            justify-content: center;
+            z-index: 10000;
+            padding: ${fullScreen ? '0' : '20px'};
+            animation: fadeIn 0.3s ease-out;
+        `;
+
+        const modalStyle = fullScreen ? `
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            max-width: none;
+        ` : `
+            width: 320px;
+            max-width: 90vw;
+            max-height: 80vh;
+            border-radius: 16px;
+        `;
+
+        modal.innerHTML = `
+            <div class="mobile-modal-content" style="
+                background: white;
+                ${modalStyle}
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                animation: ${animation} 0.3s ease-out;
+            ">
+                <div class="mobile-modal-header" style="
+                    padding: 20px 20px 15px;
+                    border-bottom: 1px solid #f0f0f0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                ">
+                    <h3 style="margin: 0; font-size: 18px; color: #333; font-weight: 600;">${title}</h3>
+                    ${showCloseButton ? `
+                        <button class="mobile-modal-close" style="
+                            background: none;
+                            border: none;
+                            font-size: 24px;
+                            color: #999;
+                            cursor: pointer;
+                            padding: 0;
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border-radius: 50%;
+                            transition: background 0.2s;
+                        " onclick="studentModePage.hideMobileModal()">×</button>
+                    ` : ''}
+                </div>
+                <div class="mobile-modal-body" style="
+                    flex: 1;
+                    padding: 20px;
+                    overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
+                ">
+                    ${content}
+                </div>
+            </div>
+        `;
+
+        // 添加动画样式
+        if (!document.getElementById('mobile-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'mobile-modal-styles';
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(50px) scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                }
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-50px) scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                }
+                .mobile-modal-close:hover {
+                    background: #f5f5f5 !important;
+                }
+                .mobile-modal-body::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .mobile-modal-body::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                }
+                .mobile-modal-body::-webkit-scrollbar-thumb {
+                    background: #c1c1c1;
+                    border-radius: 2px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hideMobileModal();
+            }
+        });
+
+        document.body.appendChild(modal);
+        this.currentMobileModal = modal;
+    }
+
+    // 隐藏手机模式弹窗
+    hideMobileModal() {
+        if (this.currentMobileModal) {
+            document.body.removeChild(this.currentMobileModal);
+            this.currentMobileModal = null;
+        }
+    }
+
+    // 模态框方法（保持兼容性）
+    showModal(title, content) {
+        this.showMobileModal(title, content);
+    }
+
+    hideModal() {
+        if (this.currentModal) {
+            document.body.removeChild(this.currentModal);
+            this.currentModal = null;
+        }
+    }
+
+    // 显示手机风格的确认弹窗
+    showMobileConfirmDialog(title, message, onConfirm) {
+        const modal = document.createElement('div');
+        modal.className = 'mobile-confirm-dialog';
         modal.style.cssText = `
             position: fixed;
             top: 0;
@@ -1191,48 +1507,208 @@ class StudentModePage {
         `;
 
         modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>${title}</h3>
-                    <button class="modal-close" onclick="studentModePage.hideModal()">×</button>
+            <div class="mobile-dialog-content" style="
+                background: white;
+                border-radius: 12px;
+                width: 280px;
+                max-width: 90vw;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                overflow: hidden;
+                animation: slideUp 0.3s ease-out;
+            ">
+                <div class="dialog-header" style="
+                    padding: 20px 20px 10px;
+                    text-align: center;
+                    border-bottom: 1px solid #f0f0f0;
+                ">
+                    <h3 style="margin: 0; font-size: 16px; color: #333; font-weight: 600;">${title}</h3>
                 </div>
-                <div class="modal-body">
-                    ${content}
+                <div class="dialog-body" style="
+                    padding: 20px;
+                    text-align: center;
+                    color: #666;
+                    font-size: 14px;
+                    line-height: 1.5;
+                ">
+                    ${message}
+                </div>
+                <div class="dialog-actions" style="
+                    display: flex;
+                    border-top: 1px solid #f0f0f0;
+                ">
+                    <button class="dialog-btn cancel-btn" style="
+                        flex: 1;
+                        padding: 15px;
+                        border: none;
+                        background: transparent;
+                        color: #666;
+                        font-size: 16px;
+                        cursor: pointer;
+                        border-right: 1px solid #f0f0f0;
+                        transition: background 0.2s;
+                    " onclick="studentModePage.hideMobileConfirmDialog()">取消</button>
+                    <button class="dialog-btn confirm-btn" style="
+                        flex: 1;
+                        padding: 15px;
+                        border: none;
+                        background: transparent;
+                        color: #007AFF;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                    " onclick="studentModePage.executeMobileConfirm()">删除</button>
                 </div>
             </div>
         `;
 
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(50px) scale(0.9);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+            .dialog-btn:hover {
+                background: #f8f9fa !important;
+            }
+            .confirm-btn:hover {
+                background: #fff5f5 !important;
+            }
+        `;
+        document.head.appendChild(style);
+
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                this.hideModal();
+                this.hideMobileConfirmDialog();
             }
         });
 
         document.body.appendChild(modal);
-        this.currentModal = modal;
+        this.currentMobileConfirm = {
+            modal: modal,
+            onConfirm: onConfirm,
+            style: style
+        };
     }
 
-    hideModal() {
-        if (this.currentModal) {
-            document.body.removeChild(this.currentModal);
-            this.currentModal = null;
+    // 隐藏手机确认弹窗
+    hideMobileConfirmDialog() {
+        if (this.currentMobileConfirm) {
+            const { modal, style } = this.currentMobileConfirm;
+            if (modal && modal.parentNode) {
+                document.body.removeChild(modal);
+            }
+            if (style && style.parentNode) {
+                document.head.removeChild(style);
+            }
+            this.currentMobileConfirm = null;
         }
+    }
+
+    // 执行确认操作
+    executeMobileConfirm() {
+        if (this.currentMobileConfirm && this.currentMobileConfirm.onConfirm) {
+            this.currentMobileConfirm.onConfirm();
+        }
+        this.hideMobileConfirmDialog();
     }
 
     // 删除方法
     deletePartTimeJob(jobId) {
-        if (!confirm('确定要删除这条兼职记录吗？')) return;
+        const job = this.partTimeJobs.find(job => job.id === jobId);
+        if (!job) return;
         
+        // 显示手机风格的确认弹窗
+        this.showMobileConfirmDialog('删除确认', '确定要删除这条兼职记录吗？', () => {
+            this.confirmDeletePartTimeJob(jobId, job);
+        });
+    }
+
+    // 确认删除兼职记录
+    confirmDeletePartTimeJob(jobId, job) {
         this.partTimeJobs = this.partTimeJobs.filter(job => job.id !== jobId);
         localStorage.setItem('student_part_time_jobs', JSON.stringify(this.partTimeJobs));
         
-        document.getElementById('part-time-list').innerHTML = this.renderPartTimeJobs();
+        // 同步删除对应的交易记录（如果是已到账的收入）
+        if (job.status === 'completed') {
+            this.syncDeleteTransaction(job);
+        }
+        
+        // 立即刷新显示
+        this.refreshPartTimeDisplay();
         this.app.showToast('兼职记录已删除');
     }
 
-    deleteGoal(goalId) {
-        if (!confirm('确定要删除这个储蓄目标吗？')) return;
+    // 刷新兼职收入显示
+    refreshPartTimeDisplay() {
+        // 刷新兼职收入统计
+        const partTimeSummary = document.querySelector('.part-time-summary');
+        if (partTimeSummary) {
+            partTimeSummary.innerHTML = `
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">¥${this.getMonthlyPartTimeIncome()}</div>
+                        <div class="stat-label">本月兼职收入</div>
+                    </div>
+                </div>
+            `;
+        }
         
+        // 刷新兼职记录列表
+        const partTimeList = document.getElementById('part-time-list');
+        if (partTimeList) {
+            partTimeList.innerHTML = this.renderPartTimeJobs();
+        }
+    }
+
+    // 同步删除对应的交易记录
+    syncDeleteTransaction(job) {
+        try {
+            // 获取交易记录
+            const transactions = this.app.transactions || [];
+            
+            // 查找精确匹配的交易记录
+            const transactionIndex = transactions.findIndex(transaction => {
+                // 构建兼职记录对应的交易描述格式
+                const expectedDescription = `${job.source} - ${job.description || '兼职收入'}`;
+                
+                return transaction.type === 'income' && 
+                       transaction.category === '兼职收入' &&
+                       transaction.amount === job.amount &&
+                       new Date(transaction.date).toDateString() === new Date(job.date).toDateString() &&
+                       transaction.description === expectedDescription;
+            });
+            
+            if (transactionIndex !== -1) {
+                // 删除对应的交易记录
+                this.app.deleteTransaction(transactionIndex);
+                console.log('已同步删除对应的交易记录');
+            }
+        } catch (error) {
+            console.error('同步删除交易记录失败:', error);
+        }
+    }
+
+    deleteGoal(goalId) {
+        // 查找要删除的目标
+        const goal = this.examGoals.find(g => g.id === goalId);
+        if (!goal) return;
+        
+        // 显示手机风格的确认弹窗
+        this.showMobileConfirmDialog('删除确认', '确定要删除这个储蓄目标吗？', () => {
+            this.confirmDeleteGoal(goalId);
+        });
+    }
+    
+    // 确认删除储蓄目标
+    confirmDeleteGoal(goalId) {
         this.examGoals = this.examGoals.filter(goal => goal.id !== goalId);
         localStorage.setItem('student_exam_goals', JSON.stringify(this.examGoals));
         
@@ -1417,45 +1893,45 @@ class StudentModePage {
         const activeGoals = this.examGoals.filter(goal => goal.currentAmount < goal.amount);
         const completedGoals = this.examGoals.filter(goal => goal.currentAmount >= goal.amount);
         
-        this.showModal('储蓄分析报告', `
-            <div style="padding: 20px;">
-                <div class="analysis-overview">
-                    <h4>储蓄概览</h4>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number">¥${totalSavings.toFixed(2)}</div>
-                            <div class="stat-label">总储蓄金额</div>
+        this.showMobileModal('储蓄分析报告', `
+            <div style="padding: 0;">
+                <div class="analysis-overview" style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 15px 0; font-size: 16px; color: #333;">储蓄概览</h4>
+                    <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="stat-card" style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                            <div class="stat-number" style="font-size: 18px; font-weight: 600; color: #007AFF;">¥${totalSavings.toFixed(2)}</div>
+                            <div class="stat-label" style="font-size: 12px; color: #666; margin-top: 5px;">总储蓄金额</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${this.examGoals.length}</div>
-                            <div class="stat-label">储蓄目标数</div>
+                        <div class="stat-card" style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                            <div class="stat-number" style="font-size: 18px; font-weight: 600; color: #007AFF;">${this.examGoals.length}</div>
+                            <div class="stat-label" style="font-size: 12px; color: #666; margin-top: 5px;">储蓄目标数</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${completedGoals.length}</div>
-                            <div class="stat-label">已完成目标</div>
+                        <div class="stat-card" style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                            <div class="stat-number" style="font-size: 18px; font-weight: 600; color: #007AFF;">${completedGoals.length}</div>
+                            <div class="stat-label" style="font-size: 12px; color: #666; margin-top: 5px;">已完成目标</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${this.getAverageProgress().toFixed(1)}%</div>
-                            <div class="stat-label">平均进度</div>
+                        <div class="stat-card" style="padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                            <div class="stat-number" style="font-size: 18px; font-weight: 600; color: #007AFF;">${this.getAverageProgress().toFixed(1)}%</div>
+                            <div class="stat-label" style="font-size: 12px; color: #666; margin-top: 5px;">平均进度</div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="goals-breakdown">
-                    <h4>目标分析</h4>
+                    <h4 style="margin: 0 0 15px 0; font-size: 16px; color: #333;">目标分析</h4>
                     ${this.examGoals.map(goal => {
                         const progress = (goal.currentAmount / goal.amount * 100).toFixed(1);
                         const daysLeft = Math.ceil((new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24));
                         return `
-                            <div class="goal-analysis-item">
-                                <div class="goal-name">${goal.name}</div>
-                                <div class="goal-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: ${progress}%"></div>
+                            <div class="goal-analysis-item" style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <div class="goal-name" style="font-weight: 500; margin-bottom: 8px; color: #333;">${goal.name}</div>
+                                <div class="goal-progress" style="margin-bottom: 8px;">
+                                    <div class="progress-bar" style="height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden;">
+                                        <div class="progress-fill" style="height: 100%; background: #007AFF; width: ${progress}%;"></div>
                                     </div>
-                                    <span>${progress}% (¥${goal.currentAmount}/¥${goal.amount})</span>
+                                    <span style="font-size: 12px; color: #666; margin-top: 5px; display: block;">${progress}% (¥${goal.currentAmount}/¥${goal.amount})</span>
                                 </div>
-                                <div class="goal-status">
+                                <div class="goal-status" style="font-size: 12px; font-weight: 500;">
                                     ${goal.currentAmount >= goal.amount ? '✅ 已完成' : 
                                       daysLeft <= 0 ? '⚠️ 已逾期' :
                                       daysLeft <= 7 ? '🔥 紧急' : '📅 进行中'}
@@ -1465,8 +1941,9 @@ class StudentModePage {
                     }).join('')}
                 </div>
                 
-                <div class="button-group">
-                    <button class="btn btn-secondary" onclick="studentModePage.hideModal()">关闭</button>
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" 
+                            style="width: 100%; padding: 12px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-size: 16px;">关闭</button>
                 </div>
             </div>
         `);
@@ -1474,47 +1951,73 @@ class StudentModePage {
 
     // 自动储蓄设置
     showAutoSaveSettings() {
-        this.showModal('自动储蓄设置', `
-            <div style="padding: 20px;">
-                <div class="auto-save-info">
-                    <h4>自动储蓄功能</h4>
-                    <p>开启后，系统会根据你的储蓄目标自动从生活费中划扣相应金额。</p>
+        this.showMobileModal('自动储蓄设置', `
+            <div style="padding: 0;">
+                <div class="auto-save-info" style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">自动储蓄功能</h4>
+                    <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.5;">开启后，系统会根据你的储蓄目标自动从生活费中划扣相应金额。</p>
                 </div>
                 
-                <div class="goals-auto-save">
+                <div class="goals-auto-save" style="margin-bottom: 20px;">
+                    <h5 style="margin: 0 0 15px 0; font-size: 14px; color: #333;">储蓄目标设置</h5>
                     ${this.examGoals.map(goal => {
                         const weeklyNeed = this.calculateWeeklyNeed(goal);
                         return `
-                            <div class="auto-save-item">
+                            <div class="auto-save-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
                                 <div class="goal-info">
-                                    <h5>${goal.name}</h5>
-                                    <p>建议每周自动存入: ¥${weeklyNeed}</p>
+                                    <h6 style="margin: 0 0 5px 0; font-size: 14px; color: #333;">${goal.name}</h6>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">建议每周存入: ¥${weeklyNeed}</p>
                                 </div>
-                                <label class="switch">
+                                <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
                                     <input type="checkbox" ${goal.autoSave ? 'checked' : ''} 
-                                           onchange="studentModePage.toggleAutoSave('${goal.id}', this.checked)">
-                                    <span class="slider"></span>
+                                           onchange="studentModePage.toggleAutoSave('${goal.id}', this.checked)"
+                                           style="opacity: 0; width: 0; height: 0;">
+                                    <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                                    <span class="slider:before" style="position: absolute; content: ''; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
                                 </label>
                             </div>
                         `;
                     }).join('')}
                 </div>
                 
-                <div class="auto-save-schedule">
-                    <h4>自动储蓄时间</h4>
-                    <select id="auto-save-day">
+                <div class="auto-save-schedule" style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #333;">自动储蓄时间</h4>
+                    <select id="auto-save-day" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; background: white;">
                         <option value="1">每周一</option>
                         <option value="5">每周五</option>
                         <option value="0">每周日</option>
                     </select>
                 </div>
                 
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="studentModePage.saveAutoSaveSettings()">保存设置</button>
-                    <button class="btn btn-secondary" onclick="studentModePage.hideModal()">取消</button>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="studentModePage.saveAutoSaveSettings()" 
+                            style="flex: 1; padding: 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500;">保存设置</button>
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" 
+                            style="flex: 1; padding: 12px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-size: 16px;">取消</button>
                 </div>
             </div>
         `);
+        
+        // 添加开关样式
+        setTimeout(() => {
+            const checkboxes = document.querySelectorAll('.auto-save-item input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                const slider = checkbox.nextElementSibling;
+                
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        slider.style.backgroundColor = '#007AFF';
+                    } else {
+                        slider.style.backgroundColor = '#ccc';
+                    }
+                });
+                
+                // 初始化开关状态
+                if (checkbox.checked) {
+                    slider.style.backgroundColor = '#007AFF';
+                }
+            });
+        }, 100);
     }
 
     toggleAutoSave(goalId, enabled) {
@@ -1527,7 +2030,7 @@ class StudentModePage {
 
     saveAutoSaveSettings() {
         localStorage.setItem('student_exam_goals', JSON.stringify(this.examGoals));
-        this.hideModal();
+        this.hideMobileModal();
         this.app.showToast('自动储蓄设置已保存');
     }
 }

@@ -21,9 +21,7 @@ class ProfilePage {
                 case 'family':
                     this.familySettings = JSON.parse(localStorage.getItem('family_mode_settings') || '{}');
                     break;
-                case 'freelancer':
-                    this.freelancerSettings = JSON.parse(localStorage.getItem('freelancer_mode_settings') || '{}');
-                    break;
+
             }
         } catch (e) {
             console.error('加载用户模式设置失败:', e);
@@ -145,10 +143,7 @@ class ProfilePage {
                             <div>家庭模式</div>
                             <small style="font-size: 0.8em; color: #718096;">多人共享 · 家庭开支</small>
                         </div>
-                        <div class="mode-btn ${this.getCurrentUserMode() === 'freelancer' ? 'active' : ''}" onclick="profilePage.setUserMode('freelancer')">
-                            <div>自由职业</div>
-                            <small style="font-size: 0.8em; color: #718096;">经营收支 · 税务申报</small>
-                        </div>
+
                     </div>
                 </div>
 
@@ -291,8 +286,7 @@ class ProfilePage {
     getModeDisplayName(mode) {
         const modeNames = {
             'student': '学生模式',
-            'family': '家庭模式',
-            'freelancer': '自由职业模式'
+            'family': '家庭模式'
         };
         return modeNames[mode] || '未知模式';
     }
@@ -857,10 +851,7 @@ class ProfilePage {
                 const familySettings = JSON.parse(localStorage.getItem('family_mode_settings') || '{}');
                 monthlyIncome = parseFloat(familySettings.familyBudget || 0);
                 break;
-            case '自由职业':
-                const freelancerSettings = JSON.parse(localStorage.getItem('freelancer_mode_settings') || '{}');
-                monthlyIncome = parseFloat(freelancerSettings.incomeTarget || 0);
-                break;
+
         }
 
         // 计算建议的储蓄比例
@@ -968,7 +959,7 @@ class ProfilePage {
     // 设置用户模式
     setUserMode(mode) {
         // 验证模式有效性
-        const validModes = ['student', 'family', 'freelancer'];
+        const validModes = ['student', 'family'];
         if (!validModes.includes(mode)) {
             console.error('无效的用户模式:', mode);
             return;
@@ -1010,8 +1001,7 @@ class ProfilePage {
             // 通过按钮内容判断对应的模式
             const buttonText = button.textContent.toLowerCase();
             if ((selectedMode === 'student' && buttonText.includes('学生')) ||
-                (selectedMode === 'family' && buttonText.includes('家庭')) ||
-                (selectedMode === 'freelancer' && buttonText.includes('自由职业'))) {
+                (selectedMode === 'family' && buttonText.includes('家庭'))) {
                 button.classList.add('active');
             }
         });

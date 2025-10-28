@@ -10,8 +10,7 @@ class Router {
             'register': null,
             'savings-goals': null,
             'student-mode': null,
-            'family-mode': null,
-            'freelancer-mode': null
+            'family-mode': null
         };
         this.currentPage = 'home';
         this.userMode = localStorage.getItem('user_mode') || 'student';
@@ -47,9 +46,6 @@ class Router {
         }
         if (typeof FamilyModePage !== 'undefined') {
             this.pages['family-mode'] = FamilyModePage;
-        }
-        if (typeof FreelancerModePage !== 'undefined') {
-            this.pages['freelancer-mode'] = FreelancerModePage;
         }
     }
 
@@ -102,14 +98,26 @@ class Router {
 
     // 切换到指定页面
     switchToPage(pageName) {
-        if (!this.pages[pageName]) {
-            console.error(`页面 ${pageName} 未找到`);
+        console.log(`切换到页面: ${pageName}`);
+        
+        // 检查页面是否存在
+        if (!this.pages[pageName] || this.pages[pageName] === null) {
+            console.error(`页面 ${pageName} 未找到或未加载`);
+            // 如果目标页面不存在，默认跳转到首页
+            if (pageName !== 'home' && this.pages['home']) {
+                console.log('页面不存在，跳转到首页');
+                this.switchToPage('home');
+            } else {
+                // 如果首页也不存在，显示错误页面
+                this.showErrorPage(`页面 "${pageName}" 未找到`);
+            }
             return;
         }
 
         // 受保护页面拦截（未登录禁止访问除登录/注册外的页面）
         const publicPages = ['login', 'register'];
         if (!publicPages.includes(pageName) && !this.isAuthenticated()) {
+            console.log('未登录，跳转到登录页');
             this.renderPage('login');
             this.currentPage = 'login';
             // 登录/注册页隐藏底部导航
@@ -132,6 +140,7 @@ class Router {
         this.renderPage(pageName);
 
         this.currentPage = pageName;
+        console.log(`页面切换完成: ${pageName}`);
     }
 
     // 更新导航状态
@@ -212,7 +221,7 @@ class Router {
 
     // 切换用户模式
     switchUserMode(mode) {
-        const validModes = ['student', 'family', 'freelancer'];
+        const validModes = ['student', 'family'];
         if (!validModes.includes(mode)) {
             console.error(`无效的用户模式: ${mode}`);
             return;
@@ -236,8 +245,7 @@ class Router {
         if (this.app && typeof this.app.showToast === 'function') {
             const modeNames = {
                 'student': '学生模式',
-                'family': '家庭模式',
-                'freelancer': '自由职业者模式'
+                'family': '家庭模式'
             };
             this.app.showToast(`已切换到${modeNames[mode]}`, 'success');
         }
