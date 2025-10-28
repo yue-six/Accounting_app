@@ -70,39 +70,15 @@ class HomePage {
                     </div>
                 </div>
 
-                <!-- 支付连接 -->
+                <!-- 储蓄目标概览 -->
                 <div class="card">
-                    <h3><i class="fas fa-credit-card"></i> 支付连接</h3>
-                    <div class="payment-connections">
-                        <div class="payment-item">
-                            <div class="payment-icon wechat">
-                                <i class="fab fa-weixin"></i>
-                            </div>
-                            <div class="payment-info">
-                                <div class="payment-name">微信支付</div>
-                                <div class="payment-status">
-                                    <span class="status-dot" id="wechat-status-dot"></span>
-                                    <span class="status-text" id="wechat-status-text">未连接</span>
-                                </div>
-                            </div>
-                            <button class="payment-action-btn" onclick="homePage.connectWechatPay()">管理</button>
-                        </div>
-                        
-                        <div class="payment-item">
-                            <div class="payment-icon alipay">
-                                <i class="fab fa-alipay"></i>
-                            </div>
-                            <div class="payment-info">
-                                <div class="payment-name">支付宝</div>
-                                <div class="payment-status">
-                                    <span class="status-dot" id="alipay-status-dot"></span>
-                                    <span class="status-text" id="alipay-status-text">未连接</span>
-                                </div>
-                            </div>
-                            <button class="payment-action-btn" onclick="homePage.connectAlipay()">管理</button>
-                        </div>
+                    <h3><i class="fas fa-piggy-bank"></i> 储蓄目标</h3>
+                    <div class="savings-overview" id="savings-overview">
+                        ${this.renderSavingsOverview()}
                     </div>
                 </div>
+
+
             </div>
         `;
     }
@@ -134,6 +110,147 @@ class HomePage {
                 </div>
             `;
         }).join('');
+    }
+
+    // 渲染储蓄目标概览
+    renderSavingsOverview() {
+        // 只显示学生模式下的考证/学费储蓄计划
+        const userMode = this.getCurrentUserMode();
+        
+        if (userMode !== 'student') {
+            return `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3rem; color: #cbd5e0; margin-bottom: 10px;">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <p style="color: #718096; margin-bottom: 15px;">储蓄目标功能仅对学生模式开放</p>
+                    <p style="color: #a0aec0; font-size: 0.9rem;">切换到学生模式可查看考证/学费储蓄计划</p>
+                </div>
+            `;
+        }
+
+        // 加载学生模式下的考证目标数据
+        const examGoals = this.loadStudentExamGoals();
+        
+        if (examGoals.length === 0) {
+            return `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3rem; color: #cbd5e0; margin-bottom: 10px;">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <p style="color: #718096; margin-bottom: 15px;">还没有考证/学费储蓄目标</p>
+                    <p style="color: #a0aec0; font-size: 0.9rem; margin-bottom: 15px;">在学生模式中创建储蓄目标</p>
+                </div>
+            `;
+        }
+
+        // 显示前3个活跃目标
+        const activeGoals = examGoals.filter(goal => !this.isGoalCompleted(goal)).slice(0, 3);
+        
+        return `
+            <div class="savings-overview-content">
+                <div class="savings-stats">
+                    <div class="savings-stat">
+                        <div class="stat-value">${activeGoals.length}</div>
+                        <div class="stat-label">活跃目标</div>
+                    </div>
+                    <div class="savings-stat">
+                        <div class="stat-value">¥${this.getTotalStudentSavings(examGoals).toLocaleString()}</div>
+                        <div class="stat-label">总储蓄</div>
+                    </div>
+                    <div class="savings-stat">
+                        <div class="stat-value">${this.getAverageStudentProgress(examGoals).toFixed(1)}%</div>
+                        <div class="stat-label">平均进度</div>
+                    </div>
+                </div>
+                
+                <div class="goals-preview">
+                    ${activeGoals.map(goal => this.renderStudentGoalPreview(goal)).join('')}
+                </div>
+                
+                <div class="savings-actions">
+                    <button class="action-btn" onclick="homePage.navigateToStudentMode()">
+                        查看全部目标
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // 渲染学生模式单个目标预览
+    renderStudentGoalPreview(goal) {
+        const progress = (goal.currentAmount / goal.amount * 100).toFixed(1);
+        const deadline = new Date(goal.deadline);
+        const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+        
+        return `
+            <div class="goal-preview student-goal" onclick="homePage.navigateToStudentMode()">
+                <div class="goal-header">
+                    <div class="goal-icon" style="background-color: #667eea">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="goal-info">
+                        <div class="goal-name">${goal.name}</div>
+                        <div class="goal-details">
+                            <span class="goal-amount">¥${goal.currentAmount.toLocaleString()} / ¥${goal.amount.toLocaleString()}</span>
+                            <span class="goal-deadline">${daysLeft > 0 ? `剩余${daysLeft}天` : '已到期'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                    </div>
+                    <div class="progress-text">${progress}%</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 加载学生模式下的考证目标数据
+    loadStudentExamGoals() {
+        try {
+            const savedGoals = localStorage.getItem('student_exam_goals');
+            if (savedGoals) {
+                return JSON.parse(savedGoals);
+            }
+        } catch (error) {
+            console.error('加载学生模式储蓄目标数据失败:', error);
+        }
+        return [];
+    }
+
+    // 检查目标是否已完成
+    isGoalCompleted(goal) {
+        return goal.currentAmount >= goal.amount;
+    }
+
+    // 获取学生模式总储蓄金额
+    getTotalStudentSavings(goals) {
+        return goals.reduce((total, goal) => total + goal.currentAmount, 0);
+    }
+
+    // 获取学生模式平均进度
+    getAverageStudentProgress(goals) {
+        if (goals.length === 0) return 0;
+        const totalProgress = goals.reduce((sum, goal) => sum + (goal.currentAmount / goal.amount * 100), 0);
+        return totalProgress / goals.length;
+    }
+
+    // 删除不再使用的旧函数
+
+    // 导航到学生模式页面
+    navigateToStudentMode() {
+        if (window.router && typeof window.router.navigate === 'function') {
+            window.router.navigate('student-mode');
+        } else {
+            console.warn('路由功能不可用');
+        }
+    }
+
+    // 导航到储蓄目标页面（保留兼容性）
+    navigateToSavingsGoals() {
+        this.navigateToStudentMode();
     }
 
     // 获取当前用户模式
@@ -172,30 +289,7 @@ class HomePage {
     renderModeSpecificContent(mode) {
         switch(mode) {
             case 'student':
-                return `
-                    <div class="card mode-specific-content student-mode">
-                        <h3><i class="fas fa-graduation-cap"></i> 学习预算追踪</h3>
-                        <div class="mode-content">
-                            <div class="mode-stats">
-                                <div class="mode-stat-item">
-                                    <div class="stat-icon"><i class="fas fa-book"></i></div>
-                                    <div class="stat-info">
-                                        <div class="stat-value" id="study-budget">¥0</div>
-                                        <div class="stat-label">学习预算</div>
-                                    </div>
-                                </div>
-                                <div class="mode-stat-item">
-                                    <div class="stat-icon"><i class="fas fa-piggy-bank"></i></div>
-                                    <div class="stat-info">
-                                        <div class="stat-value" id="scholarship-savings">¥0</div>
-                                        <div class="stat-label">奖学金储蓄</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="mode-tip">设置学习预算，追踪学习支出，合理规划奖学金使用</p>
-                        </div>
-                    </div>
-                `;
+                return ''; // 删除学习预算追踪功能
             case 'family':
                 return `
                     <div class="card mode-specific-content family-mode">
@@ -316,15 +410,7 @@ class HomePage {
     
     // 加载学生模式数据
     loadStudentModeData() {
-        // 这里可以从app中获取学习相关数据并更新UI
-        // 示例：设置学习预算和奖学金储蓄数据
-        setTimeout(() => {
-            const studyBudgetEl = document.getElementById('study-budget');
-            const scholarshipSavingsEl = document.getElementById('scholarship-savings');
-            
-            if (studyBudgetEl) studyBudgetEl.textContent = '¥1000';
-            if (scholarshipSavingsEl) scholarshipSavingsEl.textContent = '¥5000';
-        }, 500);
+        // 学习预算追踪功能已删除
     }
     
     // 加载家庭模式数据
@@ -585,6 +671,17 @@ class HomePage {
         
         // 更新模式特定内容
         this.updateModeSpecificContent();
+        
+        // 更新储蓄目标概览
+        this.updateSavingsOverview();
+    }
+
+    // 更新储蓄目标概览
+    updateSavingsOverview() {
+        const container = document.getElementById('savings-overview');
+        if (container) {
+            container.innerHTML = this.renderSavingsOverview();
+        }
     }
     
     // 更新模式特定内容
@@ -610,18 +707,7 @@ class HomePage {
     
     // 更新学生模式特定内容
     updateStudentModeContent() {
-        const studyBudget = document.getElementById('study-budget');
-        const scholarshipSavings = document.getElementById('scholarship-savings');
-        
-        if (studyBudget) {
-            // 这里可以添加学生模式特定的预算计算逻辑
-            studyBudget.textContent = '¥0';
-        }
-        
-        if (scholarshipSavings) {
-            // 这里可以添加奖学金储蓄计算逻辑
-            scholarshipSavings.textContent = '¥0';
-        }
+        // 学习预算追踪功能已删除
     }
     
     // 更新家庭模式特定内容
@@ -996,45 +1082,7 @@ class HomePage {
         }
     }
 
-    // 连接微信支付
-    connectWechatPay() {
-        // 委托给应用实例启动微信OAuth登录（应用层包含更健壮的实现）
-        try {
-            if (this.app && typeof this.app.startWechatOAuthLogin === 'function') {
-                const p = this.app.startWechatOAuthLogin();
-                if (p && typeof p.then === 'function') p.catch(err => {
-                    console.error('微信登录失败:', err);
-                    this.app.showToast && this.app.showToast('微信登录失败，请重试');
-                });
-            } else {
-                console.error('无法找到启动微信登录的方法');
-                this.app.showToast && this.app.showToast('启动微信登录失败，请重试');
-            }
-        } catch (e) {
-            console.error('connectWechatPay error:', e);
-            this.app.showToast && this.app.showToast('启动微信登录失败，请重试');
-        }
-    }
 
-    // 连接支付宝
-    connectAlipay() {
-        // 委托给应用实例启动支付宝OAuth登录（应用层包含更健壮的实现）
-        try {
-            if (this.app && typeof this.app.startAlipayOAuthLogin === 'function') {
-                const p = this.app.startAlipayOAuthLogin();
-                if (p && typeof p.then === 'function') p.catch(err => {
-                    console.error('支付宝登录失败:', err);
-                    this.app.showToast && this.app.showToast('支付宝登录失败，请重试');
-                });
-            } else {
-                console.error('无法找到启动支付宝登录的方法');
-                this.app.showToast && this.app.showToast('启动支付宝登录失败，请重试');
-            }
-        } catch (e) {
-            console.error('connectAlipay error:', e);
-            this.app.showToast && this.app.showToast('启动支付宝登录失败，请重试');
-        }
-    }
 
     // 显示语音输入（兼容模式）
     showVoiceInput() {

@@ -229,10 +229,11 @@ class AnalysisPage {
         const ctx = document.getElementById('monthlyChart')?.getContext('2d');
         if (!ctx) return;
 
-        // 模拟6个月的数据
-        const months = ['1月', '2月', '3月', '4月', '5月', '6月'];
-        const incomeData = [8000, 8500, 9200, 7800, 9500, 10000];
-        const expenseData = [6500, 7200, 6800, 7500, 8200, 7800];
+        // 获取最近6个月的真实数据
+        const monthlyData = this.getMonthlyTrendData();
+        const months = monthlyData.months;
+        const incomeData = monthlyData.income;
+        const expenseData = monthlyData.expense;
 
         if (this.monthlyChart) {
             this.monthlyChart.destroy();
@@ -280,6 +281,50 @@ class AnalysisPage {
                 }
             }
         });
+    }
+
+    // 获取月度趋势数据
+    getMonthlyTrendData() {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        
+        // 生成最近6个月的月份标签
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(currentYear, currentMonth - i, 1);
+            months.push(`${date.getMonth() + 1}月`);
+        }
+        
+        // 初始化收入支出数组
+        const incomeData = new Array(6).fill(0);
+        const expenseData = new Array(6).fill(0);
+        
+        // 遍历交易数据，按月份统计
+        this.app.transactions.forEach(transaction => {
+            const transactionDate = new Date(transaction.date);
+            const transactionMonth = transactionDate.getMonth();
+            const transactionYear = transactionDate.getFullYear();
+            
+            // 计算月份索引（0-5，对应最近6个月）
+            const monthDiff = (currentYear - transactionYear) * 12 + (currentMonth - transactionMonth);
+            const index = 5 - monthDiff;
+            
+            // 只处理最近6个月的数据
+            if (index >= 0 && index < 6) {
+                if (transaction.type === 'income') {
+                    incomeData[index] += parseFloat(transaction.amount || 0);
+                } else if (transaction.type === 'expense') {
+                    expenseData[index] += parseFloat(transaction.amount || 0);
+                }
+            }
+        });
+        
+        return {
+            months: months,
+            income: incomeData,
+            expense: expenseData
+        };
     }
 
     // 更新数据
