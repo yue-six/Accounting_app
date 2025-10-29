@@ -193,7 +193,8 @@ class DataManager {
         try {
             const data = await this.loadData();
             
-            const exportData = {
+            // 导出为 JSON
+            const exportJson = {
                 ...data,
                 exportInfo: {
                     exportedAt: new Date().toISOString(),
@@ -202,18 +203,61 @@ class DataManager {
                 }
             };
 
-            // 创建下载链接
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            // 导出为 DOCX（示例逻辑，需根据实际库调整）
+            const exportDocx = async () => {
+                const { Packer } = require('docx');
+                const { Document, Paragraph, TextRun } = require('docx');
+                
+                const doc = new Document({
+                    sections: [{
+                        properties: {},
+                        children: [
+                            new Paragraph({
+                                children: [
+                                    new TextRun({
+                                        text: '账单数据导出',
+                                        bold: true
+                                    })
+                                ]
+                            }),
+                            new Paragraph({
+                                children: [
+                                    new TextRun({
+                                        text: JSON.stringify(data.transactions, null, 2)
+                                    })
+                                ]
+                            })
+                        ]
+                    }]
+                });
+                
+                const buffer = await Packer.toBuffer(doc);
+                return buffer;
+            };
+
+            // 创建下载链接（JSON）
+            const jsonStr = JSON.stringify(exportJson, null, 2);
+            const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
             
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `accounting_data_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
+            const jsonLink = document.createElement('a');
+            jsonLink.href = URL.createObjectURL(jsonBlob);
+            jsonLink.download = `accounting_data_${new Date().toISOString().split('T')[0]}.json`;
+            jsonLink.click();
+            
+            // 创建下载链接（DOCX）
+            const docxBuffer = await exportDocx();
+            const docxBlob = new Blob([docxBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            
+            const docxLink = document.createElement('a');
+            docxLink.href = URL.createObjectURL(docxBlob);
+            docxLink.download = `accounting_data_${new Date().toISOString().split('T')[0]}.docx`;
+            docxLink.click();
             
             // 清理URL
-            setTimeout(() => URL.revokeObjectURL(url), 100);
+            setTimeout(() => {
+                URL.revokeObjectURL(jsonLink.href);
+                URL.revokeObjectURL(docxLink.href);
+            }, 100);
             
             console.log('📤 数据导出成功');
             return true;
@@ -233,11 +277,17 @@ class DataManager {
             
             reader.onload = async (e) => {
                 try {
-                    const importedData = JSON.parse(e.target.result);
+                    let importedData;
                     
-                    // 验证导入数据
-                    if (!this.validateData(importedData)) {
-                        throw new Error('导入文件格式无效');
+                    // 尝试解析为 JSON
+                    try {
+                        importedData = JSON.parse(e.target.result);
+                        if (!this.validateData(importedData)) {
+                            throw new Error('JSON 格式无效');
+                        }
+                    } catch (jsonError) {
+                        // 尝试解析为微信或支付宝账单格式
+                        importedData = this.parseWechatOrAlipayBill(e.target.result);
                     }
                     
                     // 创建备份
@@ -258,6 +308,73 @@ class DataManager {
             reader.onerror = () => reject(new Error('文件读取失败'));
             reader.readAsText(file);
         });
+    }
+    
+    /**
+     * 解析微信或支付宝账单
+     */
+    parseWechatOrAlipayBill(csvData) {
+        const lines = csvData.split('\n');
+        const transactions = [];
+        
+        // 解析微信账单
+        if (lines[0].includes('微信支付账单明细')) {
+            for (let i = 1; i < lines.length; i++) {
+                const fields = lines[i].split(',');
+                if (fields.length >= 10) {
+                    transactions.push({
+                        id: this.generateId(),
+                        amount: parseFloat(fields[5]) || 0,
+                        type: fields[4].includes('收入') ? 'income' : 'expense',
+                        category: this.detectCategory(fields[7]),
+                        date: fields[0],
+                        description: fields[7]
+                    });
+                }
+            }
+        } 
+        // 解析支付宝账单
+        else if (lines[0].includes('支付宝交易记录明细')) {
+            for (let i = 1; i < lines.length; i++) {
+                const fields = lines[i].split(',');
+                if (fields.length >= 8) {
+                    transactions.push({
+                        id: this.generateId(),
+                        amount: parseFloat(fields[5]) || 0,
+                        type: fields[4].includes('收入') ? 'income' : 'expense',
+                        category: this.detectCategory(fields[7]),
+                        date: fields[2],
+                        description: fields[7]
+                    });
+                }
+            }
+        } else {
+            throw new Error('不支持的文件格式');
+        }
+        
+        return {
+            transactions,
+            categories: this.getDefaultData().categories,
+            budgets: {},
+            userMode: 'student',
+            settings: this.getDefaultData().settings
+        };
+    }
+    
+    /**
+     * 根据描述自动分类
+     */
+    detectCategory(description) {
+        const categories = this.getDefaultData().categories;
+        
+        if (description.includes('餐饮')) return 'food';
+        if (description.includes('交通')) return 'transport';
+        if (description.includes('购物')) return 'shopping';
+        if (description.includes('娱乐')) return 'entertainment';
+        if (description.includes('工资')) return 'salary';
+        
+        return 'other';
+    }
     }
 
     /**
