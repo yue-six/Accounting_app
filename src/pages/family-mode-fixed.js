@@ -216,7 +216,14 @@ class FamilyModePage {
 
     // 获取家庭成员列表
     getFamilyMembers() {
-        return this.familyMembers || [];
+        const members = this.familyMembers || [];
+        // 确保管理员用户始终在成员列表中
+        const adminExists = members.some(member => member.role === 'admin');
+        if (!adminExists) {
+            // 如果没有管理员，添加默认管理员
+            return [...members, { name: "我", role: "admin", id: "default" }];
+        }
+        return members;
     }
 
     // 获取家庭余额（基于每月剩余金额累计）
@@ -668,7 +675,10 @@ class FamilyModePage {
             return;
         }
 
-        const member = this.familyMembers.find(m => m.id === userId);
+        // 从包含管理员的成员列表中查找用户
+        const members = this.getFamilyMembers();
+        const member = members.find(m => m.id === userId);
+        
         if (!member) {
             this.app.showToast('用户不存在', 'error');
             return;

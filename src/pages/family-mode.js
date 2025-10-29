@@ -653,7 +653,8 @@ class FamilyModePage {
 
     // 切换用户
     switchUser() {
-        const allUsers = [this.currentUser, ...this.familyMembers];
+        // 使用getFamilyMembers()方法确保包含管理员用户
+        const allUsers = this.getFamilyMembers();
         
         this.showModal('切换用户', `
             <div style="padding: 20px;">
@@ -679,7 +680,8 @@ class FamilyModePage {
 
     // 选择用户
     selectUser(userId) {
-        const allUsers = [this.currentUser, ...this.familyMembers];
+        // 使用getFamilyMembers()方法确保包含管理员用户
+        const allUsers = this.getFamilyMembers();
         const selectedUser = allUsers.find(user => user.id === userId);
         
         if (selectedUser) {
@@ -1225,7 +1227,14 @@ class FamilyModePage {
 
     // 获取家庭成员列表
     getFamilyMembers() {
-        return this.familyMembers || [];
+        const members = this.familyMembers || [];
+        // 确保管理员用户始终在成员列表中
+        const adminExists = members.some(member => member.role === 'admin');
+        if (!adminExists) {
+            // 如果没有管理员，添加默认管理员
+            return [...members, { name: "我", role: "admin", id: "default" }];
+        }
+        return members;
     }
 
     // 获取活跃成员数

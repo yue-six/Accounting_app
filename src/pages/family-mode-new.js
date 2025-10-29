@@ -145,7 +145,14 @@ class FamilyModePage {
 
     // 获取家庭成员列表
     getFamilyMembers() {
-        return this.familyMembers || [];
+        const members = this.familyMembers || [];
+        // 确保管理员用户始终在成员列表中
+        const adminExists = members.some(member => member.role === 'admin');
+        if (!adminExists) {
+            // 如果没有管理员，添加默认管理员
+            return [...members, { name: "我", role: "admin", id: "default" }];
+        }
+        return members;
     }
 
     // 获取家庭余额
