@@ -1325,138 +1325,31 @@ class StudentModePage {
         return expensesByCategory;
     }
 
-    // 手机模式弹窗系统
+    // 手机模式弹窗系统 - 与账户设置弹窗保持一致
     showMobileModal(title, content, options = {}) {
         const {
-            fullScreen = false,
-            showCloseButton = true,
-            animation = 'slideUp'
+            showCloseButton = true
         } = options;
         
         // 清理之前的弹窗
         this.hideMobileModal();
         
         const modal = document.createElement('div');
-        modal.className = 'mobile-modal-overlay';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: ${fullScreen ? 'stretch' : 'center'};
-            justify-content: center;
-            z-index: 10000;
-            padding: ${fullScreen ? '0' : '20px'};
-            animation: fadeIn 0.3s ease-out;
-        `;
-
-        const modalStyle = fullScreen ? `
-            width: 100%;
-            height: 100%;
-            border-radius: 0;
-            max-width: none;
-        ` : `
-            width: 320px;
-            max-width: 90vw;
-            max-height: 80vh;
-            border-radius: 16px;
-        `;
+        modal.className = 'modal-overlay';
 
         modal.innerHTML = `
-            <div class="mobile-modal-content" style="
-                background: white;
-                ${modalStyle}
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                animation: ${animation} 0.3s ease-out;
-            ">
-                <div class="mobile-modal-header" style="
-                    padding: 20px 20px 15px;
-                    border-bottom: 1px solid #f0f0f0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                ">
-                    <h3 style="margin: 0; font-size: 18px; color: #333; font-weight: 600;">${title}</h3>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>${title}</h3>
                     ${showCloseButton ? `
-                        <button class="mobile-modal-close" style="
-                            background: none;
-                            border: none;
-                            font-size: 24px;
-                            color: #999;
-                            cursor: pointer;
-                            padding: 0;
-                            width: 30px;
-                            height: 30px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            border-radius: 50%;
-                            transition: background 0.2s;
-                        " onclick="studentModePage.hideMobileModal()">×</button>
+                        <button class="modal-close" onclick="studentModePage.hideMobileModal()">×</button>
                     ` : ''}
                 </div>
-                <div class="mobile-modal-body" style="
-                    flex: 1;
-                    padding: 20px;
-                    overflow-y: auto;
-                    -webkit-overflow-scrolling: touch;
-                ">
+                <div class="modal-body">
                     ${content}
                 </div>
             </div>
         `;
-
-        // 添加动画样式
-        if (!document.getElementById('mobile-modal-styles')) {
-            const style = document.createElement('style');
-            style.id = 'mobile-modal-styles';
-            style.textContent = `
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(50px) scale(0.9);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                }
-                @keyframes slideDown {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-50px) scale(0.9);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                }
-                .mobile-modal-close:hover {
-                    background: #f5f5f5 !important;
-                }
-                .mobile-modal-body::-webkit-scrollbar {
-                    width: 4px;
-                }
-                .mobile-modal-body::-webkit-scrollbar-track {
-                    background: #f1f1f1;
-                }
-                .mobile-modal-body::-webkit-scrollbar-thumb {
-                    background: #c1c1c1;
-                    border-radius: 2px;
-                }
-            `;
-            document.head.appendChild(style);
-        }
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
