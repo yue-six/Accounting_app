@@ -1137,23 +1137,16 @@ body {
     text-align: center;
 }
 
-/* 移动端模态框样式 */
-.mobile-modal-overlay {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background: rgba(0, 0, 0, 0.7) !important;
-    display: flex !important;
-    align-items: flex-end !important;
-    justify-content: center !important;
-    z-index: 10000 !important;
-    animation: fadeIn 0.3s ease !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+/* 邀请容器样式 */
+.invite-container {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 300px;
+    width: 100%;
+    margin: 20px auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease;
 }
 
 .mobile-modal-container {
@@ -1422,6 +1415,12 @@ body {
     gap: 10px;
 }
 
+.invite-actions .btn {
+    white-space: nowrap;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+}
+
 /* 二维码样式 */
 .invite-qr-section {
     text-align: center;
@@ -1466,10 +1465,12 @@ body {
 
 .modal-actions .btn {
     flex: 1;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border-radius: 12px;
     font-weight: 600;
     transition: all 0.3s ease;
+    white-space: nowrap;
+    font-size: 0.85rem;
 }
 
 .modal-actions .btn-primary {
@@ -2381,12 +2382,12 @@ body {
 }
 
 .action-btn {
-    padding: 20px 12px;
+    padding: 16px 12px;
     border: none;
     border-radius: 16px;
     background: linear-gradient(145deg, #f8f9fa, #e9ecef);
     color: var(--dark);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     display: flex;
     flex-direction: column;
@@ -2398,6 +2399,7 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.05);
     min-height: 80px;
+    white-space: nowrap;
 }
 
 .action-btn:active {
@@ -2491,6 +2493,40 @@ body {
 .action-btn:active::after {
     width: 100px;
     height: 100px;
+}
+
+/* 消费类型按钮样式 */
+.expense-type-buttons {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.type-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.05);
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.type-btn i {
+    font-size: 0.9rem;
+}
+
+.type-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* 快速记账标题美化 */

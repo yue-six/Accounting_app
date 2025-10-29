@@ -2,6 +2,7 @@ class FamilyModePage {
     constructor(app) {
         this.app = app;
         this.currentModal = null;
+        this.currentUser = { name: "我", role: "admin", id: "default", canPersonalExpense: true };
         this.loadFamilyData();
     }
 
@@ -12,7 +13,7 @@ class FamilyModePage {
             this.familyMembers = JSON.parse(localStorage.getItem('family_members') || '[]');
             this.familyTransactions = JSON.parse(localStorage.getItem('family_transactions') || '[]');
             this.familyBudgets = JSON.parse(localStorage.getItem('family_budgets') || '{}');
-            this.currentUser = JSON.parse(localStorage.getItem('current_family_user') || '{"name": "我", "role": "admin", "id": "default"}');
+            this.currentUser = JSON.parse(localStorage.getItem('current_family_user') || '{"name": "我", "role": "admin", "id": "default", "canPersonalExpense": true}');
         } catch (e) {
             console.error('加载家庭模式数据失败:', e);
         }
@@ -534,6 +535,11 @@ class FamilyModePage {
 
     // 选择消费类型
     selectExpenseType(type) {
+        if (type === 'personal' && !this.currentUser.canPersonalExpense) {
+            this.app.showToast('当前用户无个人消费权限', 'warning');
+            return;
+        }
+        
         this.currentExpenseType = type;
         
         document.querySelectorAll('.type-btn').forEach(btn => {

@@ -66,6 +66,18 @@ class FamilyModePage {
         }
     }
 
+    // 设置消费类型
+    setExpenseType(type) {
+        const buttons = document.querySelectorAll('.type-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.type === type) {
+                btn.classList.add('active');
+            }
+        });
+        this.currentExpenseType = type;
+    }
+
     // 渲染页面
     render() {
         return `
@@ -177,8 +189,12 @@ class FamilyModePage {
                             <div class="input-group">
                                 <label>消费类型</label>
                                 <div class="expense-type-buttons">
-                                    <button class="type-btn active" data-type="family">家庭共同</button>
-                                    <button class="type-btn" data-type="personal">个人消费</button>
+                                    <button class="type-btn active" data-type="family" onclick="familyModePage.setExpenseType('family')">
+                                        <i class="fas fa-home"></i> 家庭共同
+                                    </button>
+                                    <button class="type-btn" data-type="personal" onclick="familyModePage.setExpenseType('personal')">
+                                        <i class="fas fa-user"></i> 个人消费
+                                    </button>
                                 </div>
                             </div>
                             
@@ -292,12 +308,11 @@ class FamilyModePage {
         const isManual = this.familySettings.manual_balance !== undefined;
         
         const modalContent = `
-            <div class="modal-content">
-                <h3>编辑家庭总余额</h3>
+
                 <div class="form-group">
                     <label>当前余额：¥${currentBalance.toFixed(2)}</label>
                     <input type="number" id="edit-balance-input" class="form-control" 
-                           value="${currentBalance}" step="0.01" min="0" 
+                           value="${currentBalance}" step="1" min="0" 
                            placeholder="请输入新的余额">
                 </div>
                 <div class="form-group">
@@ -310,7 +325,7 @@ class FamilyModePage {
                     <button class="btn btn-secondary" onclick="familyModePage.closeModal()">取消</button>
                     <button class="btn btn-primary" onclick="familyModePage.confirmBalanceEdit()">确认</button>
                 </div>
-            </div>
+
         `;
         
         this.showModal('编辑余额', modalContent);
@@ -678,8 +693,8 @@ class FamilyModePage {
 
     // 显示添加成员
     showAddMember() {
-        const modalContent = `
-            <div class="mobile-modal-content">
+        const inviteContent = `
+            <div class="invite-container">
                 <h3>邀请家庭成员</h3>
                 <div class="invite-form">
                     <div class="form-group">
@@ -726,18 +741,31 @@ class FamilyModePage {
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="familyModePage.closeModal()">取消</button>
+                    <button class="btn btn-secondary" onclick="familyModePage.closeInvite()">取消</button>
                     <button class="btn btn-primary" onclick="familyModePage.confirmAddMember()">确认邀请</button>
                 </div>
             </div>
         `;
         
-        this.showMobileModal('邀请成员', modalContent);
+        // 直接显示弹窗内容
+        const inviteContainer = document.createElement('div');
+        inviteContainer.className = 'invite-container';
+        inviteContainer.innerHTML = inviteContent;
+        
+        // 添加到页面
+        document.getElementById('family-members-list').appendChild(inviteContainer);
         
         // 初始化邀请方式切换
         setTimeout(() => {
             this.initInviteMethods();
         }, 100);
+    }
+    
+    closeInvite() {
+        const inviteContainer = document.querySelector('.invite-container');
+        if (inviteContainer) {
+            inviteContainer.remove();
+        }
     }
 
     // 初始化邀请方式
