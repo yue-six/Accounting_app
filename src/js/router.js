@@ -8,6 +8,7 @@ class Router {
             'profile': null,
             'login': null,
             'register': null,
+            'phone-login': null,
             'savings-goals': null,
             'student-mode': null,
             'family-mode': null
@@ -38,6 +39,7 @@ class Router {
         this.pages.profile = typeof ProfilePage !== 'undefined' ? ProfilePage : null;
         this.pages.login = typeof LoginPage !== 'undefined' ? LoginPage : null;
         this.pages.register = typeof RegisterPage !== 'undefined' ? RegisterPage : null;
+        this.pages['phone-login'] = typeof PhoneLoginPage !== 'undefined' ? PhoneLoginPage : null;
         this.pages['savings-goals'] = typeof SavingsGoalsPage !== 'undefined' ? SavingsGoalsPage : null;
         
         // 用户模式专属页面

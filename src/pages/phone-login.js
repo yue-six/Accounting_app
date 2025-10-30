@@ -1,5 +1,5 @@
-// 登录页面组件
-class LoginPage {
+// 手机号登录页面组件
+class PhoneLoginPage {
     constructor(app) {
         this.app = app;
         this.state = { 
@@ -7,35 +7,34 @@ class LoginPage {
             code: '', 
             codeSent: false, 
             countdown: 0, 
-            timer: null,
-            loginType: 'password' // 默认登录方式：password 或 phone
+            timer: null
         };
     }
 
     render() {
         return `
-            <div class="page active" id="login-page" style="padding:16px;">
+            <div class="page active" id="phone-login-page" style="padding:16px;">
                 <div style="text-align:center;margin:24px 0;">
-                    <h2 style="margin:8px 0;">登录智能记账</h2>
-                    <div style="color:#718096;font-size:0.9rem;">请选择登录方式</div>
+                    <h2 style="margin:8px 0;">手机号登录</h2>
+                    <div style="color:#718096;font-size:0.9rem;">使用手机号验证码登录</div>
                 </div>
 
-                <!-- 账号密码登录 -->
+                <!-- 手机号登录 -->
                 <div class="card" style="padding:16px;">
-                    <h3 style="margin:0 0 12px 0;"><i class="fas fa-user"></i> 账号密码登录</h3>
+                    <h3 style="margin:0 0 12px 0;"><i class="fas fa-mobile-alt"></i> 手机号验证码登录</h3>
                     <div class="input-group" style="margin-bottom:10px;">
-                        <label>手机号/账号</label>
-                        <input id="username-input" type="text" placeholder="请输入手机号或用户名" maxlength="20">
+                        <label>手机号</label>
+                        <input id="phone-input" type="tel" placeholder="请输入11位手机号码" maxlength="11">
                     </div>
-                    <div class="input-group" style="margin-bottom:10px;">
-                        <label>密码</label>
-                        <input id="password-input" type="password" placeholder="请输入密码" maxlength="20">
+                    <div class="input-group" style="display:flex;gap:8px;align-items:center;">
+                        <input id="code-input" type="text" placeholder="验证码（默认 123456）" maxlength="6" style="flex:1;">
+                        <button id="btn-send-code" class="btn btn-secondary" style="white-space:nowrap;">获取验证码</button>
                     </div>
-                    <button id="btn-password-login" class="btn btn-primary" style="width:100%;margin-top:12px;">登录</button>
+                    <button id="btn-phone-login" class="btn btn-primary" style="width:100%;margin-top:12px;">登录</button>
                     
                     <div style="text-align:center;margin-top:12px;">
-                        <button id="btn-switch-to-phone" class="btn btn-link" style="color:var(--primary);text-decoration:none;">
-                            <i class="fas fa-mobile-alt"></i> 使用手机号验证码登录
+                        <button id="btn-switch-to-password" class="btn btn-link" style="color:var(--primary);text-decoration:none;">
+                            <i class="fas fa-user"></i> 使用账号密码登录
                         </button>
                     </div>
                 </div>
@@ -67,88 +66,84 @@ class LoginPage {
     initEvents() {
         const wechatBtn = document.getElementById('btn-wechat');
         const alipayBtn = document.getElementById('btn-alipay');
-        const passwordLoginBtn = document.getElementById('btn-password-login');
-        const usernameInput = document.getElementById('username-input');
-        const passwordInput = document.getElementById('password-input');
+        const sendCodeBtn = document.getElementById('btn-send-code');
+        const phoneLoginBtn = document.getElementById('btn-phone-login');
+        const phoneInput = document.getElementById('phone-input');
+        const codeInput = document.getElementById('code-input');
         const gotoRegister = document.getElementById('go-register');
-        const switchToPhoneBtn = document.getElementById('btn-switch-to-phone');
+        const switchToPasswordBtn = document.getElementById('btn-switch-to-password');
 
         if (wechatBtn) wechatBtn.addEventListener('click', () => this.simulateLogin('wechat'));
         if (alipayBtn) alipayBtn.addEventListener('click', () => this.simulateLogin('alipay'));
         
-        // 账号密码登录
-        if (passwordLoginBtn) {
-            passwordLoginBtn.addEventListener('click', () => {
-                const username = usernameInput.value.trim();
-                const password = passwordInput.value;
-                
-                if (!username) { this.app.showToast('请输入手机号或用户名', 'warning'); return; }
-                if (!password) { this.app.showToast('请输入密码', 'warning'); return; }
-                
-                this.loginWithPassword(username, password);
+        // 发送验证码
+        if (sendCodeBtn) {
+            sendCodeBtn.addEventListener('click', () => {
+                const phone = phoneInput.value.trim();
+                if (!/^1\d{10}$/.test(phone)) { 
+                    this.app.showToast('请输入有效的11位手机号', 'warning'); 
+                    return; 
+                }
+                this.state.phone = phone;
+                this.state.codeSent = true;
+                this.app.showToast('验证码已发送：123456', 'success');
+                this.startCountdown(sendCodeBtn);
             });
         }
         
-        // 跳转到手机号登录页面
-        if (switchToPhoneBtn) {
-            switchToPhoneBtn.addEventListener('click', (e) => {
+        // 手机号验证码登录
+        if (phoneLoginBtn) {
+            phoneLoginBtn.addEventListener('click', () => {
+                const phone = phoneInput.value.trim();
+                const code = codeInput.value.trim();
+                if (!/^1\d{10}$/.test(phone)) { 
+                    this.app.showToast('请输入有效的11位手机号', 'warning'); 
+                    return; 
+                }
+                if (!code) { 
+                    this.app.showToast('请输入验证码', 'warning'); 
+                    return; 
+                }
+                if (code !== '123456') { 
+                    this.app.showToast('验证码错误', 'error'); 
+                    return; 
+                }
+                
+                this.loginWithPhone(phone, code);
+            });
+        }
+        
+        // 跳转到账号密码登录页面
+        if (switchToPasswordBtn) {
+            switchToPasswordBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (window.router) window.router.switchToPage('phone-login');
+                if (window.router) window.router.switchToPage('login');
             });
         }
         
         if (gotoRegister) {
-            gotoRegister.addEventListener('click', (e) => { e.preventDefault(); if (window.router) window.router.switchToPage('register'); });
+            gotoRegister.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                if (window.router) window.router.switchToPage('register'); 
+            });
         }
     }
 
     updateData() {}
 
     startCountdown(btn) {
-        let left = 60; btn.disabled = true;
-        const update = () => { btn.textContent = left > 0 ? `${left}s后重发` : '获取验证码'; if (left === 0) { btn.disabled = false; return; } left -= 1; this.state.timer = setTimeout(update, 1000); };
+        let left = 60; 
+        btn.disabled = true;
+        const update = () => { 
+            btn.textContent = left > 0 ? `${left}s后重发` : '获取验证码'; 
+            if (left === 0) { 
+                btn.disabled = false; 
+                return; 
+            } 
+            left -= 1; 
+            this.state.timer = setTimeout(update, 1000); 
+        };
         update();
-    }
-
-    // 账号密码登录
-    loginWithPassword(username, password) {
-        try {
-            // 从本地存储获取用户数据
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            // 查找匹配的用户（支持手机号或用户名登录）
-            const user = users.find(u => 
-                (u.phone === username || u.username === username) && 
-                u.password === password
-            );
-            
-            if (!user) {
-                this.app.showToast('账号或密码错误', 'error');
-                return;
-            }
-            
-            // 登录成功
-            const authUser = {
-                provider: 'password',
-                nickname: user.nickname || '用户',
-                phone: user.phone,
-                username: user.username,
-                token: 'token_' + Date.now(),
-                userId: user.id || Date.now().toString()
-            };
-            
-            localStorage.setItem('auth_user', JSON.stringify(authUser));
-            this.app.showToast('登录成功', 'success');
-            
-            // 跳转到首页
-            if (window.router) {
-                window.router.switchToPage('home');
-            }
-            
-        } catch (error) {
-            console.error('登录失败:', error);
-            this.app.showToast('登录失败，请重试', 'error');
-        }
     }
 
     // 手机号验证码登录
@@ -182,9 +177,17 @@ class LoginPage {
                 const newUser = {
                     id: Date.now().toString(),
                     phone: phone,
+                    username: phone, // 使用手机号作为用户名
                     nickname: '手机用户',
                     password: 'auto_generated_' + Math.random().toString(36).substr(2, 8),
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString(),
+                    status: 'active',
+                    preferences: {
+                        theme: 'light',
+                        currency: 'CNY',
+                        language: 'zh-CN'
+                    }
                 };
                 
                 users.push(newUser);
@@ -194,6 +197,7 @@ class LoginPage {
                     provider: 'phone',
                     nickname: newUser.nickname,
                     phone: newUser.phone,
+                    username: newUser.username,
                     token: 'token_' + Date.now(),
                     userId: newUser.id
                 };
@@ -218,7 +222,7 @@ class LoginPage {
             provider, 
             nickname: provider === 'wechat' ? '微信用户' : '支付宝用户', 
             phone: null,
-            token: 'demo_token_' + Date.now() // 添加模拟的token
+            token: 'demo_token_' + Date.now()
         };
         localStorage.setItem('auth_user', JSON.stringify(user));
         this.app.showToast('登录成功', 'success');

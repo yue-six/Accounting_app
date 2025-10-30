@@ -275,10 +275,7 @@ class HomePage {
                 'monthlyOverview': '本月收支',
                 'modeSpecificTitle': '学习预算追踪'
             },
-            'family': {
-                'monthlyOverview': '家庭收支',
-                'modeSpecificTitle': '家庭财务管理'
-            },
+
 
         };
         
@@ -290,31 +287,7 @@ class HomePage {
         switch(mode) {
             case 'student':
                 return ''; // 删除学习预算追踪功能
-            case 'family':
-                return `
-                    <div class="card mode-specific-content family-mode">
-                        <h3><i class="fas fa-home"></i> 家庭财务管理</h3>
-                        <div class="mode-content">
-                            <div class="mode-stats">
-                                <div class="mode-stat-item">
-                                    <div class="stat-icon"><i class="fas fa-utensils"></i></div>
-                                    <div class="stat-info">
-                                        <div class="stat-value" id="family-expense">¥0</div>
-                                        <div class="stat-label">家庭支出</div>
-                                    </div>
-                                </div>
-                                <div class="mode-stat-item">
-                                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                                    <div class="stat-info">
-                                        <div class="stat-value" id="member-count">0</div>
-                                        <div class="stat-label">成员数量</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="mode-tip">管理家庭共同账户，追踪各项家庭支出，合理规划家庭预算</p>
-                        </div>
-                    </div>
-                `;
+
             case 'freelancer':
                 return `
                     <div class="card mode-specific-content">
@@ -401,9 +374,7 @@ class HomePage {
             case 'student':
                 this.loadStudentModeData();
                 break;
-            case 'family':
-                this.loadFamilyModeData();
-                break;
+
 
         }
     }
@@ -413,17 +384,7 @@ class HomePage {
         // 学习预算追踪功能已删除
     }
     
-    // 加载家庭模式数据
-    loadFamilyModeData() {
-        // 这里可以从app中获取家庭相关数据并更新UI
-        setTimeout(() => {
-            const familyExpenseEl = document.getElementById('family-expense');
-            const memberCountEl = document.getElementById('member-count');
-            
-            if (familyExpenseEl) familyExpenseEl.textContent = '¥8000';
-            if (memberCountEl) memberCountEl.textContent = '4';
-        }, 500);
-    }
+
     
     // 加载自由职业者模式数据
     loadFreelancerModeData() {
@@ -695,9 +656,7 @@ class HomePage {
                 case 'student':
                     this.updateStudentModeContent();
                     break;
-                case 'family':
-                    this.updateFamilyModeContent();
-                    break;
+
                 case 'freelancer':
                     this.updateFreelancerModeContent();
                     break;
@@ -710,11 +669,7 @@ class HomePage {
         // 学习预算追踪功能已删除
     }
     
-    // 更新家庭模式特定内容
-    updateFamilyModeContent() {
-        // 家庭模式特定内容更新逻辑
-        console.log('更新家庭模式内容');
-    }
+
     
 
 
