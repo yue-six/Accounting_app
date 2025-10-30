@@ -571,7 +571,7 @@ class FamilyModePage {
                         cursor: pointer;
                     ">×</button>
                 </div>
-                <div class="mobile-modal-body" style="padding: 20px;">
+                <div class="mobile-modal-body" style="padding: 15px;">
                     ${content}
                 </div>
             </div>
@@ -645,16 +645,22 @@ class FamilyModePage {
                 <h3>切换家庭成员</h3>
                 <div class="user-switch-list">
                     ${members.map(member => `
-                        <div class="user-switch-item ${this.currentUser.id === member.id ? 'active' : ''}" 
-                             onclick="familyModePage.selectUser('${member.id}')">
-                            <div class="user-avatar">${member.name.charAt(0)}</div>
-                            <div class="user-info">
-                                <div class="user-name">${member.name}</div>
-                                <div class="user-role">${this.getRoleText(member.role)}</div>
+                        <div class="user-switch-item ${this.currentUser.id === member.id ? 'active' : ''}">
+                            <div class="user-item-main" onclick="familyModePage.selectUser('${member.id}')">
+                                <div class="user-avatar">${member.name.charAt(0)}</div>
+                                <div class="user-info">
+                                    <div class="user-name">${member.name}</div>
+                                    <div class="user-role">${this.getRoleText(member.role)}</div>
+                                </div>
+                                ${this.currentUser.id === member.id ? 
+                                    '<div class="current-indicator"><i class="fas fa-check"></i> 当前用户</div>' : 
+                                    '<div class="switch-btn">切换</div>'
+                                }
                             </div>
-                            ${this.currentUser.id === member.id ? 
-                                '<div class="current-indicator"><i class="fas fa-check"></i> 当前用户</div>' : 
-                                '<div class="switch-btn">切换</div>'
+                            ${this.currentUser.role === 'admin' && member.id !== 'default' && this.currentUser.id !== member.id ? 
+                                `<div class="delete-btn" onclick="event.stopPropagation(); familyModePage.deleteMember('${member.id}')">
+                                    <i class="fas fa-trash-alt"></i> 删除
+                                </div>` : ''
                             }
                         </div>
                     `).join('')}
@@ -665,7 +671,80 @@ class FamilyModePage {
             </div>
         `;
         
-        this.showMobileModal('切换用户', modalContent);
+        // 调整弹窗样式，确保从手机框架底部弹出
+        const modal = document.createElement('div');
+        modal.className = 'mobile-modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+            width: 100%;
+            max-width: 375px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            height: 100%;
+        `;
+
+        modal.innerHTML = `
+            <div class="mobile-modal-container" style="
+                background: white;
+                border-radius: 20px 20px 0 0;
+                width: 100%;
+                max-height: 70vh;
+                overflow-y: auto;
+                animation: slideUp 0.3s ease-out;
+                box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
+                box-sizing: border-box;
+                transform-origin: bottom center;
+                position: absolute;
+                bottom: 60px;
+                left: 0;
+                right: 0;
+                z-index: 10001;
+            ">
+                <div class="mobile-modal-header" style="
+                    padding: 15px 15px 10px;
+                    border-bottom: 1px solid rgba(0,0,0,0.1);
+                    position: sticky;
+                    top: 0;
+                    background: white;
+                    z-index: 10;
+                ">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">切换用户</h3>
+                    <button class="mobile-modal-close" onclick="familyModePage.closeModal()" style="
+                        position: absolute;
+                        right: 15px;
+                        top: 15px;
+                        background: none;
+                        border: none;
+                        font-size: 1.3rem;
+                        color: #666;
+                        cursor: pointer;
+                        padding: 5px;
+                    ">×</button>
+                </div>
+                <div class="mobile-modal-body" style="padding: 20px;">
+                    ${modalContent}
+                </div>
+            </div>
+        `;
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModal();
+            }
+        });
+
+        document.body.appendChild(modal);
+        this.currentModal = modal;
     }
 
     // 选择用户
@@ -699,6 +778,134 @@ class FamilyModePage {
         this.closeModal();
         this.updateFamilyOverview();
         this.app.showToast(`已切换到 ${member.name}`, 'success');
+    }
+    
+    // 删除成员
+    async deleteMember(memberId) {
+        if (this.currentUser.role !== 'admin') {
+            this.app.showToast('只有管理员可以删除成员', 'warning');
+            return;
+        }
+        
+        // 不能删除默认管理员
+        if (memberId === 'default') {
+            this.app.showToast('不能删除默认管理员', 'warning');
+            return;
+        }
+        
+        // 找到要删除的成员
+        const memberIndex = this.familyMembers.findIndex(m => m.id === memberId);
+        if (memberIndex === -1) {
+            this.app.showToast('成员不存在', 'error');
+            return;
+        }
+        
+        const memberName = this.familyMembers[memberIndex].name;
+        
+        // 使用手机模式弹窗确认删除
+        this.showDeleteConfirmationModal(memberId, memberName);
+    }
+    
+    // 显示删除确认弹窗（手机模式）
+    showDeleteConfirmationModal(memberId, memberName) {
+        // 先关闭当前的切换用户弹窗
+        this.closeModal();
+        
+        const modalContent = `
+            <div class="delete-confirm-content">
+                <div class="warning-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <h4>确认删除</h4>
+                <p>确定要删除成员「${memberName}」吗？</p>
+                <p class="delete-note">此操作不可撤销。</p>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="familyModePage.closeModal()">取消</button>
+                    <button class="btn btn-danger" onclick="familyModePage.confirmDelete('${memberId}')">删除</button>
+                </div>
+            </div>
+        `;
+        
+        // 创建手机模式的确认弹窗
+        const modal = document.createElement('div');
+        modal.className = 'mobile-modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+            width: 100%;
+            max-width: 375px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            height: 100%;
+        `;
+
+        modal.innerHTML = `
+            <div class="mobile-modal-container" style="
+                background: white;
+                border-radius: 20px 20px 0 0;
+                width: 100%;
+                max-width: 320px;
+                position: absolute;
+                bottom: 60px;
+                left: 0;
+                right: 0;
+                margin: 0 auto;
+                z-index: 10001;
+                animation: slideUp 0.3s ease-out;
+                transform-origin: bottom center;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            ">
+                <div class="mobile-modal-body" style="padding: 20px;">
+                    ${modalContent}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        this.currentModal = modal;
+    }
+    
+    // 确认删除成员
+    async confirmDelete(memberId) {
+        try {
+            // 找到要删除的成员
+            const memberIndex = this.familyMembers.findIndex(m => m.id === memberId);
+            if (memberIndex === -1) {
+                this.app.showToast('成员不存在', 'error');
+                this.closeModal();
+                return;
+            }
+            
+            const memberName = this.familyMembers[memberIndex].name;
+            
+            // 从成员列表中移除
+            this.familyMembers.splice(memberIndex, 1);
+            
+            // 保存数据
+            await this.saveFamilyData();
+            
+            // 先显示成功提示
+            this.app.showToast(`已删除成员「${memberName}」`, 'success');
+            
+            // 关闭确认弹窗
+            this.closeModal();
+            
+            // 更新页面显示，使用更安全的方式更新而不是直接render
+            this.updateFamilyOverview();
+            
+        } catch (error) {
+            console.error('删除成员失败:', error);
+            // 即使出错也要关闭弹窗
+            this.closeModal();
+            this.app.showToast('删除成员失败，请重试', 'error');
+        }
     }
 
     // 显示添加成员

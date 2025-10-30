@@ -2,12 +2,62 @@ class FamilyModePage {
     constructor(app) {
         this.app = app;
         this.currentModal = null;
+        this.currentBottomModal = null;
+        this.modeDatabase = null;
+        this.familySettings = {};
+        this.familyMembers = [];
+        this.familyTransactions = [];
+        this.familyBudgets = {};
         this.currentUser = { name: "我", role: "admin", id: "default", canPersonalExpense: true };
-        this.loadFamilyData();
+        this.initDatabase();
     }
 
-    // 加载家庭模式数据
-    loadFamilyData() {
+    // 初始化数据库连接
+    async initDatabase() {
+        try {
+            // 检查是否支持数据库
+            if (typeof modeDatabase !== 'undefined') {
+                this.modeDatabase = modeDatabase;
+                await this.loadFamilyDataFromDatabase();
+            } else {
+                // 降级到本地存储
+                this.loadFamilyDataFromLocalStorage();
+            }
+        } catch (e) {
+            console.error('初始化数据库失败:', e);
+            this.loadFamilyDataFromLocalStorage();
+        }
+    }
+
+    // 从数据库加载家庭模式数据
+    async loadFamilyDataFromDatabase() {
+        try {
+            // 获取家庭模式设置
+            this.familySettings = await this.modeDatabase.getFamilyModeSettings() || {};
+            
+            // 获取家庭成员（从设置中提取）
+            this.familyMembers = this.familySettings.family_members || [];
+            
+            // 获取家庭交易记录
+            if (this.familySettings.id) {
+                this.familyTransactions = await this.modeDatabase.getFamilyTransactions(this.familySettings.id) || [];
+            }
+            
+            // 获取家庭预算
+            this.familyBudgets = this.familySettings.budgets || {};
+            
+            // 获取当前用户
+            this.currentUser = this.familySettings.current_user || { name: "我", role: "admin", id: "default", canPersonalExpense: true };
+            
+            console.log('✅ 家庭数据已从数据库加载');
+        } catch (e) {
+            console.error('从数据库加载家庭数据失败:', e);
+            this.loadFamilyDataFromLocalStorage();
+        }
+    }
+
+    // 从本地存储加载家庭模式数据
+    loadFamilyDataFromLocalStorage() {
         try {
             this.familySettings = JSON.parse(localStorage.getItem('family_mode_settings') || '{}');
             this.familyMembers = JSON.parse(localStorage.getItem('family_members') || '[]');
@@ -16,6 +66,48 @@ class FamilyModePage {
             this.currentUser = JSON.parse(localStorage.getItem('current_family_user') || '{"name": "我", "role": "admin", "id": "default", "canPersonalExpense": true}');
         } catch (e) {
             console.error('加载家庭模式数据失败:', e);
+        }
+    }
+
+    // 保存家庭数据到数据库
+    async saveFamilyDataToDatabase() {
+        try {
+            if (!this.modeDatabase) return;
+            
+            // 更新家庭设置
+            const settingsToSave = {
+                ...this.familySettings,
+                family_members: this.familyMembers,
+                budgets: this.familyBudgets,
+                current_user: this.currentUser,
+                updated_at: new Date().toISOString()
+            };
+            
+            await this.modeDatabase.saveFamilyModeSettings(settingsToSave);
+            
+            // 保存交易记录
+            if (this.familySettings.id && this.familyTransactions.length > 0) {
+                await this.modeDatabase.saveFamilyTransactions(this.familySettings.id, this.familyTransactions);
+            }
+            
+            console.log('✅ 家庭数据已保存到数据库');
+        } catch (e) {
+            console.error('保存家庭数据到数据库失败:', e);
+            // 降级到本地存储
+            this.saveFamilyDataToLocalStorage();
+        }
+    }
+
+    // 保存家庭数据到本地存储
+    saveFamilyDataToLocalStorage() {
+        try {
+            localStorage.setItem('family_mode_settings', JSON.stringify(this.familySettings));
+            localStorage.setItem('family_members', JSON.stringify(this.familyMembers));
+            localStorage.setItem('family_transactions', JSON.stringify(this.familyTransactions));
+            localStorage.setItem('family_budgets', JSON.stringify(this.familyBudgets));
+            localStorage.setItem('current_family_user', JSON.stringify(this.currentUser));
+        } catch (e) {
+            console.error('保存家庭数据到本地存储失败:', e);
         }
     }
 
@@ -548,7 +640,7 @@ class FamilyModePage {
     }
 
     // 添加家庭交易记录
-    addFamilyTransaction() {
+    async addFamilyTransaction() {
         const amount = parseFloat(document.getElementById('transaction-amount').value);
         const category = document.getElementById('transaction-category').value;
         const description = document.getElementById('transaction-description').value;
@@ -572,7 +664,13 @@ class FamilyModePage {
         };
 
         this.familyTransactions.unshift(transaction);
-        localStorage.setItem('family_transactions', JSON.stringify(this.familyTransactions));
+        
+        // 保存到数据库或本地存储
+        if (this.modeDatabase) {
+            await this.saveFamilyDataToDatabase();
+        } else {
+            localStorage.setItem('family_transactions', JSON.stringify(this.familyTransactions));
+        }
 
         // 同时添加到主应用的交易记录
         this.app.addTransaction({
@@ -625,7 +723,7 @@ class FamilyModePage {
     }
 
     // 添加家庭成员
-    addFamilyMember() {
+    async addFamilyMember() {
         const name = document.getElementById('member-name').value;
         const relation = document.getElementById('member-relation').value;
         const role = document.getElementById('member-role').value;
@@ -644,7 +742,13 @@ class FamilyModePage {
         };
 
         this.familyMembers.push(member);
-        localStorage.setItem('family_members', JSON.stringify(this.familyMembers));
+        
+        // 保存到数据库或本地存储
+        if (this.modeDatabase) {
+            await this.saveFamilyDataToDatabase();
+        } else {
+            localStorage.setItem('family_members', JSON.stringify(this.familyMembers));
+        }
 
         document.getElementById('family-members-list').innerHTML = this.renderFamilyMembers();
         this.hideModal();
@@ -679,18 +783,24 @@ class FamilyModePage {
     }
 
     // 选择用户
-    selectUser(userId) {
+    async selectUser(userId) {
         // 使用getFamilyMembers()方法确保包含管理员用户
         const allUsers = this.getFamilyMembers();
         const selectedUser = allUsers.find(user => user.id === userId);
         
         if (selectedUser) {
             this.currentUser = selectedUser;
-            localStorage.setItem('current_family_user', JSON.stringify(this.currentUser));
+            
+            // 保存到数据库或本地存储
+            if (this.modeDatabase) {
+                await this.saveFamilyDataToDatabase();
+            } else {
+                localStorage.setItem('current_family_user', JSON.stringify(this.currentUser));
+            }
             
             // 重新渲染页面
             document.getElementById('family-mode-page').innerHTML = this.render().replace('<div class="page active" id="family-mode-page">', '').replace('</div>', '');
-            this.hideModal();
+            this.hideBottomModal();
             this.app.showToast(`已切换到 ${selectedUser.name}`);
         }
     }
@@ -720,7 +830,7 @@ class FamilyModePage {
     }
 
     // 保存预算设置
-    saveBudgetSettings() {
+    async saveBudgetSettings() {
         const categories = ['餐饮美食', '交通出行', '购物消费', '生活缴费', '医疗健康', '教育培训', '娱乐休闲'];
         
         categories.forEach(category => {
@@ -732,7 +842,13 @@ class FamilyModePage {
             }
         });
 
-        localStorage.setItem('family_budgets', JSON.stringify(this.familyBudgets));
+        // 保存到数据库或本地存储
+        if (this.modeDatabase) {
+            await this.saveFamilyDataToDatabase();
+        } else {
+            localStorage.setItem('family_budgets', JSON.stringify(this.familyBudgets));
+        }
+        
         document.getElementById('budget-overview').innerHTML = this.renderBudgetOverview();
         
         this.hideModal();
@@ -1670,22 +1786,128 @@ class FamilyModePage {
         URL.revokeObjectURL(url);
     }
 
-    updateMemberRole(memberId, role) {
+    async updateMemberRole(memberId, role) {
         // 更新成员角色
         const member = this.familyMembers.find(m => m.id === memberId);
         if (member) {
             member.role = role;
-            this.saveFamilyData();
+            
+            // 保存到数据库或本地存储
+            if (this.modeDatabase) {
+                await this.saveFamilyDataToDatabase();
+            } else {
+                this.saveFamilyDataToLocalStorage();
+            }
         }
     }
 
-    updatePermission(memberId, permission, value) {
+    async updatePermission(memberId, permission, value) {
         // 更新成员权限
         const member = this.familyMembers.find(m => m.id === memberId);
         if (member) {
             if (!member.permissions) member.permissions = {};
             member.permissions[permission] = value;
-            this.saveFamilyData();
+            
+            // 保存到数据库或本地存储
+            if (this.modeDatabase) {
+                await this.saveFamilyDataToDatabase();
+            } else {
+                this.saveFamilyDataToLocalStorage();
+            }
+        }
+    }
+
+    // 移除家庭成员
+    async removeMember(memberId) {
+        // 确认删除
+        if (!confirm('确定要移除该家庭成员吗？此操作不可撤销。')) {
+            return;
+        }
+        
+        // 找到要删除的成员
+        const memberIndex = this.familyMembers.findIndex(m => m.id === memberId);
+        if (memberIndex === -1) {
+            this.app.showToast('未找到该成员', 'error');
+            return;
+        }
+        
+        const memberName = this.familyMembers[memberIndex].name;
+        
+        // 从成员列表中移除
+        this.familyMembers.splice(memberIndex, 1);
+        
+        // 保存到数据库或本地存储
+        if (this.modeDatabase) {
+            await this.saveFamilyDataToDatabase();
+        } else {
+            this.saveFamilyDataToLocalStorage();
+        }
+        
+        // 更新UI
+        document.getElementById('family-members-list').innerHTML = this.renderFamilyMembers();
+        this.app.showToast(`${memberName}已从家庭账本中移除`);
+    }
+
+    // 编辑家庭成员
+    async editMember(memberId) {
+        const member = this.familyMembers.find(m => m.id === memberId);
+        if (!member) {
+            this.app.showToast('未找到该成员', 'error');
+            return;
+        }
+        
+        this.showModal('编辑家庭成员', `
+            <div style="padding: 20px;">
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="edit-member-name" value="${member.name}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>关系</label>
+                    <input type="text" id="edit-member-relation" value="${member.relation || ''}" class="form-control" placeholder="如：配偶、子女、父母等">
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="edit-member-role" class="form-control">
+                        <option value="member" ${member.role === 'member' ? 'selected' : ''}>普通成员</option>
+                        <option value="admin" ${member.role === 'admin' ? 'selected' : ''}>管理员</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="familyModePage.saveMemberEdit('${memberId}')">保存</button>
+                    <button class="btn btn-secondary" onclick="familyModePage.hideModal()">取消</button>
+                </div>
+            </div>
+        `);
+    }
+
+    // 保存成员编辑
+    async saveMemberEdit(memberId) {
+        const name = document.getElementById('edit-member-name').value;
+        const relation = document.getElementById('edit-member-relation').value;
+        const role = document.getElementById('edit-member-role').value;
+
+        if (!name) {
+            this.app.showToast('请输入成员姓名');
+            return;
+        }
+
+        const member = this.familyMembers.find(m => m.id === memberId);
+        if (member) {
+            member.name = name;
+            member.relation = relation;
+            member.role = role;
+            
+            // 保存到数据库或本地存储
+            if (this.modeDatabase) {
+                await this.saveFamilyDataToDatabase();
+            } else {
+                this.saveFamilyDataToLocalStorage();
+            }
+            
+            document.getElementById('family-members-list').innerHTML = this.renderFamilyMembers();
+            this.hideModal();
+            this.app.showToast('成员信息已更新');
         }
     }
 }

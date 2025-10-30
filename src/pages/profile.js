@@ -618,7 +618,7 @@ class ProfilePage {
     }
 
     // 保存家庭模式设置
-    saveFamilySettings() {
+    async saveFamilySettings() {
         const familyBudget = document.getElementById('family-budget').value;
         const familyMembers = [];
         
@@ -626,16 +626,34 @@ class ProfilePage {
             const name = item.querySelector('input').value;
             const role = item.querySelector('select').value;
             if (name) {
-                familyMembers.push({ name, role });
+                familyMembers.push({ 
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                    name, 
+                    role,
+                    joinedAt: new Date().toISOString()
+                });
             }
         });
 
-        // 保存到本地存储
+        // 保存到数据库或本地存储
         const settings = {
             familyBudget,
-            familyMembers
+            familyMembers,
+            updated_at: new Date().toISOString()
         };
-        localStorage.setItem('family_mode_settings', JSON.stringify(settings));
+        
+        // 检查是否支持数据库
+        if (typeof modeDatabase !== 'undefined' && modeDatabase) {
+            try {
+                await modeDatabase.saveFamilyModeSettings(settings);
+            } catch (e) {
+                console.error('保存到数据库失败:', e);
+                // 降级到本地存储
+                localStorage.setItem('family_mode_settings', JSON.stringify(settings));
+            }
+        } else {
+            localStorage.setItem('family_mode_settings', JSON.stringify(settings));
+        }
 
         this.app.showToast('家庭模式设置已保存');
         this.hideModal();
