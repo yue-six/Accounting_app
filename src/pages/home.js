@@ -494,15 +494,15 @@ class HomePage {
             const apiAvailable = await this.checkBackendAPI();
             
             if (apiAvailable) {
-                // 获取本月日期范围（用于收入）
+                // 获取本月日期范围
                 const now = new Date();
                 const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
                 const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
                 
-                // 获取今日日期（用于支出）
+                // 获取今日日期
                 const today = new Date().toISOString().split('T')[0];
                 
-                // 调用后端API获取本月收入统计
+                // 调用后端API获取本月完整统计（包含收入和支出）
                 const monthlyResponse = await fetch(`/api/transactions/stats/summary?startDate=${startDate}&endDate=${endDate}`);
                 
                 // 调用后端API获取今日支出统计
@@ -516,17 +516,24 @@ class HomePage {
                         const monthlyStats = monthlyResult.data.stats;
                         const todayStats = todayResult.data.stats;
                         
+                        // 注意：学生模式的兼职收入已经通过交易记录包含在API返回的数据中
+                        // 不需要再次添加，否则会导致重复计算
+                        const totalIncome = monthlyStats.totalIncome || 0;
+                        const totalExpense = monthlyStats.totalExpense || 0;
+                        const totalBalance = totalIncome - totalExpense;
+                        
                         // 更新页面显示
-                        document.getElementById('monthly-income').textContent = `¥${monthlyStats.totalIncome || 0}`;
+                        document.getElementById('monthly-income').textContent = `¥${totalIncome}`;
                         document.getElementById('today-expense').textContent = `¥${todayStats.totalExpense || 0}`;
-                        document.getElementById('monthly-balance').textContent = `¥${monthlyStats.netIncome || 0}`;
+                        document.getElementById('monthly-balance').textContent = `¥${totalBalance}`;
                         
                         // 计算预算进度（基于当月预算与当月支出）
                         const budgetProgress = this.calculateBudgetProgress();
                         document.getElementById('budget-progress').textContent = `${budgetProgress}%`;
                         this.updateBudgetIndicators(budgetProgress);
                         
-                        console.log('✅ 使用后端API数据');
+                        console.log('✅ 使用后端API数据（兼职收入已包含在交易记录中）');
+                        console.log(`本月收入: ¥${totalIncome}, 本月支出: ¥${totalExpense}, 本月结余: ¥${totalBalance}`);
                         return;
                     }
                 }
@@ -536,14 +543,21 @@ class HomePage {
             const monthlyStats = this.app.getMonthlyStats();
             const todayStats = this.app.getTodayStats();
             
-            document.getElementById('monthly-income').textContent = `¥${monthlyStats.income}`;
+            // 注意：学生模式的兼职收入已经通过交易记录包含在本地数据中
+            // 不需要再次添加，否则会导致重复计算
+            const totalIncome = monthlyStats.income;
+            const totalExpense = monthlyStats.expense;
+            const totalBalance = totalIncome - totalExpense;
+            
+            document.getElementById('monthly-income').textContent = `¥${totalIncome}`;
             document.getElementById('today-expense').textContent = `¥${todayStats.expense}`;
-            document.getElementById('monthly-balance').textContent = `¥${monthlyStats.balance}`;
+            document.getElementById('monthly-balance').textContent = `¥${totalBalance}`;
             const budgetProgress = this.calculateBudgetProgress();
             document.getElementById('budget-progress').textContent = `${budgetProgress}%`;
             this.updateBudgetIndicators(budgetProgress);
             
-            console.log('📁 使用本地数据');
+            console.log('📁 使用本地数据（兼职收入已包含在交易记录中）');
+            console.log(`本月收入: ¥${totalIncome}, 本月支出: ¥${totalExpense}, 本月结余: ¥${totalBalance}`);
             
         } catch (error) {
             console.error('加载本月统计数据错误:', error);
@@ -564,6 +578,30 @@ class HomePage {
         }
     }
     
+    // 获取学生模式的兼职收入
+    getStudentPartTimeIncome() {
+        try {
+            const partTimeJobs = JSON.parse(localStorage.getItem('student_part_time_jobs') || '[]');
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            let totalIncome = 0;
+            partTimeJobs.forEach(job => {
+                if (job.status === 'completed') {
+                    const jobDate = new Date(job.date);
+                    if (jobDate.getMonth() === currentMonth && jobDate.getFullYear() === currentYear) {
+                        totalIncome += job.amount;
+                    }
+                }
+            });
+            
+            return totalIncome;
+        } catch (error) {
+            console.error('获取学生模式兼职收入失败:', error);
+            return 0;
+        }
+    }
+
     // 计算预算进度（按当月预算与当月支出）
     calculateBudgetProgress() {
         const monthlyBudget = Number(this.app.budgets?.monthly || 0);

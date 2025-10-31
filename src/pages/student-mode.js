@@ -662,7 +662,7 @@ class StudentModePage {
     }
 
     // 保存兼职工作
-    savePartTimeJob() {
+    async savePartTimeJob() {
         const source = document.getElementById('job-source').value;
         const description = document.getElementById('job-description').value;
         const amount = parseFloat(document.getElementById('job-amount').value);
@@ -689,6 +689,7 @@ class StudentModePage {
 
         // 如果是已到账的收入，自动添加到收入记录
         if (status === 'completed') {
+            // 添加到应用交易记录
             this.app.addTransaction({
                 type: 'income',
                 amount,
@@ -696,6 +697,24 @@ class StudentModePage {
                 description: `${source} - ${description}`,
                 date
             });
+
+            // 同步到数据库
+            try {
+                if (typeof modeDatabase !== 'undefined' && modeDatabase) {
+                    await modeDatabase.addUserTransaction({
+                        type: 'income',
+                        amount: amount,
+                        category: '兼职收入',
+                        description: `${source} - ${description}`,
+                        date: date,
+                        source: 'student_mode',
+                        created_at: new Date().toISOString()
+                    });
+                    console.log('兼职收入已同步到数据库');
+                }
+            } catch (error) {
+                console.error('同步兼职收入到数据库失败:', error);
+            }
         }
 
         // 更新兼职记录列表
@@ -1525,13 +1544,13 @@ class StudentModePage {
     }
 
     // 确认删除兼职记录
-    confirmDeletePartTimeJob(jobId, job) {
+    async confirmDeletePartTimeJob(jobId, job) {
         this.partTimeJobs = this.partTimeJobs.filter(job => job.id !== jobId);
         localStorage.setItem('student_part_time_jobs', JSON.stringify(this.partTimeJobs));
         
         // 同步删除对应的交易记录（如果是已到账的收入）
         if (job.status === 'completed') {
-            this.syncDeleteTransaction(job);
+            await this.syncDeleteTransaction(job);
         }
         
         // 立即刷新显示
@@ -1562,7 +1581,7 @@ class StudentModePage {
     }
 
     // 同步删除对应的交易记录
-    syncDeleteTransaction(job) {
+    async syncDeleteTransaction(job) {
         try {
             // 获取交易记录
             const transactions = this.app.transactions || [];
@@ -1583,6 +1602,34 @@ class StudentModePage {
                 // 删除对应的交易记录
                 this.app.deleteTransaction(transactionIndex);
                 console.log('已同步删除对应的交易记录');
+            }
+            
+            // 同步删除数据库中的对应交易记录
+            try {
+                if (typeof modeDatabase !== 'undefined' && modeDatabase) {
+                    // 获取数据库中的交易记录
+                    const dbTransactions = await modeDatabase.getUserTransactions();
+                    
+                    // 查找匹配的数据库记录
+                    const dbTransaction = dbTransactions.find(transaction => {
+                        const expectedDescription = `${job.source} - ${job.description || '兼职收入'}`;
+                        
+                        return transaction.type === 'income' && 
+                               transaction.category === '兼职收入' &&
+                               transaction.amount === job.amount &&
+                               new Date(transaction.date).toDateString() === new Date(job.date).toDateString() &&
+                               transaction.description === expectedDescription;
+                    });
+                    
+                    if (dbTransaction) {
+                        // 这里需要实现数据库删除逻辑
+                        // 由于modeDatabase没有提供删除方法，我们暂时记录日志
+                        console.log('需要删除数据库中的兼职收入记录:', dbTransaction);
+                        // TODO: 实现数据库删除功能
+                    }
+                }
+            } catch (dbError) {
+                console.error('同步删除数据库记录失败:', dbError);
             }
         } catch (error) {
             console.error('同步删除交易记录失败:', error);

@@ -166,7 +166,7 @@ class AccountingApp {
         const transaction = {
             id: this.generateId(),
             ...transactionData,
-            date: new Date().toISOString(),
+            date: transactionData.date || new Date().toISOString(),
             time: new Date().toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' })
         };
         
@@ -180,10 +180,10 @@ class AccountingApp {
                 body: JSON.stringify({
                     type: transaction.type,
                     amount: transaction.amount,
-                    categoryId: transaction.category,
+                    category: transaction.category,  // 修正字段名
                     description: transaction.description,
                     merchant: transaction.merchant,
-                    transactionDate: transaction.date
+                    date: transaction.date  // 修正字段名
                 })
             });
             
@@ -204,16 +204,23 @@ class AccountingApp {
             console.error('保存交易到后端失败:', error);
             
             // 后端保存失败，尝试使用Supabase或本地存储
-            if (this.useSupabase) {
-                // 保存到Supabase
-                const savedTransaction = await this.supabaseClient.addTransaction(transaction);
-                if (savedTransaction) {
-                    transaction.id = savedTransaction.id;
+            if (this.useSupabase && this.supabaseClient) {
+                try {
+                    // 保存到Supabase
+                    const savedTransaction = await this.supabaseClient.addTransaction(transaction);
+                    if (savedTransaction) {
+                        transaction.id = savedTransaction.id;
+                        this.transactions.unshift(transaction);
+                        this.showToast('记账成功！');
+                    } else {
+                        throw new Error('Supabase保存失败');
+                    }
+                } catch (supabaseError) {
+                    console.error('Supabase保存失败:', supabaseError);
+                    // Supabase保存失败，回退到本地存储
                     this.transactions.unshift(transaction);
+                    await this.saveData();
                     this.showToast('记账成功！');
-                } else {
-                    this.showToast('记账失败，请重试', 'error');
-                    return null;
                 }
             } else {
                 // 保存到本地存储
@@ -428,11 +435,12 @@ class AccountingApp {
         );
 
         const income = todayTransactions.filter(t => t.type === 'income')
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
         const expense = todayTransactions.filter(t => t.type === 'expense')
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
         const balance = income - expense;
 
+        console.log(`今日统计 - 交易数量: ${todayTransactions.length}, 收入: ${income}, 支出: ${expense}, 结余: ${balance}`);
         return { income, expense, balance };
     }
 
@@ -462,17 +470,21 @@ class AccountingApp {
         const start = new Date(now.getFullYear(), now.getMonth(), 1);
         const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         
+        // 确保end日期包含当天的完整时间
+        end.setHours(23, 59, 59, 999);
+        
         const monthlyTransactions = this.transactions.filter(t => {
             const transactionDate = new Date(t.date);
             return transactionDate >= start && transactionDate <= end;
         });
 
         const income = monthlyTransactions.filter(t => t.type === 'income')
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
         const expense = monthlyTransactions.filter(t => t.type === 'expense')
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
         const balance = income - expense;
 
+        console.log(`本月统计 - 交易数量: ${monthlyTransactions.length}, 收入: ${income}, 支出: ${expense}, 结余: ${balance}`);
         return { income, expense, balance };
     }
 
