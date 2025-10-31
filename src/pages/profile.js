@@ -413,20 +413,47 @@ class ProfilePage {
     }
 
     // 显示设置
-    showSettings() {
+    async showSettings() {
+        try {
+            // 获取当前登录用户信息
+            const user = await this.getCurrentUserInfo();
+            
+            this.showModal('账户设置', `
+                <div style="padding: 20px;">
+                    <div class="input-group">
+                        <label>用户名</label>
+                        <input type="text" id="profile-username" value="${user?.username || user?.nickname || ''}" placeholder="请输入用户名">
+                    </div>
+                    <div class="input-group">
+                        <label>手机号</label>
+                        <input type="tel" id="profile-phone" value="${user?.phone || ''}" placeholder="请输入手机号">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="profilePage.saveSettings()">保存</button>
+                        <button class="btn btn-secondary" onclick="profilePage.hideModal()">取消</button>
+                    </div>
+                </div>
+            `);
+        } catch (error) {
+            console.error('获取用户信息失败:', error);
+            // 降级到本地存储
+            this.showSettingsFallback();
+        }
+    }
+
+    // 降级显示设置（使用本地存储）
+    showSettingsFallback() {
+        const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+        
         this.showModal('账户设置', `
             <div style="padding: 20px;">
                 <div class="input-group">
                     <label>用户名</label>
-                    <input type="text" value="张三" placeholder="请输入用户名">
-                </div>
-                <div class="input-group">
-                    <label>邮箱</label>
-                    <input type="email" value="zhangsan@example.com" placeholder="请输入邮箱">
+                    <input type="text" id="profile-username" value="${user?.nickname || user?.username || ''}" placeholder="请输入用户名">
                 </div>
                 <div class="input-group">
                     <label>手机号</label>
-                    <input type="tel" value="138****8888" placeholder="请输入手机号">
+                    <input type="tel" id="profile-phone" value="${user?.phone || ''}" placeholder="请输入手机号">
                 </div>
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="profilePage.saveSettings()">保存</button>
@@ -592,10 +619,37 @@ class ProfilePage {
         `);
     }
 
-    // 保存设置（示例方法）
-    saveSettings() {
-        this.app.showToast('设置已保存');
-        this.hideModal();
+    // 保存设置
+    async saveSettings() {
+        try {
+            // 获取表单数据
+            const username = document.getElementById('profile-username')?.value || '';
+            const phone = document.getElementById('profile-phone')?.value || '';
+            
+            // 验证数据
+            if (!username.trim()) {
+                this.app.showToast('请输入用户名', 'error');
+                return;
+            }
+            
+            // 更新用户信息到数据库
+            const success = await this.updateUserProfile({
+                username: username.trim(),
+                phone: phone.trim()
+            });
+            
+            if (success) {
+                this.app.showToast('账户设置已保存');
+                this.hideModal();
+                // 更新页面显示
+                this.updateData();
+            } else {
+                this.app.showToast('保存失败，请重试', 'error');
+            }
+        } catch (error) {
+            console.error('保存设置失败:', error);
+            this.app.showToast('保存失败，请重试', 'error');
+        }
     }
 
     // 保存学生模式设置
@@ -873,6 +927,106 @@ class ProfilePage {
         this.app.showToast('已退出登录', 'success');
         if (window.router) window.router.switchToPage('login');
         this.hideModal();
+    }
+
+    // 获取当前用户信息（从数据库）
+    async getCurrentUserInfo() {
+        try {
+            // 首先检查本地存储的认证信息
+            const authUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
+            
+            // 如果有token，尝试从API获取最新用户信息
+            if (authUser.token) {
+                const response = await fetch('/api/auth/me', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authUser.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        return result.data.user;
+                    }
+                }
+            }
+            
+            // 降级到本地存储信息
+            return authUser;
+        } catch (error) {
+            console.error('获取用户信息失败:', error);
+            // 返回本地存储信息作为降级方案
+            return JSON.parse(localStorage.getItem('auth_user') || '{}');
+        }
+    }
+
+    // 更新用户信息到数据库
+    async updateUserProfile(profileData) {
+        try {
+            const authUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
+            
+            if (!authUser.token) {
+                // 如果没有token，使用本地存储
+                this.updateLocalUserProfile(profileData);
+                return true;
+            }
+            
+            const response = await fetch('/api/users/profile', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${authUser.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    profile: profileData
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    // 更新本地存储的用户信息
+                    this.updateLocalUserProfile(profileData);
+                    return true;
+                }
+            }
+            
+            // API调用失败，使用本地存储
+            this.updateLocalUserProfile(profileData);
+            return true;
+        } catch (error) {
+            console.error('更新用户信息失败:', error);
+            // 降级到本地存储
+            this.updateLocalUserProfile(profileData);
+            return true;
+        }
+    }
+
+    // 更新本地存储的用户信息
+    updateLocalUserProfile(profileData) {
+        try {
+            const authUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
+            
+            // 更新用户信息
+            const updatedUser = {
+                ...authUser,
+                ...profileData,
+                nickname: profileData.username || authUser.nickname,
+                updatedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+        } catch (error) {
+            console.error('更新本地用户信息失败:', error);
+        }
+    }
+
+    // 验证邮箱格式
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
 }
 
