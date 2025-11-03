@@ -1091,6 +1091,23 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
+/* 移动端模态框遮罩层 */
+.mobile-modal-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    z-index: 10000 !important;
+    animation: fadeIn 0.3s ease !important;
+    border-radius: 32px !important;
+    overflow: hidden !important;
+}
+
 .mobile-modal-container {
     background: white !important;
     border-radius: 24px 24px 0 0 !important;

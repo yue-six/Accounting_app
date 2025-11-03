@@ -483,31 +483,30 @@ class FamilyModePage {
         `).join('');
     }
 
-    // 模态框方法
+    // 模态框方法（移动端从底部滑入）
     showModal(title, content) {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-        `;
+        // 如果已经有模态框打开，先移除它
+        if (this.currentModal) {
+            this.currentModal.remove();
+        }
 
+        // 获取手机模拟框容器
+        const phoneFrame = document.querySelector('.phone-frame');
+        if (!phoneFrame) {
+            console.error('找不到手机模拟框容器');
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'mobile-modal-overlay';
+        
         modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>${title}</h3>
-                    <button class="modal-close" onclick="familyModePage.closeModal()">×</button>
+            <div class="mobile-modal-container">
+                <div class="mobile-modal-header">
+                    <h3 class="mobile-modal-title">${title}</h3>
+                    <button class="mobile-modal-close" onclick="familyModePage.hideModal()">×</button>
                 </div>
-                <div class="modal-body">
+                <div class="mobile-modal-body">
                     ${content}
                 </div>
             </div>
@@ -515,12 +514,21 @@ class FamilyModePage {
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                this.closeModal();
+                this.hideModal();
             }
         });
 
-        document.body.appendChild(modal);
+        // 将模态框添加到手机模拟框容器中
+        phoneFrame.appendChild(modal);
         this.currentModal = modal;
+    }
+
+    // 隐藏模态框（用于手机模拟框内的模态框）
+    hideModal() {
+        if (this.currentModal) {
+            this.currentModal.remove();
+            this.currentModal = null;
+        }
     }
 
     // 移动端模态框方法
@@ -642,53 +650,13 @@ class FamilyModePage {
                     `).join('')}
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="familyModePage.closeModal()">取消</button>
+                    <button class="btn btn-secondary" onclick="familyModePage.hideModal()">取消</button>
                 </div>
             </div>
         `;
         
-        // 调整弹窗样式，确保从手机框架底部弹出
-        const modal = document.createElement('div');
-        modal.className = 'mobile-modal-overlay';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            z-index: 10000;
-            animation: fadeIn 0.3s ease;
-            width: 100%;
-            max-width: 375px;
-            margin: 0 auto;
-            box-sizing: border-box;
-            height: 100%;
-        `;
-
-        modal.innerHTML = `
-            <div class="mobile-modal-container">
-                <div class="mobile-modal-header">
-                    <h3>切换用户</h3>
-                    <button class="mobile-modal-close" onclick="familyModePage.closeModal()">×</button>
-                </div>
-                <div class="mobile-modal-body">
-                    ${modalContent}
-                </div>
-            </div>
-        `;
-
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                this.closeModal();
-            }
-        });
-
-        document.body.appendChild(modal);
-        this.currentModal = modal;
+        // 使用修改后的showModal方法，确保从手机模拟框底部弹出
+        this.showModal('切换用户', modalContent);
     }
 
     // 选择用户
