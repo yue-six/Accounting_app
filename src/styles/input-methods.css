@@ -21,55 +21,24 @@
     border-radius: 12px;
     background: white;
     cursor: pointer;
-    transition: all 0.3s ease;
     min-height: 80px;
     text-align: center;
 }
 
-.input-method-btn:hover {
-    border-color: #4fd1c5;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(79, 209, 197, 0.2);
-}
-
-.input-method-btn:active {
-    transform: translateY(0);
-}
-
 .input-method-btn.voice {
-    border-color: #4299e1;
-}
-
-.input-method-btn.voice:hover {
-    border-color: #3182ce;
-    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
+    border-color: #1e88e5;
 }
 
 .input-method-btn.qr {
-    border-color: #48bb78;
-}
-
-.input-method-btn.qr:hover {
-    border-color: #38a169;
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.2);
+    border-color: #1e88e5;
 }
 
 .input-method-btn.manual {
-    border-color: #ed8936;
-}
-
-.input-method-btn.manual:hover {
-    border-color: #dd6b20;
-    box-shadow: 0 4px 12px rgba(237, 137, 54, 0.2);
+    border-color: #1e88e5;
 }
 
 .input-method-btn.photo {
-    border-color: #9f7aea;
-}
-
-.input-method-btn.photo:hover {
-    border-color: #805ad5;
-    box-shadow: 0 4px 12px rgba(159, 122, 234, 0.2);
+    border-color: #1e88e5;
 }
 
 .method-icon {

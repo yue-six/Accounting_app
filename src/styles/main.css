@@ -1,15 +1,15 @@
 /* 手机APP样式 - 全局样式和变量定义 */
 :root {
-    --primary: #667eea;
-    --secondary: #764ba2;
-    --success: #4fd1c5;
-    --warning: #f56565;
-    --info: #4299e1;
-    --light: #f7fafc;
-    --dark: #2d3748;
+    --primary: #1e88e5;
+    --secondary: #1565c0;
+    --success: #43a047;
+    --warning: #f57c00;
+    --info: #0288d1;
+    --light: #f5f5f5;
+    --dark: #263238;
     --border-radius: 16px;
     --shadow: 0 4px 12px rgba(0,0,0,0.1);
-    --shadow-hover: 0 8px 24px rgba(0,0,0,0.15);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.1);
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-bottom: env(safe-area-inset-bottom);
     --phone-width: 375px;
@@ -42,7 +42,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at center, #2c2c2c 0%, #1a1a1a 100%);
+    background: #f5f5f5;
 }
 
 /* 手机模拟器容器 */
@@ -144,7 +144,6 @@ body {
     color: #8a8a8a;
     text-decoration: none;
     font-size: 0.7rem;
-    transition: all 0.2s ease;
     border-radius: 12px;
     min-width: 60px;
     height: 44px;
@@ -158,11 +157,10 @@ body {
 .nav-item i {
     font-size: 1.2rem;
     margin-bottom: 2px;
-    transition: all 0.2s ease;
 }
 
 .nav-item.active i {
-    transform: scale(1.1);
+    /* 移除缩放效果 */
 }
 
 .nav-item span {
@@ -182,19 +180,9 @@ body {
 
 .page {
     padding: 0;
-    animation: slideUp 0.3s ease-out;
 }
 
-@keyframes slideUp {
-    from { 
-        opacity: 0; 
-        transform: translateY(20px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-}
+/* 移除动画效果 */
 
 /* 手机卡片样式 */
 .card {
@@ -216,11 +204,11 @@ body {
 #student-mode-page .page-header {
     text-align: center;
     padding: 25px 0 35px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #1e88e5, #1565c0);
     color: white;
     border-radius: var(--border-radius);
     margin-bottom: 25px;
-    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 15px 40px rgba(30, 136, 229, 0.3);
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(20px);
@@ -234,7 +222,6 @@ body {
     width: 200%;
     height: 200%;
     background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-    animation: float 6s ease-in-out infinite;
 }
 
 #student-mode-page .page-header::after {
@@ -245,7 +232,6 @@ body {
     right: 0;
     bottom: 0;
     background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-    animation: shimmer 3s ease-in-out infinite;
 }
 
 #student-mode-page .page-header h2 {
