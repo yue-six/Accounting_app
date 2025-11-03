@@ -2,11 +2,11 @@
 :root {
     --primary: #1e88e5;
     --secondary: #1565c0;
-    --success: #43a047;
-    --warning: #f57c00;
-    --info: #0288d1;
-    --light: #f5f5f5;
-    --dark: #263238;
+    --success: #1e88e5;
+    --warning: #1e88e5;
+    --info: #1e88e5;
+    --light: #ffffff;
+    --dark: #000000;
     --border-radius: 16px;
     --shadow: 0 4px 12px rgba(0,0,0,0.1);
 
@@ -30,19 +30,19 @@
 html, body {
     height: 100%;
     overflow: visible;
-    background: #1a1a1a;
+    background: #ffffff;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
-    color: var(--dark);
+    color: #000000;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     touch-action: manipulation;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f5f5f5;
+    background: #ffffff;
 }
 
 /* 手机模拟器容器 */
@@ -96,7 +96,7 @@ body {
     height: calc(100% - 30px);
     display: flex;
     flex-direction: column;
-    background: #f8f9fa;
+    background: #ffffff;
     position: relative;
 }
 
@@ -108,7 +108,7 @@ body {
     text-align: center;
     position: relative;
     z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(30,136,229,0.2);
     border-radius: 0;
 }
 
@@ -130,7 +130,7 @@ body {
     display: flex;
     justify-content: space-around;
     padding: 8px 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(30,136,229,0.1);
     z-index: 1000;
     height: 60px;
 }
@@ -141,7 +141,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 4px 12px;
-    color: #8a8a8a;
+    color: #000000;
     text-decoration: none;
     font-size: 0.7rem;
     border-radius: 12px;
@@ -151,7 +151,7 @@ body {
 
 .nav-item.active {
     color: var(--primary);
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(30, 136, 229, 0.2);
 }
 
 .nav-item i {
@@ -191,7 +191,7 @@ body {
     padding: 20px;
     margin-bottom: 16px;
     box-shadow: var(--shadow);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(30,136,229,0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -388,11 +388,11 @@ body {
 #family-mode-page .page-header {
     text-align: center;
     padding: 25px 0 35px;
-    background: linear-gradient(135deg, #f56565, #ed8936);
+    background: linear-gradient(135deg, #1e88e5, #1565c0);
     color: white;
     border-radius: var(--border-radius);
     margin-bottom: 25px;
-    box-shadow: 0 15px 40px rgba(245, 101, 101, 0.3);
+    box-shadow: 0 15px 40px rgba(30, 136, 229, 0.3);
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(20px);
@@ -2254,35 +2254,35 @@ body {
 
 /* 语音记账按钮特殊样式 */
 #voice-input-btn {
-    background: linear-gradient(145deg, rgba(79, 209, 197, 0.15), rgba(79, 209, 197, 0.08));
-    border-color: rgba(79, 209, 197, 0.3);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-color: rgba(0, 0, 0, 0.05);
 }
 
 #voice-input-btn i {
-    color: var(--success);
-    text-shadow: 0 2px 8px rgba(79, 209, 197, 0.3);
+    color: var(--primary);
+    text-shadow: 0 2px 8px rgba(30, 136, 229, 0.3);
 }
 
 /* 拍照记账按钮特殊样式 */
 #photo-input-btn {
-    background: linear-gradient(145deg, rgba(102, 126, 234, 0.15), rgba(102, 126, 234, 0.08));
-    border-color: rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-color: rgba(0, 0, 0, 0.05);
 }
 
 #photo-input-btn i {
-    color: var(--primary);
-    text-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    color: var(--secondary);
+    text-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
 }
 
 /* 手动输入按钮特殊样式 */
 #manual-input-btn {
-    background: linear-gradient(145deg, rgba(245, 101, 101, 0.15), rgba(245, 101, 101, 0.08));
-    border-color: rgba(245, 101, 101, 0.3);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-color: rgba(0, 0, 0, 0.05);
 }
 
 #manual-input-btn i {
     color: var(--warning);
-    text-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+    text-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
 }
 
 /* 按钮文字样式 */

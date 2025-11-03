@@ -17,7 +17,7 @@
     align-items: center;
     justify-content: center;
     padding: 16px 12px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid rgba(30,136,229,0.2);
     border-radius: 12px;
     background: white;
     cursor: pointer;
@@ -27,18 +27,22 @@
 
 .input-method-btn.voice {
     border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
 }
 
 .input-method-btn.qr {
     border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
 }
 
 .input-method-btn.manual {
     border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
 }
 
 .input-method-btn.photo {
     border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
 }
 
 .method-icon {
@@ -50,7 +54,7 @@
 .method-label {
     font-size: 0.85rem;
     font-weight: 500;
-    color: #4a5568;
+    color: #000000;
 }
 
 /* 输入模态框样式 - 移动端统一标准 */
@@ -82,10 +86,10 @@
 
 .input-modal-header {
     padding: 16px 20px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid rgba(30,136,229,0.1);
     position: sticky;
     top: 0;
-    background: #fafafa;
+    background: white;
     z-index: 10;
     display: flex;
     justify-content: space-between;
@@ -96,7 +100,7 @@
 .input-modal-title {
     font-size: 18px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: #000000;
     flex: 1;
     text-align: center;
 }
@@ -134,15 +138,15 @@
 }
 
 .voice-status.recording {
-    color: #e53e3e;
+    color: #000000;
 }
 
 .voice-status.processing {
-    color: #d69e2e;
+    color: #000000;
 }
 
 .voice-status.success {
-    color: #38a169;
+    color: #000000;
 }
 
 /* 扫码界面 */
@@ -155,14 +159,14 @@
     width: 100%;
     max-width: 300px;
     height: 300px;
-    background: #f7fafc;
-    border: 2px dashed #cbd5e0;
+    background: white;
+    border: 2px dashed rgba(0,0,0,0.3);
     border-radius: 8px;
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #718096;
+    color: #000000;
 }
 
 /* 拍照界面 */
@@ -175,14 +179,14 @@
     width: 100%;
     max-width: 300px;
     height: 300px;
-    background: #f7fafc;
-    border: 2px dashed #cbd5e0;
+    background: white;
+    border: 2px dashed rgba(0,0,0,0.3);
     border-radius: 8px;
     margin: 0 auto 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #718096;
+    color: #000000;
     overflow: hidden;
 }
 
@@ -193,8 +197,8 @@
 }
 
 .capture-btn {
-    background: #4fd1c5;
-    color: white;
+    background: #1e88e5;
+    color: #000000;
     border: none;
     padding: 12px 24px;
     border-radius: 8px;
