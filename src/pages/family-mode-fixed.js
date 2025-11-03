@@ -542,36 +542,12 @@ class FamilyModePage {
         `;
 
         modal.innerHTML = `
-            <div class="mobile-modal-container" style="
-                background: white;
-                border-radius: 20px 20px 0 0;
-                width: 100%;
-                max-width: 500px;
-                max-height: 80vh;
-                overflow-y: auto;
-                animation: slideUp 0.3s ease;
-            ">
-                <div class="mobile-modal-header" style="
-                    padding: 20px 20px 10px;
-                    border-bottom: 1px solid rgba(0,0,0,0.1);
-                    position: sticky;
-                    top: 0;
-                    background: white;
-                    z-index: 10;
-                ">
-                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 600;">${title}</h3>
-                    <button class="mobile-modal-close" onclick="familyModePage.closeModal()" style="
-                        position: absolute;
-                        right: 20px;
-                        top: 20px;
-                        background: none;
-                        border: none;
-                        font-size: 1.5rem;
-                        color: #666;
-                        cursor: pointer;
-                    ">×</button>
+            <div class="mobile-modal-container">
+                <div class="mobile-modal-header">
+                    <h3>${title}</h3>
+                    <button class="mobile-modal-close" onclick="familyModePage.closeModal()">×</button>
                 </div>
-                <div class="mobile-modal-body" style="padding: 15px;">
+                <div class="mobile-modal-body">
                     ${content}
                 </div>
             </div>
@@ -694,44 +670,12 @@ class FamilyModePage {
         `;
 
         modal.innerHTML = `
-            <div class="mobile-modal-container" style="
-                background: white;
-                border-radius: 20px 20px 0 0;
-                width: 100%;
-                max-height: 70vh;
-                overflow-y: auto;
-                animation: slideUp 0.3s ease-out;
-                box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
-                box-sizing: border-box;
-                transform-origin: bottom center;
-                position: absolute;
-                bottom: 60px;
-                left: 0;
-                right: 0;
-                z-index: 10001;
-            ">
-                <div class="mobile-modal-header" style="
-                    padding: 15px 15px 10px;
-                    border-bottom: 1px solid rgba(0,0,0,0.1);
-                    position: sticky;
-                    top: 0;
-                    background: white;
-                    z-index: 10;
-                ">
-                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">切换用户</h3>
-                    <button class="mobile-modal-close" onclick="familyModePage.closeModal()" style="
-                        position: absolute;
-                        right: 15px;
-                        top: 15px;
-                        background: none;
-                        border: none;
-                        font-size: 1.3rem;
-                        color: #666;
-                        cursor: pointer;
-                        padding: 5px;
-                    ">×</button>
+            <div class="mobile-modal-container">
+                <div class="mobile-modal-header">
+                    <h3>切换用户</h3>
+                    <button class="mobile-modal-close" onclick="familyModePage.closeModal()">×</button>
                 </div>
-                <div class="mobile-modal-body" style="padding: 20px;">
+                <div class="mobile-modal-body">
                     ${modalContent}
                 </div>
             </div>

@@ -1016,43 +1016,49 @@ class HomePage {
         }, 0);
     }
 
-    // 显示模态框
+    // 显示模态框（移动端从底部滑入）
     showModal(title, content) {
         // 如果已经有模态框打开，先移除它
         if (this.currentModal) {
-            document.body.removeChild(this.currentModal);
+            this.currentModal.remove();
+        }
+
+        // 获取手机模拟框容器
+        const phoneFrame = document.querySelector('.phone-frame');
+        if (!phoneFrame) {
+            console.error('找不到手机模拟框容器');
+            return;
         }
 
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'mobile-modal-overlay';
         modal.style.cssText = `
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
             z-index: 10000;
-            padding: 20px;
         `;
 
         modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>${title}</h3>
-                    <button class="modal-close">×</button>
+            <div class="mobile-modal-container">
+                <div class="mobile-modal-header">
+                    <div class="mobile-modal-title">${title}</div>
+                    <button class="mobile-modal-close">×</button>
                 </div>
-                <div class="modal-body">
+                <div class="mobile-modal-body">
                     ${content}
                 </div>
             </div>
         `;
 
         // 为关闭按钮添加事件监听
-        const closeBtn = modal.querySelector('.modal-close');
+        const closeBtn = modal.querySelector('.mobile-modal-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.hideModal());
         }
@@ -1063,14 +1069,19 @@ class HomePage {
             }
         });
 
-        document.body.appendChild(modal);
+        phoneFrame.appendChild(modal);
         this.currentModal = modal;
+        
+        // 阻止页面滚动
+        document.body.style.overflow = 'hidden';
     }
 
     // 隐藏模态框
     hideModal() {
         if (this.currentModal) {
-            document.body.removeChild(this.currentModal);
+            // 恢复页面滚动
+            document.body.style.overflow = '';
+            this.currentModal.remove();
             this.currentModal = null;
         }
     }

@@ -858,9 +858,7 @@ class SavingsGoalsPage {
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>${title}</h3>
-                    <button class="modal-close" onclick="savingsGoalsPage.hideModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <button class="modal-close" onclick="savingsGoalsPage.hideModal()">×</button>
                 </div>
                 <div class="modal-body">
                     ${content}

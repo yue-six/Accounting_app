@@ -1153,6 +1153,15 @@ body {
     -webkit-overflow-scrolling: touch !important;
 }
 
+.mobile-modal-title {
+    margin: 0 !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    flex: 1 !important;
+    text-align: center !important;
+}
+
 /* 用户切换列表样式 */
 .user-switch-list {
     max-height: 300px;
@@ -2508,16 +2517,16 @@ html {
     scroll-behavior: smooth;
 }
 
-/* 模态框样式 */
+/* 移动端弹窗样式 - 统一标准 */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.7);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 10000;
     animation: fadeIn 0.3s ease;
@@ -2525,52 +2534,69 @@ html {
 
 .modal-content {
     background: white;
-    border-radius: 20px;
+    border-radius: 24px 24px 0 0;
     padding: 0;
-    max-width: 300px;
     width: 100%;
-    max-height: 80vh;
+    max-width: 100%;
+    max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
     animation: slideUp 0.3s ease;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    -webkit-overflow-scrolling: touch;
+    position: relative;
     margin: 0;
 }
 
 .modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-    position: relative;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    background: #fafafa;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 56px;
 }
 
 .modal-header h3 {
     margin: 0;
-    color: #2d3748;
-    font-size: 1.2rem;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    flex: 1;
+    text-align: center;
 }
 
 .modal-body {
     padding: 20px;
+    max-height: calc(85vh - 56px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
     position: absolute;
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #718096;
-    cursor: pointer;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+}
+
+.modal-close:hover {
+    background: rgba(0,0,0,0.1);
 }
 
 /* 输入框样式 */

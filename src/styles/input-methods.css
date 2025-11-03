@@ -53,64 +53,78 @@
     color: #4a5568;
 }
 
-/* 输入模态框样式 */
+/* 输入模态框样式 - 移动端统一标准 */
 .input-modal {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 1000;
-    padding: 20px;
+    animation: fadeIn 0.3s ease;
 }
 
 .input-modal-content {
     background: white;
-    border-radius: 16px;
-    max-width: 400px;
+    border-radius: 24px 24px 0 0;
     width: 100%;
-    max-height: 80vh;
+    max-width: 100%;
+    max-height: 85vh;
     overflow-y: auto;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
+    -webkit-overflow-scrolling: touch;
 }
 
 .input-modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #e2e8f0;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    background: #fafafa;
+    z-index: 10;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-height: 56px;
 }
 
 .input-modal-title {
-    font-size: 1.2rem;
+    font-size: 18px;
     font-weight: 600;
-    color: #2d3748;
+    color: #1a1a1a;
+    flex: 1;
+    text-align: center;
 }
 
 .input-modal-close {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 24px;
+    color: #666;
     cursor: pointer;
-    color: #718096;
-    padding: 0;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
 }
 
 .input-modal-close:hover {
-    color: #4a5568;
+    background: rgba(0,0,0,0.1);
 }
 
 .input-modal-body {
     padding: 20px;
+    max-height: calc(85vh - 56px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* 语音识别状态 */
