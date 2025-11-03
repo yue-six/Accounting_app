@@ -30,7 +30,7 @@ class HomePage {
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="budget-progress">0%</div>
-                            <div class="stat-label">预算进度 <span id="budget-badge" style="display:inline-block; margin-left:6px; font-size:12px; padding:2px 6px; border-radius:10px; background:#edf2f7; color:#718096; vertical-align:middle;"></span></div>
+                            <div class="stat-label">预算进度</div>
                         </div>
                     </div>
                 </div>
