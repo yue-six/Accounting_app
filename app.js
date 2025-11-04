@@ -8,6 +8,7 @@ class AccountingApp {
             { id: 'shopping', name: '购物', color: '#45b7d1', icon: '🛍️' },
             { id: 'entertainment', name: '娱乐', color: '#96ceb4', icon: '🎮' },
             { id: 'study', name: '学习', color: '#feca57', icon: '📚' },
+            { id: 'medical', name: '医药', color: '#e53e3e', icon: '💊' },
             { id: 'salary', name: '工资', color: '#4fd1c5', icon: '💰' },
             { id: 'investment', name: '投资', color: '#667eea', icon: '📈' },
             { id: 'other', name: '其他', color: '#a0aec0', icon: '📦' }

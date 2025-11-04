@@ -262,14 +262,316 @@ body {
     letter-spacing: 0.3px;
 }
 
+/* 学生模式页面整体布局 */
+.student-mode-page {
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.student-mode-page .page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 16px;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+.student-mode-page .page-header h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.student-mode-page .page-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
 /* 学生模式卡片特殊样式 */
 .student-mode-page .card {
-    transform: translateY(0) scale(1);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 16px;
+    border: none;
     overflow: hidden;
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    backdrop-filter: blur(10px);
+}
+
+.student-mode-page .card h3 {
+    margin: 0;
+    padding: 16px 20px;
+    background: #f7fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.student-mode-page .card h3 i {
+    color: #667eea;
+}
+
+/* 学生模式内容布局 */
+.student-mode-page .page-content {
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.student-mode-page .content-wrapper {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 预算卡片特殊样式 */
+.student-mode-page .budget-card {
+    border-left: 4px solid #667eea;
+}
+
+/* 目标卡片特殊样式 */
+.student-mode-page .goals-card {
+    border-left: 4px solid #e53e3e;
+}
+
+/* 输入组样式优化 */
+.student-mode-page .input-group {
+    margin-bottom: 20px;
+}
+
+.student-mode-page .input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.9rem;
+}
+
+.student-mode-page .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.student-mode-page .input-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.student-mode-page .input-row input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.student-mode-page .input-row button {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 12px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.student-mode-page .input-row button:hover {
+    background: #5a6fd8;
+}
+
+/* 预算分配样式优化 */
+.student-mode-page .budget-summary {
+    background: #f7fafc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.student-mode-page .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.student-mode-page .summary-row:last-child {
+    margin-bottom: 0;
+}
+
+.student-mode-page .summary-row .amount {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.student-mode-page .summary-row .spent {
+    color: #e53e3e;
+}
+
+.student-mode-page .summary-row .remaining {
+    color: #38a169;
+}
+
+/* 分类项目样式 */
+.student-mode-page .category-item {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.student-mode-page .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.student-mode-page .category-name {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.student-mode-page .category-amount {
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+.student-mode-page .category-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #718096;
+    margin-top: 8px;
+}
+
+.student-mode-page .over-spent {
+    color: #e53e3e;
+    font-weight: 600;
+}
+
+/* 按钮组样式 */
+.student-mode-page .budget-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.student-mode-page .budget-actions .btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.student-mode-page .budget-actions .btn-secondary {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+.student-mode-page .budget-actions .btn-secondary:hover {
+    background: #edf2f7;
+}
+
+.student-mode-page .budget-actions .btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.student-mode-page .budget-actions .btn-primary:hover {
+    background: #5a6fd8;
+}
+
+/* 进度条样式 */
+.student-mode-page .progress-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.student-mode-page .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+/* 目标列表样式 */
+.student-mode-page .exam-goals-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.student-mode-page .goal-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.student-mode-page .goal-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.student-mode-page .goal-item.completed {
+    border-color: #38a169;
+    background: #f0fff4;
+}
+
+.student-mode-page .goal-item.overdue {
+    border-color: #e53e3e;
+    background: #fff5f5;
+}
+
+/* 目标操作按钮 */
+.student-mode-page .goal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.student-mode-page .goal-actions .btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+/* 空状态样式 */
+.student-mode-page .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #718096;
+}
+
+.student-mode-page .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
 }
 
 
@@ -334,7 +636,7 @@ body {
 /* 学生模式按钮美化 */
 .student-mode-page .btn {
     position: relative;
-    min-width: 120px;
+    min-width: 90px;
     white-space: nowrap;
     white-space: nowrap;
     overflow: hidden;
@@ -344,7 +646,8 @@ body {
     font-weight: 600;
     letter-spacing: 0.3px;
     white-space: nowrap;
-    padding: 10px 16px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
 }
 
 .family-mode-page .btn {
@@ -1360,8 +1663,8 @@ body {
 
 .invite-actions .btn {
     white-space: nowrap;
-    padding: 10px 12px;
-    font-size: 0.85rem;
+    padding: 8px 10px;
+    font-size: 0.8rem;
 }
 
 /* 二维码样式 */
@@ -1408,12 +1711,12 @@ body {
 
 .modal-actions .btn {
     flex: 1;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 12px;
     font-weight: 600;
     transition: all 0.3s ease;
     white-space: nowrap;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 .modal-actions .btn-primary {

@@ -10,13 +10,15 @@ class StudentModePage {
             free: 25       // 自由支配
         };
         this.loadStudentData();
+        
+        // 监听交易记录变化，当首页添加新交易时自动更新预算分配显示
+        this.setupTransactionListener();
     }
 
     // 加载学生模式数据
     loadStudentData() {
         try {
             this.settings = JSON.parse(localStorage.getItem('student_mode_settings') || '{}');
-            this.partTimeJobs = JSON.parse(localStorage.getItem('student_part_time_jobs') || '[]');
             this.examGoals = JSON.parse(localStorage.getItem('student_exam_goals') || '[]');
             this.budgetAllocations = JSON.parse(localStorage.getItem('student_budget_allocations') || '{}');
         } catch (e) {
@@ -28,10 +30,13 @@ class StudentModePage {
     render() {
         return `
             <div class="page active" id="student-mode-page">
-                ${this.renderHeader()}
-                ${this.renderBudgetSection()}
-                ${this.renderPartTimeSection()}
-                ${this.renderGoalsSection()}
+                <div class="page-content">
+                    ${this.renderHeader()}
+                    <div class="content-wrapper">
+                        ${this.renderBudgetSection()}
+                        ${this.renderGoalsSection()}
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -49,13 +54,15 @@ class StudentModePage {
     // 渲染预算分配部分
     renderBudgetSection() {
         return `
-            <div class="card">
+            <div class="card budget-card">
                 <h3><i class="fas fa-chart-pie"></i> 生活费智能分配</h3>
                 <div class="budget-setup">
                     <div class="input-group">
                         <label>每月生活费</label>
-                        <input type="number" id="monthly-allowance" value="${this.settings.monthlyAllowance || ''}" placeholder="请输入金额">
-                        <button class="btn btn-primary" onclick="studentModePage.setupBudgetAllocation()">智能分配</button>
+                        <div class="input-row">
+                            <input type="number" id="monthly-allowance" value="${this.settings.monthlyAllowance || ''}" placeholder="请输入金额">
+                            <button class="btn btn-primary" onclick="studentModePage.setupBudgetAllocation()">智能分配</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -66,35 +73,12 @@ class StudentModePage {
         `;
     }
 
-    // 渲染兼职收入部分
-    renderPartTimeSection() {
-        return `
-            <div class="card">
-                <h3><i class="fas fa-briefcase"></i> 兼职收入管理</h3>
-                <div class="part-time-summary">
-                    <div class="summary-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">¥${this.getMonthlyPartTimeIncome()}</div>
-                            <div class="stat-label">本月兼职收入</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="part-time-list" id="part-time-list">
-                    ${this.renderPartTimeJobs()}
-                </div>
-                <div class="part-time-actions">
-                    <button class="btn btn-primary" onclick="studentModePage.showAddPartTimeJob()">
-                        <i class="fas fa-plus"></i> 添加兼职收入
-                    </button>
-                </div>
-            </div>
-        `;
-    }
+
 
     // 渲染储蓄目标部分
     renderGoalsSection() {
         return `
-            <div class="card">
+            <div class="card goals-card">
                 <div class="goals-header">
                     <h3><i class="fas fa-certificate"></i> 考证/学费储蓄计划</h3>
                     <div class="goals-summary">
@@ -723,7 +707,7 @@ class StudentModePage {
         const names = {
             food: '餐饮',
             study: '学习用品',
-            entertainment: '娱乐社交',
+            entertainment: '社交娱乐',
             emergency: '应急储备',
             free: '自由支配'
         };
@@ -948,13 +932,13 @@ class StudentModePage {
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
         
-        // 分类映射关系
+        // 分类映射关系 - 根据首页分类精确对应到学生模式预算分类
         const categoryMap = {
-            food: ['餐饮', '外卖', '零食', '早餐', '午餐', '晚餐'],
-            study: ['学习用品', '教材', '文具', '书籍', '考试报名费', '培训费'],
-            entertainment: ['娱乐', '电影', '游戏', '社交', '聚会', '旅行'],
-            emergency: ['医疗', '药品', '急救'],
-            free: ['其他', '杂项']
+            food: ['food', '餐饮'], // 首页的【餐饮】分类对应学生模式的【餐饮】
+            study: ['study', '学习'], // 首页的【学习】分类对应学生模式的【学习用品】
+            entertainment: ['entertainment', '娱乐'], // 首页的【娱乐】分类对应学生模式的【社交娱乐】
+            emergency: ['medical', '医药'], // 首页的【医药】分类对应学生模式的【应急储备】
+            free: ['transport', 'shopping', 'investment', 'other', '交通', '购物', '投资', '其他'] // 首页的【交通】【购物】【投资】【其他】对应学生模式的【自由支配】
         };
         
         // 如果应用实例存在并且有交易记录
@@ -968,11 +952,18 @@ class StudentModePage {
                     
                     const transactionDate = new Date(transaction.date);
                     // 筛选本月支出
-                    return transaction.type === 'expense' &&
-                           transactionDate.getMonth() === currentMonth &&
-                           transactionDate.getFullYear() === currentYear &&
-                           (categoryMap[category]?.includes(transaction.category) ||
-                           transaction.category === this.getCategoryName(category));
+                    const isCurrentMonth = transactionDate.getMonth() === currentMonth &&
+                                         transactionDate.getFullYear() === currentYear;
+                    
+                    // 检查分类匹配 - 使用更精确的匹配方式
+                    const categoryMatch = categoryMap[category]?.some(cat => {
+                        // 检查分类ID或分类名称是否匹配
+                        return transaction.category === cat || 
+                               (typeof transaction.category === 'string' && transaction.category.includes(cat)) ||
+                               (typeof cat === 'string' && cat.includes(transaction.category));
+                    });
+                    
+                    return transaction.type === 'expense' && isCurrentMonth && categoryMatch;
                 })
                 .reduce((sum, transaction) => sum + (parseFloat(transaction.amount) || 0), 0);
         }
@@ -1629,6 +1620,92 @@ ${message}`)) {
         localStorage.setItem('student_exam_goals', JSON.stringify(this.examGoals));
         this.hideMobileModal();
         this.app.showToast('自动储蓄设置已保存');
+    }
+
+    // 设置交易记录监听器
+    setupTransactionListener() {
+        // 保存原始的 addTransaction 方法
+        const originalAddTransaction = this.app.addTransaction;
+        
+        // 重写 addTransaction 方法，添加监听功能
+        this.app.addTransaction = (transaction) => {
+            // 调用原始方法
+            const result = originalAddTransaction.call(this.app, transaction);
+            
+            // 如果是支出交易，自动更新学生模式预算分配显示
+            if (transaction.type === 'expense') {
+                console.log('检测到新的支出交易，更新学生模式预算显示');
+                this.updateBudgetDisplay();
+                
+                // 触发交易更新事件
+                this.triggerTransactionUpdate();
+            }
+            
+            return result;
+        };
+
+        // 保存原始的 editTransaction 方法
+        const originalEditTransaction = this.app.editTransaction;
+        
+        // 重写 editTransaction 方法
+        this.app.editTransaction = (index, transaction) => {
+            const result = originalEditTransaction.call(this.app, index, transaction);
+            
+            // 如果是支出交易，自动更新学生模式预算分配显示
+            if (transaction.type === 'expense') {
+                console.log('检测到编辑支出交易，更新学生模式预算显示');
+                this.updateBudgetDisplay();
+                
+                // 触发交易更新事件
+                this.triggerTransactionUpdate();
+            }
+            
+            return result;
+        };
+
+        // 保存原始的 deleteTransaction 方法
+        const originalDeleteTransaction = this.app.deleteTransaction;
+        
+        // 重写 deleteTransaction 方法
+        this.app.deleteTransaction = (index) => {
+            // 获取要删除的交易信息
+            const transactionToDelete = this.app.transactions[index];
+            
+            const result = originalDeleteTransaction.call(this.app, index);
+            
+            // 如果是支出交易，自动更新学生模式预算分配显示
+            if (transactionToDelete && transactionToDelete.type === 'expense') {
+                console.log('检测到删除支出交易，更新学生模式预算显示');
+                this.updateBudgetDisplay();
+                
+                // 触发交易更新事件
+                this.triggerTransactionUpdate();
+            }
+            
+            return result;
+        };
+        
+        // 添加事件监听器，监听交易数据变化
+        window.addEventListener('transactionUpdated', () => {
+            console.log('收到交易更新事件，更新学生模式预算显示');
+            this.updateBudgetDisplay();
+        });
+    }
+    
+    // 触发交易更新事件
+    triggerTransactionUpdate() {
+        const event = new CustomEvent('transactionUpdated', {
+            detail: { timestamp: new Date().toISOString() }
+        });
+        window.dispatchEvent(event);
+    }
+
+    // 更新预算分配显示
+    updateBudgetDisplay() {
+        const budgetAllocationElement = document.getElementById('budget-allocation');
+        if (budgetAllocationElement) {
+            budgetAllocationElement.innerHTML = this.renderBudgetAllocation();
+        }
     }
 }
 
