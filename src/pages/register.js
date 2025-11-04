@@ -41,21 +41,25 @@ class RegisterPage {
                     
                     <!-- 验证码 -->
                     <div class="input-group" style="display:flex;gap:8px;align-items:center;">
-                        <input id="reg-code" type="text" placeholder="短信验证码（默认 123456）" maxlength="6" style="flex:1;">
+                        <input id="reg-code" type="text" placeholder="请输入短信验证码" maxlength="6" style="flex:1;">
                         <button id="btn-reg-send-code" class="btn btn-secondary" style="white-space:nowrap;">获取验证码</button>
                     </div>
                     
                     <button id="btn-register" class="btn btn-primary" style="width:100%;margin-top:12px;">注册并登录</button>
                 </div>
 
+                <!-- 第三方登录 -->
                 <div class="card" style="padding:16px;margin-top:12px;">
-                    <div style="display:flex;gap:8px;flex-direction:column;">
-                        <button id="btn-reg-wechat" class="action-btn" style="width:100%;background:#09bb07;color:#fff;">
-                            <i class="fab fa-weixin"></i> 使用微信快速注册
-                        </button>
-                        <button id="btn-reg-alipay" class="action-btn" style="width:100%;background:#1677ff;color:#fff;">
-                            <i class="fab fa-alipay"></i> 使用支付宝快速注册
-                        </button>
+                    <div style="text-align:center;margin-bottom:12px;color:#718096;font-size:0.9rem;">
+                        使用其他方式登录
+                    </div>
+                    <div class="social-login-icons">
+                        <div class="social-login-icon wechat" id="btn-reg-wechat" title="微信登录">
+                            <i class="fab fa-weixin"></i>
+                        </div>
+                        <div class="social-login-icon alipay" id="btn-reg-alipay" title="支付宝登录">
+                            <i class="fab fa-alipay"></i>
+                        </div>
                     </div>
                 </div>
 

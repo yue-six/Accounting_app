@@ -116,8 +116,8 @@ class Router {
             return;
         }
 
-        // 受保护页面拦截（未登录禁止访问除登录/注册外的页面）
-        const publicPages = ['login', 'register'];
+        // 受保护页面拦截（未登录禁止访问除登录/注册/手机号登录外的页面）
+        const publicPages = ['login', 'register', 'phone-login'];
         if (!publicPages.includes(pageName) && !this.isAuthenticated()) {
             console.log('未登录，跳转到登录页');
             this.renderPage('login');
@@ -135,7 +135,7 @@ class Router {
         // 登录/注册页隐藏底部导航，其它页显示
         const bottomNav = document.querySelector('.bottom-nav');
         if (bottomNav) {
-            bottomNav.style.display = (pageName === 'login' || pageName === 'register') ? 'none' : 'flex';
+            bottomNav.style.display = (pageName === 'login' || pageName === 'register' || pageName === 'phone-login') ? 'none' : 'flex';
         }
 
         // 渲染页面内容
@@ -307,7 +307,12 @@ class Router {
 
     // 获取当前用户模式
     getCurrentUserMode() {
-        return this.userMode;
+        // 优先从应用实例获取，其次从localStorage获取
+        if (this.app && this.app.userMode) {
+            return this.app.userMode;
+        }
+        // 检查不同的存储键名
+        return localStorage.getItem('user_mode') || localStorage.getItem('userMode') || 'student';
     }
 
     // 检查是否在特定模式下

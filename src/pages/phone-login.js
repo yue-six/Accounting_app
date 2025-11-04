@@ -26,9 +26,9 @@ class PhoneLoginPage {
                         <label>手机号</label>
                         <input id="phone-input" type="tel" placeholder="请输入11位手机号码" maxlength="11">
                     </div>
-                    <div class="input-group" style="display:flex;gap:8px;align-items:center;">
-                        <input id="code-input" type="text" placeholder="验证码（默认 123456）" maxlength="6" style="flex:1;">
-                        <button id="btn-send-code" class="btn btn-secondary" style="white-space:nowrap;">获取验证码</button>
+                    <div class="code-input-group">
+                        <input id="code-input" type="text" placeholder="请输入验证码" maxlength="6">
+                        <button id="btn-send-code" class="btn btn-secondary">获取验证码</button>
                     </div>
                     <button id="btn-phone-login" class="btn btn-primary" style="width:100%;margin-top:12px;">登录</button>
                     
@@ -48,12 +48,14 @@ class PhoneLoginPage {
                     <div style="text-align:center;margin-bottom:12px;color:#718096;font-size:0.9rem;">
                         其他登录方式
                     </div>
-                    <button id="btn-wechat" class="action-btn" style="width:100%;margin-bottom:8px;background:#09bb07;color:#fff;">
-                        <i class="fab fa-weixin"></i> 微信登录
-                    </button>
-                    <button id="btn-alipay" class="action-btn" style="width:100%;background:#1677ff;color:#fff;">
-                        <i class="fab fa-alipay"></i> 支付宝登录
-                    </button>
+                    <div class="social-login-icons">
+                        <div class="social-login-icon wechat" id="btn-wechat" title="微信登录">
+                            <i class="fab fa-weixin"></i>
+                        </div>
+                        <div class="social-login-icon alipay" id="btn-alipay" title="支付宝登录">
+                            <i class="fab fa-alipay"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="color:#a0aec0;font-size:12px;margin-top:12px;text-align:center;">
@@ -76,18 +78,42 @@ class PhoneLoginPage {
         if (wechatBtn) wechatBtn.addEventListener('click', () => this.simulateLogin('wechat'));
         if (alipayBtn) alipayBtn.addEventListener('click', () => this.simulateLogin('alipay'));
         
+        // 手机号输入实时验证
+        if (phoneInput) {
+            phoneInput.addEventListener('input', () => {
+                this.validatePhoneInput(phoneInput);
+            });
+            
+            phoneInput.addEventListener('blur', () => {
+                this.validatePhoneInput(phoneInput);
+            });
+        }
+        
+        // 验证码输入实时验证
+        if (codeInput) {
+            codeInput.addEventListener('input', () => {
+                this.validateCodeInput(codeInput);
+            });
+        }
+        
         // 发送验证码
         if (sendCodeBtn) {
             sendCodeBtn.addEventListener('click', () => {
                 const phone = phoneInput.value.trim();
-                if (!/^1\d{10}$/.test(phone)) { 
+                if (!this.validatePhone(phone)) { 
                     this.app.showToast('请输入有效的11位手机号', 'warning'); 
                     return; 
                 }
+                
                 this.state.phone = phone;
                 this.state.codeSent = true;
                 this.app.showToast('验证码已发送：123456', 'success');
                 this.startCountdown(sendCodeBtn);
+                
+                // 自动聚焦到验证码输入框
+                if (codeInput) {
+                    codeInput.focus();
+                }
             });
         }
         
@@ -96,7 +122,8 @@ class PhoneLoginPage {
             phoneLoginBtn.addEventListener('click', () => {
                 const phone = phoneInput.value.trim();
                 const code = codeInput.value.trim();
-                if (!/^1\d{10}$/.test(phone)) { 
+                
+                if (!this.validatePhone(phone)) { 
                     this.app.showToast('请输入有效的11位手机号', 'warning'); 
                     return; 
                 }
@@ -104,12 +131,37 @@ class PhoneLoginPage {
                     this.app.showToast('请输入验证码', 'warning'); 
                     return; 
                 }
-                if (code !== '123456') { 
+                if (!this.validateCode(code)) { 
                     this.app.showToast('验证码错误', 'error'); 
                     return; 
                 }
                 
+                // 添加加载状态
+                phoneLoginBtn.disabled = true;
+                phoneLoginBtn.textContent = '登录中...';
+                
                 this.loginWithPhone(phone, code);
+            });
+        }
+        
+        // 回车键登录
+        if (phoneInput) {
+            phoneInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    if (codeInput && codeInput.value.trim()) {
+                        phoneLoginBtn.click();
+                    } else if (sendCodeBtn && !sendCodeBtn.disabled) {
+                        sendCodeBtn.click();
+                    }
+                }
+            });
+        }
+        
+        if (codeInput) {
+            codeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    phoneLoginBtn.click();
+                }
             });
         }
         
@@ -130,6 +182,57 @@ class PhoneLoginPage {
     }
 
     updateData() {}
+
+    // 验证手机号格式
+    validatePhone(phone) {
+        return /^1\d{10}$/.test(phone);
+    }
+
+    // 验证验证码格式
+    validateCode(code) {
+        return code === '123456'; // 默认验证码
+    }
+
+    // 实时验证手机号输入
+    validatePhoneInput(input) {
+        const phone = input.value.trim();
+        const isValid = this.validatePhone(phone);
+        
+        if (phone && !isValid) {
+            input.style.borderColor = '#f56565';
+            input.style.boxShadow = '0 0 0 2px rgba(245, 101, 101, 0.1)';
+        } else {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+        }
+        
+        return isValid;
+    }
+
+    // 实时验证验证码输入
+    validateCodeInput(input) {
+        const code = input.value.trim();
+        const isValid = this.validateCode(code);
+        
+        if (code && !isValid) {
+            input.style.borderColor = '#f56565';
+            input.style.boxShadow = '0 0 0 2px rgba(245, 101, 101, 0.1)';
+        } else {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+        }
+        
+        return isValid;
+    }
+
+    // 重置登录按钮状态
+    resetLoginButton() {
+        const phoneLoginBtn = document.getElementById('btn-phone-login');
+        if (phoneLoginBtn) {
+            phoneLoginBtn.disabled = false;
+            phoneLoginBtn.textContent = '登录';
+        }
+    }
 
     startCountdown(btn) {
         let left = 60; 
@@ -152,6 +255,7 @@ class PhoneLoginPage {
             // 验证码验证（默认验证码为123456）
             if (code !== '123456') {
                 this.app.showToast('验证码错误', 'error');
+                this.resetLoginButton();
                 return;
             }
             
@@ -214,6 +318,7 @@ class PhoneLoginPage {
         } catch (error) {
             console.error('手机号登录失败:', error);
             this.app.showToast('登录失败，请重试', 'error');
+            this.resetLoginButton();
         }
     }
 

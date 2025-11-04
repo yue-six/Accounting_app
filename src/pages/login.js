@@ -49,12 +49,14 @@ class LoginPage {
                     <div style="text-align:center;margin-bottom:12px;color:#718096;font-size:0.9rem;">
                         其他登录方式
                     </div>
-                    <button id="btn-wechat" class="action-btn" style="width:100%;margin-bottom:8px;background:#09bb07;color:#fff;">
-                        <i class="fab fa-weixin"></i> 微信登录
-                    </button>
-                    <button id="btn-alipay" class="action-btn" style="width:100%;background:#1677ff;color:#fff;">
-                        <i class="fab fa-alipay"></i> 支付宝登录
-                    </button>
+                    <div class="social-login-icons">
+                        <div class="social-login-icon wechat" id="btn-wechat" title="微信登录">
+                            <i class="fab fa-weixin"></i>
+                        </div>
+                        <div class="social-login-icon alipay" id="btn-alipay" title="支付宝登录">
+                            <i class="fab fa-alipay"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="color:#a0aec0;font-size:12px;margin-top:12px;text-align:center;">

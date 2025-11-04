@@ -204,7 +204,12 @@ class ProfilePage {
 
     // 获取当前用户模式
     getCurrentUserMode() {
-        return localStorage.getItem('userMode') || 'student';
+        // 优先从应用实例获取，其次从localStorage获取
+        if (this.app && this.app.userMode) {
+            return this.app.userMode;
+        }
+        // 检查不同的存储键名
+        return localStorage.getItem('user_mode') || localStorage.getItem('userMode') || 'student';
     }
 
     // 设置用户模式
@@ -857,23 +862,33 @@ class ProfilePage {
         }
 
         try {
+            // 保存到本地存储（统一使用user_mode键名）
+            localStorage.setItem('user_mode', mode);
+            
+            // 更新应用的用户模式
+            if (this.app) {
+                this.app.userMode = mode;
+                this.app.saveData();
+            }
+            
             // 调用router的switchUserMode方法来切换用户模式
             if (window.router && typeof window.router.switchUserMode === 'function') {
                 window.router.switchUserMode(mode);
-                
-                // 更新按钮的激活状态
-                this.updateModeButtons(mode);
             } else {
-                // 降级处理：如果router不存在，则直接设置应用的用户模式
-                if (this.app && typeof this.app.setUserMode === 'function') {
-                    this.app.setUserMode(mode);
-                    this.updateModeButtons(mode);
-                    
-                    // 如果是直接设置的，手动重新渲染页面以应用新模式
-                    if (window.router && typeof window.router.reloadCurrentPageWithMode === 'function') {
-                        window.router.reloadCurrentPageWithMode();
-                    }
-                }
+                // 如果router不存在，手动更新导航栏
+                this.updateNavigationForMode(mode);
+            }
+            
+            // 更新按钮的激活状态
+            this.updateModeButtons(mode);
+            
+            // 显示成功提示
+            if (this.app && typeof this.app.showToast === 'function') {
+                const modeNames = {
+                    'student': '学生模式',
+                    'family': '家庭模式'
+                };
+                this.app.showToast(`已切换到${modeNames[mode]}`, 'success');
             }
         } catch (error) {
             console.error('切换用户模式时出错:', error);
@@ -897,11 +912,28 @@ class ProfilePage {
             }
         });
     }
-    
-    // 获取当前用户模式
-    getCurrentUserMode() {
-        return this.app.userMode || localStorage.getItem('user_mode') || 'student';
+
+    // 手动更新导航栏显示（在没有router的情况下）
+    updateNavigationForMode(mode) {
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            const navItems = bottomNav.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                const page = item.getAttribute('data-page');
+                const alwaysVisible = ['home', 'analysis', 'profile'];
+                
+                if (alwaysVisible.includes(page)) {
+                    item.style.display = 'flex';
+                } else if (item.classList.contains('mode-nav-item')) {
+                    const itemMode = item.getAttribute('data-mode');
+                    item.style.display = itemMode === mode ? 'flex' : 'none';
+                }
+            });
+        }
     }
+    
+
     
     // 退出登录
     logout() {
