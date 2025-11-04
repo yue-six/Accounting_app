@@ -41,7 +41,7 @@ class VoiceInputManager {
                 let errorMessage = '语音识别失败';
                 switch (event.error) {
                     case 'not-allowed':
-                        errorMessage = '请允许浏览器使用麦克风权限';
+                        errorMessage = '使用麦克风权限';
                         break;
                     case 'no-speech':
                         errorMessage = '没有检测到语音输入';

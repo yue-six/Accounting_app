@@ -1121,7 +1121,7 @@ class HomePage {
                 ${isVoiceSupported ? `
                 <div style="margin-top: 15px; font-size: 0.85rem; color: #666;">
                     <i class="fas fa-info-circle"></i>
-                    点击"语音输入"按钮后，请允许浏览器访问您的麦克风
+                    点击"语音输入"按钮后，请允许智能记账APP访问您的麦克风
                 </div>
                 ` : ''}
             </div>
@@ -1526,7 +1526,7 @@ class HomePage {
                 
                 <div style="margin-top: 15px; font-size: 0.85rem; color: #666;">
                     <i class="fas fa-info-circle"></i>
-                    点击"拍照识别"按钮后，请允许浏览器访问您的摄像头
+                    点击"拍照识别"按钮后，请允许拍智能记账APP访问您的摄像头
                 </div>
             </div>
         `);
