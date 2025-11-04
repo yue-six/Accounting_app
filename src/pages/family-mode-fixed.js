@@ -150,11 +150,7 @@ class FamilyModePage {
                     </div>
                     
                     <!-- 成员列表 -->
-                    <div class="family-members">
-                        <div class="family-members-list" id="family-members-list">
-                            ${this.renderFamilyMembers()}
-                        </div>
-                        
+                    <div class="family-members">       
                         <div class="member-actions">
                             ${this.currentUser.role === 'admin' ? `
                                 <button class="btn btn-primary" onclick="familyModePage.showAddMember()">
@@ -468,11 +464,14 @@ class FamilyModePage {
 
     // 渲染家庭成员列表
     renderFamilyMembers() {
-        if (this.familyMembers.length === 0) {
+        // 过滤掉当前用户，只显示其他家庭成员
+        const otherMembers = this.familyMembers.filter(member => member.id !== this.currentUser.id);
+        
+        if (otherMembers.length === 0) {
             return '<div class="empty-state">暂无其他家庭成员</div>';
         }
         
-        return this.familyMembers.map(member => `
+        return otherMembers.map(member => `
             <div class="member-item">
                 <div class="member-avatar">${member.name.charAt(0)}</div>
                 <div class="member-info">
@@ -504,7 +503,7 @@ class FamilyModePage {
             <div class="mobile-modal-container">
                 <div class="mobile-modal-header">
                     <h3 class="mobile-modal-title">${title}</h3>
-                    <button class="mobile-modal-close" onclick="familyModePage.hideModal()">×</button>
+                    <button class="mobile-modal-close" onclick="familyModePage.closeModal()">×</button>
                 </div>
                 <div class="mobile-modal-body">
                     ${content}
@@ -514,7 +513,7 @@ class FamilyModePage {
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                this.hideModal();
+                this.closeModal();
             }
         });
 
@@ -573,8 +572,23 @@ class FamilyModePage {
 
     closeModal() {
         if (this.currentModal) {
-            document.body.removeChild(this.currentModal);
-            this.currentModal = null;
+            try {
+                // 检查模态框是否在 body 中
+                if (this.currentModal.parentNode === document.body) {
+                    document.body.removeChild(this.currentModal);
+                } else if (this.currentModal.parentNode) {
+                    // 如果在其他容器中（如手机模拟框），从父节点移除
+                    this.currentModal.parentNode.removeChild(this.currentModal);
+                }
+                this.currentModal = null;
+            } catch (error) {
+                console.warn('关闭模态框时出错:', error);
+                // 如果移除失败，尝试直接隐藏
+                if (this.currentModal) {
+                    this.currentModal.style.display = 'none';
+                    this.currentModal = null;
+                }
+            }
         }
     }
 
@@ -650,7 +664,7 @@ class FamilyModePage {
                     `).join('')}
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="familyModePage.hideModal()">取消</button>
+                    <button class="btn btn-secondary" onclick="familyModePage.closeModal()">取消</button>
                 </div>
             </div>
         `;
@@ -675,21 +689,99 @@ class FamilyModePage {
             return;
         }
 
+        // 立即更新当前用户对象
         this.currentUser = { ...member };
         
-        // 保存当前用户信息
-        if (this.modeDatabase) {
-            await this.modeDatabase.saveFamilyModeSettings({
-                ...this.familySettings,
-                current_user_id: userId
-            });
-        } else {
+        // 先显示切换中提示
+        this.app.showToast(`正在切换到 ${member.name}...`, 'info');
+        
+        try {
+            // 优先使用本地存储，确保切换立即生效
             localStorage.setItem('current_family_user', JSON.stringify(this.currentUser));
+            this.familySettings.current_user_id = userId;
+            
+            // 尝试数据库保存（但不阻塞切换操作）
+            if (this.modeDatabase && typeof this.modeDatabase.saveFamilyModeSettings === 'function') {
+                try {
+                    await this.modeDatabase.saveFamilyModeSettings({
+                        ...this.familySettings,
+                        current_user_id: userId
+                    });
+                    console.log('✅ 用户切换已保存到数据库');
+                } catch (dbError) {
+                    console.warn('数据库保存失败，但本地存储已成功:', dbError);
+                    // 数据库失败不影响切换操作，继续执行
+                }
+            }
+            
+            // 保存家庭数据
+            await this.saveFamilyData();
+            
+            // 立即关闭弹窗
+            this.closeModal();
+            
+            // 更新页面显示
+            this.updateFamilyOverview();
+            
+            // 显示成功提示
+            setTimeout(() => {
+                this.app.showToast(`✅ 已成功切换到 ${member.name}`, 'success');
+                
+                // 延迟500毫秒后刷新页面状态
+                setTimeout(() => {
+                    this.refreshPageState();
+                }, 500);
+            }, 300);
+            
+        } catch (error) {
+            console.error('切换用户过程中出错:', error);
+            
+            // 即使出错，也要确保本地存储已更新
+            try {
+                localStorage.setItem('current_family_user', JSON.stringify(this.currentUser));
+                this.familySettings.current_user_id = userId;
+                this.saveFamilyDataToLocalStorage();
+                
+                this.closeModal();
+                this.updateFamilyOverview();
+                
+                setTimeout(() => {
+                    this.app.showToast(`✅ 已成功切换到 ${member.name}`, 'success');
+                    
+                    // 延迟500毫秒后刷新页面状态
+                    setTimeout(() => {
+                        this.refreshPageState();
+                    }, 500);
+                }, 300);
+            } catch (finalError) {
+                console.error('最终回退也失败:', finalError);
+                this.app.showToast('切换失败，请重试', 'error');
+            }
         }
-
-        this.closeModal();
-        this.updateFamilyOverview();
-        this.app.showToast(`已切换到 ${member.name}`, 'success');
+    }
+    
+    // 刷新页面状态
+    refreshPageState() {
+        try {
+            // 重新加载家庭数据
+            this.loadFamilyDataFromLocalStorage();
+            
+            // 重新渲染页面内容
+            const familyModePageElement = document.getElementById('family-mode-page');
+            if (familyModePageElement) {
+                // 重新渲染整个页面
+                familyModePageElement.outerHTML = this.render();
+                
+                // 重新初始化事件
+                this.initEvents();
+                
+                console.log('✅ 页面状态已刷新');
+            }
+        } catch (error) {
+            console.error('刷新页面状态失败:', error);
+            // 如果刷新失败，至少确保数据是最新的
+            this.updateFamilyOverview();
+        }
     }
     
     // 删除成员
@@ -822,79 +914,64 @@ class FamilyModePage {
 
     // 显示添加成员
     showAddMember() {
-        const inviteContent = `
-            <div class="invite-container">
-                <h3>邀请家庭成员</h3>
-                <div class="invite-form">
-                    <div class="form-group">
-                        <label>成员姓名</label>
-                        <input type="text" id="member-name" class="form-control" 
-                               placeholder="请输入成员姓名" maxlength="20">
-                    </div>
-                    <div class="form-group">
-                        <label>成员角色</label>
-                        <select id="member-role" class="form-control">
-                            <option value="member">普通成员</option>
-                            <option value="admin">管理员</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>邀请方式</label>
-                        <div class="invite-methods">
-                            <div class="invite-method active" data-method="link">
-                                <i class="fas fa-link"></i>
-                                <span>分享链接</span>
-                            </div>
-                            <div class="invite-method" data-method="qr">
-                                <i class="fas fa-qrcode"></i>
-                                <span>二维码</span>
-                            </div>
+        const modalContent = `
+            <div class="invite-form">
+                <div class="form-group">
+                    <label>成员姓名</label>
+                    <input type="text" id="member-name" class="form-control" 
+                           placeholder="请输入成员姓名" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label>成员角色</label>
+                    <select id="member-role" class="form-control">
+                        <option value="member">普通成员</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>邀请方式</label>
+                    <div class="invite-methods">
+                        <div class="invite-method active" data-method="link">
+                            <i class="fas fa-link"></i>
+                            <span>分享链接</span>
                         </div>
-                    </div>
-                    <div class="invite-link-section">
-                        <div class="invite-link">
-                            <input type="text" id="invite-link" class="form-control" 
-                                   value="https://accounting.app/family/join?code=INVITE123" readonly>
-                            <button class="btn btn-sm" onclick="familyModePage.copyInviteLink()">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                        <div class="invite-actions">
-                            <button class="btn btn-secondary" onclick="familyModePage.shareLink()">
-                                <i class="fas fa-share"></i> 分享
-                            </button>
-                            <button class="btn btn-primary" onclick="familyModePage.generateNewLink()">
-                                <i class="fas fa-sync"></i> 刷新
-                            </button>
+                        <div class="invite-method" data-method="qr">
+                            <i class="fas fa-qrcode"></i>
+                            <span>二维码</span>
                         </div>
                     </div>
                 </div>
+                <div class="invite-link-section">
+                    <div class="invite-link">
+                        <input type="text" id="invite-link" class="form-control" 
+                               value="https://accounting.app/family/join?code=INVITE123" readonly>
+                        <button class="btn btn-sm" onclick="familyModePage.copyInviteLink()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="invite-actions">
+                        <button class="btn btn-secondary" onclick="familyModePage.shareLink()">
+                            <i class="fas fa-share"></i> 分享
+                        </button>
+                        <button class="btn btn-primary" onclick="familyModePage.generateNewLink()">
+                            <i class="fas fa-sync"></i> 刷新
+                        </button>
+                    </div>
+                </div>
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="familyModePage.closeInvite()">取消</button>
+                    <button class="btn btn-secondary" onclick="familyModePage.closeModal()">取消</button>
                     <button class="btn btn-primary" onclick="familyModePage.confirmAddMember()">确认邀请</button>
                 </div>
             </div>
         `;
         
-        // 直接显示弹窗内容
-        const inviteContainer = document.createElement('div');
-        inviteContainer.className = 'invite-container';
-        inviteContainer.innerHTML = inviteContent;
-        
-        // 添加到页面
-        document.getElementById('family-members-list').appendChild(inviteContainer);
+        // 使用模态框显示邀请界面
+        this.showModal('邀请家庭成员', modalContent);
         
         // 初始化邀请方式切换
         setTimeout(() => {
             this.initInviteMethods();
         }, 100);
-    }
-    
-    closeInvite() {
-        const inviteContainer = document.querySelector('.invite-container');
-        if (inviteContainer) {
-            inviteContainer.remove();
-        }
     }
 
     // 初始化邀请方式

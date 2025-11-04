@@ -54,7 +54,7 @@ class StudentModePage {
     // 渲染预算分配部分
     renderBudgetSection() {
         return `
-            <div class="card budget-card">
+            <div class="budget-card">
                 <h3 class="section-title"><i class="fas fa-chart-pie"></i> 生活费智能分配</h3>
                 <div class="budget-item">
                     <div class="budget-setup">
