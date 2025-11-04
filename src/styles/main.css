@@ -1162,30 +1162,39 @@ body {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    background: rgba(0, 0, 0, 0.7) !important;
+    background: rgba(0, 0, 0, 0.65) !important;
     display: flex !important;
     align-items: flex-end !important;
     justify-content: center !important;
-    z-index: 10000 !important;
-    animation: fadeIn 0.3s ease !important;
+    /* 将 z-index 设置为高于底部导航，使弹窗底部覆盖在导航上 */
+    z-index: 1100 !important;
+    animation: fadeIn 0.25s ease !important;
     border-radius: 32px !important;
     overflow: hidden !important;
 }
 
 .mobile-modal-container {
     background: white !important;
-    border-radius: 24px 24px 0 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 85vh !important;
+    border-radius: 20px 20px 12px 12px !important;
+    /* 缩小弹窗尺寸（约 30%）: 使用较窄宽度与更低的最大高度 */
+    width: 90% !important;
+    max-width: 90% !important;
+    /* 将高度控制为视口高度的一部分（缩小约30%），并保留底部遮挡空间 */
+    max-height: 55vh !important;
     height: auto !important;
     overflow-y: auto !important;
-    animation: slideUp 0.3s ease !important;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3) !important;
+    animation: slideUp 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.28) !important;
     -webkit-overflow-scrolling: touch !important;
     position: relative !important;
-    margin: 0 !important;
+    margin: 0 0 0 0 !important; /* 不再额外留出大空白，弹窗底部会覆盖导航 */
     padding: 0 !important;
+    transform-origin: bottom center !important;
+}
+
+.mobile-modal-container.shrink-scale {
+    /* 额外保守缩放：如果需要更明显的 "缩小 30%" 效果，可以启用 scale */
+    transform: scale(0.95) !important;
 }
 
 .mobile-modal-header {
@@ -1900,6 +1909,33 @@ body {
     background: rgba(102, 126, 234, 0.1);
     border: 1px solid rgba(102, 126, 234, 0.2);
     color: var(--primary);
+}
+
+/* 统一：学生模式下所有按钮改为灰白色风格（覆盖原有主色调） */
+#student-mode-page .btn,
+#student-mode-page .student-mode-page .btn,
+#student-mode-page .btn-sm,
+#student-mode-page .btn-primary,
+#student-mode-page .btn-secondary,
+#student-mode-page .btn-primary.btn,
+#student-mode-page .btn-secondary.btn {
+    background: rgba(245,247,250,0.95) !important; /* 浅灰白背景 */
+    color: #2d3748 !important; /* 深色文本 */
+    border: 1px solid rgba(45,55,72,0.06) !important; /* 轻微边框 */
+    box-shadow: none !important;
+}
+
+/* 小按钮也统一样式，减少 padding 但保持配色 */
+#student-mode-page .btn-sm {
+    padding: 6px 10px !important;
+    min-width: 56px !important;
+}
+
+/* 悬停状态：轻微变暗 */
+#student-mode-page .btn:hover,
+#student-mode-page .btn:focus {
+    background: rgba(235,238,243,0.98) !important;
+    color: #1f2937 !important;
 }
 
 /* 模板按钮样式 */

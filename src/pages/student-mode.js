@@ -1175,10 +1175,28 @@ class StudentModePage {
             }
         });
 
-        document.body.appendChild(overlay);
+        // 将 overlay 挂载到手机模拟器容器中（优先 .phone-frame），保证弹窗不会超出模拟器边界
+        const simulator = document.querySelector('.phone-frame') || document.querySelector('.app-container') || document.getElementById('page-container') || document.body;
+        simulator.appendChild(overlay);
         this.currentMobileModal = overlay;
 
-        // 阻止背景滚动
+        // 确保 overlay 在其父容器内绝对定位并充满父容器
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.right = '0';
+        overlay.style.bottom = '0';
+
+        // 阻止背景滚动：如果挂载在模拟器内，优先禁止模拟器内部滚动；同时也禁止 body 滚动以避免外层滚动影响
+        try {
+            if (simulator !== document.body) {
+                // 找到页面内容容器并禁止滚动（兼容不同结构）
+                const inner = simulator.querySelector('#page-container') || simulator.querySelector('.app-container') || simulator;
+                inner.style.overflow = 'hidden';
+            }
+        } catch (e) {
+            // ignore
+        }
         document.body.style.overflow = 'hidden';
     }
 
@@ -1186,13 +1204,26 @@ class StudentModePage {
     hideMobileModal() {
         if (this.currentMobileModal) {
             try {
-                document.body.removeChild(this.currentMobileModal);
+                // 从实际父节点移除当前 modal，避免假设挂载点为 document.body
+                if (this.currentMobileModal.parentNode) {
+                    this.currentMobileModal.parentNode.removeChild(this.currentMobileModal);
+                }
             } catch (e) {
                 // already removed or not attached
             }
             this.currentMobileModal = null;
         }
         // 恢复页面滚动
+        // 恢复 body 和模拟器内部可能被禁止的滚动
+        try {
+            const simulator = document.querySelector('.phone-frame') || document.querySelector('.app-container') || document.getElementById('page-container') || document.body;
+            if (simulator !== document.body) {
+                const inner = simulator.querySelector('#page-container') || simulator.querySelector('.app-container') || simulator;
+                inner.style.overflow = '';
+            }
+        } catch (e) {
+            // ignore
+        }
         document.body.style.overflow = '';
     }
 
