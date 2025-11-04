@@ -15,8 +15,8 @@ class LoginPage {
     render() {
         return `
             <div class="page active" id="login-page" style="padding:16px;">
-                <div style="text-align:center;margin:24px 0;">
-                    <h2 style="margin:8px 0;">登录智能记账</h2>
+                <div style="text-align:center;margin:8px 0 16px 0;">
+                    <h2 style="margin:4px 0;font-size:1.5rem;font-weight:600;">登录智能记账</h2>
                     <div style="color:#718096;font-size:0.9rem;">请选择登录方式</div>
                 </div>
 

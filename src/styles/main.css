@@ -2149,35 +2149,7 @@ body {
     }
 }
 
-/* 登录按钮样式优化 */
-#phone-login-page .btn-primary {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    position: relative;
-    overflow: hidden;
-}
 
-#phone-login-page .btn-primary:hover:not(:disabled) {
-    /* 取消悬停动画效果 */
-}
-
-#phone-login-page .btn-primary:active:not(:disabled) {
-    /* 取消激活动画效果 */
-}
-
-#phone-login-page .btn-primary:disabled {
-    background: #a0aec0;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
 
 /* 链接按钮样式 */
 #phone-login-page .btn-link {
@@ -2454,35 +2426,7 @@ body {
     }
 }
 
-/* 登录按钮样式优化 */
-#phone-login-page .btn-primary {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    position: relative;
-    overflow: hidden;
-}
 
-#phone-login-page .btn-primary:hover:not(:disabled) {
-    /* 取消悬停动画效果 */
-}
-
-#phone-login-page .btn-primary:active:not(:disabled) {
-    /* 取消激活动画效果 */
-}
-
-#phone-login-page .btn-primary:disabled {
-    background: #a0aec0;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
 
 /* 链接按钮样式 */
 #phone-login-page .btn-link {

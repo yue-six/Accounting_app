@@ -14,8 +14,8 @@ class PhoneLoginPage {
     render() {
         return `
             <div class="page active" id="phone-login-page" style="padding:16px;">
-                <div style="text-align:center;margin:24px 0;">
-                    <h2 style="margin:8px 0;">手机号登录</h2>
+                <div style="text-align:center;margin:8px 0 16px 0;">
+                    <h2 style="margin:4px 0;font-size:1.5rem;font-weight:600;">手机号登录</h2>
                     <div style="color:#718096;font-size:0.9rem;">使用手机号验证码登录</div>
                 </div>
 
@@ -30,7 +30,7 @@ class PhoneLoginPage {
                         <input id="code-input" type="text" placeholder="请输入验证码" maxlength="6">
                         <button id="btn-send-code" class="btn btn-secondary">获取验证码</button>
                     </div>
-                    <button id="btn-phone-login" class="btn btn-primary" style="width:100%;margin-top:12px;">登录</button>
+                    <button id="btn-password-login" class="btn btn-primary" style="width:100%;margin-top:12px;">登录</button>
                     
                     <div style="text-align:center;margin-top:12px;">
                         <button id="btn-switch-to-password" class="btn btn-link" style="color:var(--primary);text-decoration:none;">
@@ -69,7 +69,7 @@ class PhoneLoginPage {
         const wechatBtn = document.getElementById('btn-wechat');
         const alipayBtn = document.getElementById('btn-alipay');
         const sendCodeBtn = document.getElementById('btn-send-code');
-        const phoneLoginBtn = document.getElementById('btn-phone-login');
+        const phoneLoginBtn = document.getElementById('btn-password-login');
         const phoneInput = document.getElementById('phone-input');
         const codeInput = document.getElementById('code-input');
         const gotoRegister = document.getElementById('go-register');
@@ -227,7 +227,7 @@ class PhoneLoginPage {
 
     // 重置登录按钮状态
     resetLoginButton() {
-        const phoneLoginBtn = document.getElementById('btn-phone-login');
+        const phoneLoginBtn = document.getElementById('btn-password-login');
         if (phoneLoginBtn) {
             phoneLoginBtn.disabled = false;
             phoneLoginBtn.textContent = '登录';
