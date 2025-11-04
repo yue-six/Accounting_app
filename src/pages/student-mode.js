@@ -55,19 +55,21 @@ class StudentModePage {
     renderBudgetSection() {
         return `
             <div class="card budget-card">
-                <h3><i class="fas fa-chart-pie"></i> 生活费智能分配</h3>
-                <div class="budget-setup">
-                    <div class="input-group">
-                        <label>每月生活费</label>
-                        <div class="input-row">
-                            <input type="number" id="monthly-allowance" value="${this.settings.monthlyAllowance || ''}" placeholder="请输入金额">
-                            <button class="btn btn-primary" onclick="studentModePage.setupBudgetAllocation()">智能分配</button>
+                <h3 class="section-title"><i class="fas fa-chart-pie"></i> 生活费智能分配</h3>
+                <div class="budget-item">
+                    <div class="budget-setup">
+                        <div class="input-group">
+                            <label>每月生活费</label>
+                            <div class="input-row">
+                                <input type="number" id="monthly-allowance" value="${this.settings.monthlyAllowance || ''}" placeholder="请输入金额">
+                                <button class="btn btn-primary" onclick="studentModePage.setupBudgetAllocation()">智能分配</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="budget-allocation" id="budget-allocation">
-                    ${this.renderBudgetAllocation()}
+
+                    <div class="budget-allocation" id="budget-allocation">
+                        ${this.renderBudgetAllocation()}
+                    </div>
                 </div>
             </div>
         `;
@@ -79,31 +81,36 @@ class StudentModePage {
     renderGoalsSection() {
         return `
             <div class="card goals-card">
-                <div class="goals-header">
-                    <h3><i class="fas fa-certificate"></i> 考证/学费储蓄计划</h3>
-                    <div class="goals-summary">
-                        <span class="summary-item">
-                            <span class="summary-label">目标数</span>
-                            <span class="summary-value">${this.examGoals.length}</span>
-                        </span>
-                        <span class="summary-item">
-                            <span class="summary-label">总进度</span>
-                            <span class="summary-value">${this.getAverageProgress().toFixed(1)}%</span>
-                        </span>
+                <h3 class="section-title"><i class="fas fa-certificate"></i> 考证/学费储蓄计划</h3>
+
+                <div class="goals-inner">
+                    <div class="savings-stats" style="justify-content:center; margin-bottom:14px;">
+                        <div class="savings-stat">
+                            <div class="stat-value">${this.examGoals.length}</div>
+                            <div class="stat-label">目标数</div>
+                        </div>
+                        <div class="savings-stat">
+                            <div class="stat-value">¥${this.getTotalSavings().toFixed(2)}</div>
+                            <div class="stat-label">总储蓄</div>
+                        </div>
+                        <div class="savings-stat">
+                            <div class="stat-value">${this.getAverageProgress().toFixed(1)}%</div>
+                            <div class="stat-label">平均进度</div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="exam-goals-list" id="exam-goals-list">
-                    ${this.renderExamGoals()}
-                </div>
-                
-                <div class="goal-actions">
-                    <button class="btn btn-secondary" onclick="studentModePage.showSavingsAnalysis()">
-                        <i class="fas fa-chart-bar"></i> 储蓄分析
-                    </button>
-                    <button class="btn btn-primary" onclick="studentModePage.showAddExamGoal()">
-                        <i class="fas fa-plus"></i> 添加目标
-                    </button>
+
+                    <div class="exam-goals-list" id="exam-goals-list">
+                        ${this.renderExamGoals()}
+                    </div>
+
+                    <div class="goal-actions" style="margin-top:12px; display:flex; gap:10px;">
+                        <button class="btn btn-secondary no-wrap-btn" onclick="studentModePage.showSavingsAnalysis()">
+                            <i class="fas fa-chart-bar"></i> 储蓄分析
+                        </button>
+                        <button class="btn btn-primary no-wrap-btn" onclick="studentModePage.showAddExamGoal()">
+                            <i class="fas fa-plus"></i> 添加目标
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -118,18 +125,18 @@ class StudentModePage {
         const totalAmount = parseFloat(this.settings.monthlyAllowance);
         
         return `
-            <div class="budget-summary">
-                <div class="summary-row">
-                    <span>本月生活费</span>
-                    <span class="amount">¥${totalAmount}</span>
+            <div class="savings-stats" style="justify-content:center; margin-bottom:12px;">
+                <div class="savings-stat">
+                    <div class="stat-value">¥${totalAmount}</div>
+                    <div class="stat-label">本月预算</div>
                 </div>
-                <div class="summary-row">
-                    <span>已使用</span>
-                    <span class="amount spent">¥${this.getTotalSpent().toFixed(2)}</span>
+                <div class="savings-stat">
+                    <div class="stat-value">¥${this.getTotalSpent().toFixed(2)}</div>
+                    <div class="stat-label">已使用</div>
                 </div>
-                <div class="summary-row">
-                    <span>剩余</span>
-                    <span class="amount remaining">¥${(totalAmount - this.getTotalSpent()).toFixed(2)}</span>
+                <div class="savings-stat">
+                    <div class="stat-value">¥${(totalAmount - this.getTotalSpent()).toFixed(2)}</div>
+                    <div class="stat-label">剩余</div>
                 </div>
             </div>
             
@@ -213,50 +220,34 @@ class StudentModePage {
             const remaining = Math.max(0, goal.amount - goal.currentAmount);
             
             return `
-                <div class="goal-item ${isCompleted ? 'completed' : isOverdue ? 'overdue' : ''}">
-                    <div class="goal-main">
+                <div class="goal-preview ${isCompleted ? 'completed' : isOverdue ? 'urgent' : ''}" style="padding:12px;">
+                    <div class="goal-header">
+                        <div class="goal-icon" style="background: linear-gradient(135deg, #9f7aea, #805ad5);">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
                         <div class="goal-info">
-                            <div class="goal-title">
-                                <h4>${goal.name}</h4>
-                                <span class="goal-status ${isCompleted ? 'completed' : isOverdue ? 'overdue' : 'active'}">
-                                    <i class="fas ${isCompleted ? 'fa-check-circle' : isOverdue ? 'fa-exclamation-circle' : 'fa-clock'}"></i>
-                                    ${isCompleted ? '已完成' : isOverdue ? '已逾期' : '进行中'}
-                                </span>
-                            </div>
-                            <div class="goal-amount">
-                                <span class="current">¥${goal.currentAmount.toLocaleString()}</span>
-                                <span class="separator">/</span>
-                                <span class="target">¥${goal.amount.toLocaleString()}</span>
-                            </div>
+                            <div class="goal-name">${goal.name}</div>
+                            <div class="goal-amount">¥${goal.currentAmount.toLocaleString()} / ¥${goal.amount.toLocaleString()}</div>
                         </div>
-                        
-                        <div class="goal-progress">
+                    </div>
+
+                    <div class="goal-progress" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                        <div style="flex:1;">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                                <div class="progress-fill" style="width: ${Math.min(progress, 100)}%;"></div>
                             </div>
-                            <div class="progress-text">${progress}%</div>
                         </div>
+                        <div class="progress-text">${progress}%</div>
                     </div>
-                    
-                    <div class="goal-details">
-                        <div class="goal-meta">
-                            <span class="deadline">
-                                <i class="fas fa-calendar"></i>
-                                ${deadline.toLocaleDateString()}
-                            </span>
-                            <span class="days-left ${daysLeft <= 7 && !isCompleted ? 'urgent' : ''}">
-                                ${isCompleted ? '已完成' : isOverdue ? '已逾期' : `${daysLeft}天`}
-                            </span>
-                        </div>
-                        
-                        <div class="goal-remaining">
-                            <span>还需 ¥${remaining.toLocaleString()}</span>
-                        </div>
+
+                    <div class="goal-meta" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <div class="deadline"><i class="fas fa-calendar"></i> ${deadline.toLocaleDateString()} <span class="days-left ${daysLeft <= 7 && !isCompleted ? 'urgent' : ''}" style="margin-left:8px; color:#718096; font-size:0.9rem;">${isCompleted ? '已完成' : isOverdue ? '已逾期' : `${daysLeft}天`}</span></div>
+                        <div class="goal-remaining" style="color:#2d3748; font-weight:600;">还需 ¥${remaining.toLocaleString()}</div>
                     </div>
-                    
-                    <div class="goal-actions">
+
+                    <div class="goal-actions" style="margin-top:12px; display:flex; gap:8px;">
                         ${!isCompleted ? `
-                            <button class="btn btn-sm btn-primary" onclick="studentModePage.addToGoal('${goal.id}')">
+                            <button class="btn btn-sm btn-primary no-wrap-btn" onclick="studentModePage.addToGoal('${goal.id}')">
                                 <i class="fas fa-plus"></i> 存钱
                             </button>
                         ` : ''}
@@ -327,7 +318,7 @@ class StudentModePage {
 
     // 自定义预算比例
     customizeBudgetRatios() {
-        this.showMobileModal('自定义预算比例', `
+        this.showBottomModal('自定义预算比例', `
             <div class="modal-content-simple">
                 <div class="ratio-inputs">
                     ${Object.entries(this.budgetRatios).map(([key, ratio]) => `
@@ -557,7 +548,7 @@ class StudentModePage {
 
     // 显示添加考证目标对话框
     showAddExamGoal() {
-        this.showMobileModal('自定义储蓄目标', `
+        this.showBottomModal('自定义储蓄目标', `
             <div style="padding: 0;">
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">目标名称</label>
@@ -646,7 +637,7 @@ class StudentModePage {
         if (!goal) return;
 
         const remaining = goal.amount - goal.currentAmount;
-        this.showMobileModal('存钱到目标', `
+    this.showBottomModal('存钱到目标', `
             <div style="padding: 0;">
                 <div class="goal-info" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                     <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${goal.name}</h4>
@@ -984,7 +975,7 @@ class StudentModePage {
         const goal = this.examGoals.find(g => g.id === goalId);
         if (!goal) return;
 
-        this.showMobileModal('编辑储蓄目标', `
+    this.showBottomModal('编辑储蓄目标', `
             <div style="padding: 0;">
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">目标名称</label>
@@ -1151,12 +1142,58 @@ class StudentModePage {
         this.currentMobileModal = modal;
     }
 
+    // 从底部滑出的移动端模态框（基于 iPhone 12/13 视觉规格）
+    showBottomModal(title, content, options = {}) {
+        const { showCloseButton = true } = options;
+
+        // 清理之前的弹窗
+        this.hideMobileModal();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'mobile-modal-overlay';
+
+        const container = document.createElement('div');
+        container.className = 'mobile-modal-container';
+        container.setAttribute('role', 'dialog');
+        container.setAttribute('aria-modal', 'true');
+        container.innerHTML = `
+            <div class="mobile-modal-header">
+                <h3 class="mobile-modal-title">${title}</h3>
+                ${showCloseButton ? `<button class="mobile-modal-close" onclick="studentModePage.hideMobileModal()">×</button>` : ''}
+            </div>
+            <div class="mobile-modal-body">
+                ${content}
+            </div>
+        `;
+
+        overlay.appendChild(container);
+
+        // 点击遮罩空白处关闭
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.hideMobileModal();
+            }
+        });
+
+        document.body.appendChild(overlay);
+        this.currentMobileModal = overlay;
+
+        // 阻止背景滚动
+        document.body.style.overflow = 'hidden';
+    }
+
     // 隐藏手机模式弹窗
     hideMobileModal() {
         if (this.currentMobileModal) {
-            document.body.removeChild(this.currentMobileModal);
+            try {
+                document.body.removeChild(this.currentMobileModal);
+            } catch (e) {
+                // already removed or not attached
+            }
             this.currentMobileModal = null;
         }
+        // 恢复页面滚动
+        document.body.style.overflow = '';
     }
 
     // 模态框方法（保持兼容性）
@@ -1173,11 +1210,33 @@ class StudentModePage {
 
     // 显示确认弹窗
     showMobileConfirmDialog(title, message, onConfirm) {
-        if (confirm(`${title}
+        // 使用底部滑出模态替代浏览器 confirm，保证与移动端样式一致且不会超出模拟框架
+        const content = `
+            <div style="padding: 16px;">
+                <p style="margin:0 0 16px 0; color:#333;">${message}</p>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="studentModePage.hideMobileModal()" style="flex:1;">取消</button>
+                    <button class="btn btn-primary" id="__confirm_btn" style="flex:1;">确定</button>
+                </div>
+            </div>
+        `;
 
-${message}`)) {
-            onConfirm();
-        }
+        this.showBottomModal(title, content, { showCloseButton: false });
+
+        // 绑定确认按钮事件
+        setTimeout(() => {
+            const btn = document.getElementById('__confirm_btn');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    try {
+                        onConfirm();
+                    } catch (e) {
+                        console.error('确认回调执行失败', e);
+                    }
+                    this.hideMobileModal();
+                });
+            }
+        }, 50);
     }
 
     // 删除方法
@@ -1481,7 +1540,7 @@ ${message}`)) {
         const activeGoals = this.examGoals.filter(goal => goal.currentAmount < goal.amount);
         const completedGoals = this.examGoals.filter(goal => goal.currentAmount >= goal.amount);
         
-        this.showMobileModal('储蓄分析报告', `
+    this.showBottomModal('储蓄分析报告', `
             <div style="padding: 0;">
                 <div class="analysis-overview" style="margin-bottom: 20px;">
                     <h4 style="margin: 0 0 15px 0; font-size: 16px; color: #333;">储蓄概览</h4>

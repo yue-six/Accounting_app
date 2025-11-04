@@ -268,8 +268,9 @@ body {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(102, 126, 234, 0.1);
+    border: none;
     backdrop-filter: blur(10px);
+    box-shadow: none;
 }
 
 
@@ -291,7 +292,7 @@ body {
 .student-mode-page .card h3 {
     color: #2d3748;
     margin-bottom: 18px;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -307,6 +308,69 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+/* 学生模式：去除生活费智能分配与储蓄计划外侧框，使内部板块保留白色卡片视觉 */
+#student-mode-page .budget-card,
+#student-mode-page .goals-card {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 0; /* 内部使用 .budget-item / .goals-inner 控制内边距 */
+}
+
+/* 放大两个模块的标题使其更醒目（仅学生模式） */
+#student-mode-page .section-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 确保统计项（本月预算/已使用/剩余 与 目标数/总储蓄/平均进度）在同一行并居中 */
+#student-mode-page .savings-stats {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    align-items: center;
+}
+
+#student-mode-page .savings-stat .stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+#student-mode-page .goals-inner, #student-mode-page .budget-item {
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* 学生模式：预算操作按钮居中显示 */
+#student-mode-page .budget-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+/* 学生模式：确保 goal-actions、budget-actions 中的按钮内容水平/垂直居中（图标+文字在按钮中居中） */
+#student-mode-page .goal-actions .btn,
+#student-mode-page .budget-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* 图标与文字间距 */
+    text-align: center;
+}
+
+/* 可复用：阻止按钮内文本换行（用于图标+文字按钮） */
+.no-wrap-btn {
+    white-space: nowrap !important;
 }
 
 /* 学生模式统计项美化 */
@@ -1629,10 +1693,6 @@ body {
     overflow: hidden;
 }
 
-.social-login-icon:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
 
 .social-login-icon:active {
     transform: translateY(0);
@@ -1664,10 +1724,6 @@ body {
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transition: left 0.5s ease;
-}
-
-.social-login-icon:hover::before {
-    left: 100%;
 }
 
 .social-login-label {
@@ -2043,10 +2099,6 @@ body {
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-#phone-login-page .card:hover {
-    /* 取消悬停动画效果 */
-}
-
 /* 手机号输入框组样式 */
 #phone-login-page .input-group {
     margin-bottom: 20px;
@@ -2163,11 +2215,6 @@ body {
     border-radius: 8px;
 }
 
-#phone-login-page .btn-link:hover {
-    background: rgba(102, 126, 234, 0.1);
-    transform: translateY(-1px);
-}
-
 /* 第三方登录图标优化 */
 #phone-login-page .social-login-icons {
     display: flex;
@@ -2189,11 +2236,6 @@ body {
     border: 3px solid transparent;
     position: relative;
     overflow: hidden;
-}
-
-#phone-login-page .social-login-icon:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 #phone-login-page .social-login-icon:active {
@@ -2320,10 +2362,6 @@ body {
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-#phone-login-page .card:hover {
-    /* 取消悬停动画效果 */
-}
-
 /* 手机号输入框组样式 */
 #phone-login-page .input-group {
     margin-bottom: 20px;
@@ -2440,10 +2478,6 @@ body {
     border-radius: 8px;
 }
 
-#phone-login-page .btn-link:hover {
-    background: rgba(102, 126, 234, 0.1);
-    transform: translateY(-1px);
-}
 
 /* 第三方登录图标优化 */
 #phone-login-page .social-login-icons {
@@ -2466,11 +2500,6 @@ body {
     border: 3px solid transparent;
     position: relative;
     overflow: hidden;
-}
-
-#phone-login-page .social-login-icon:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 #phone-login-page .social-login-icon:active {
@@ -3236,10 +3265,6 @@ html {
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
-}
-
-.modal-close:hover {
-    background: rgba(0,0,0,0.1);
 }
 
 /* 输入框样式 */
