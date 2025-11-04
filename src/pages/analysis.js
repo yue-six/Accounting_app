@@ -278,6 +278,23 @@ class AnalysisPage {
                             color: 'rgba(0,0,0,0.1)'
                         }
                     }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const element = elements[0];
+                        const monthIndex = element.index;
+                        const monthLabel = months[monthIndex];
+                        this.showMonthDetailModal(monthIndex, monthLabel);
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ¥${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -419,6 +436,194 @@ class AnalysisPage {
         if (progress >= 100) return '#e53e3e'; // 红色 - 超支
         if (progress >= 80) return '#d69e2e'; // 黄色 - 警告
         return '#38a169'; // 绿色 - 正常
+    }
+
+    // 显示月度详情弹窗
+    showMonthDetailModal(monthIndex, monthLabel) {
+        // 计算目标月份
+        const now = new Date();
+        const targetMonth = now.getMonth() - (5 - monthIndex);
+        const targetYear = now.getFullYear() - Math.floor((now.getMonth() - targetMonth) / 12);
+        
+        // 获取该月的交易数据
+        const monthTransactions = this.getMonthTransactions(targetYear, targetMonth);
+        
+        // 创建弹窗HTML
+        const modalHTML = this.renderMonthDetailModal(monthLabel, monthTransactions, targetYear, targetMonth);
+        
+        // 显示弹窗
+        this.showModal(modalHTML);
+    }
+
+    // 获取指定月份的交易数据
+    getMonthTransactions(year, month) {
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+        
+        return this.app.transactions.filter(transaction => {
+            const transactionDate = new Date(transaction.date);
+            return transactionDate >= startDate && transactionDate <= endDate;
+        }).sort((a, b) => new Date(b.date) - new Date(a.date)); // 按日期倒序排列
+    }
+
+    // 渲染月度详情弹窗
+    renderMonthDetailModal(monthLabel, transactions, year, month) {
+        const incomeTotal = transactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        
+        const expenseTotal = transactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        
+        const netIncome = incomeTotal - expenseTotal;
+        
+        return `
+            <div class="modal-overlay" id="month-detail-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>${year}年${monthLabel}详细账单</h3>
+                        <button class="modal-close" onclick="analysisPage.closeModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <!-- 月度统计概览 -->
+                        <div class="month-detail-stats">
+                            <div class="month-detail-stat income">
+                                <div class="month-detail-stat-value">¥${incomeTotal.toFixed(2)}</div>
+                                <div class="month-detail-stat-label">总收入</div>
+                            </div>
+                            <div class="month-detail-stat expense">
+                                <div class="month-detail-stat-value">¥${expenseTotal.toFixed(2)}</div>
+                                <div class="month-detail-stat-label">总支出</div>
+                            </div>
+                            <div class="month-detail-stat net ${netIncome < 0 ? 'negative' : ''}">
+                                <div class="month-detail-stat-value">¥${Math.abs(netIncome).toFixed(2)}</div>
+                                <div class="month-detail-stat-label">${netIncome >= 0 ? '净收入' : '净支出'}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 交易列表 -->
+                        <div class="month-transaction-list">
+                            <h4 style="margin-bottom: 15px; color: #2d3748;">交易记录</h4>
+                            ${transactions.length > 0 ? 
+                                transactions.map(transaction => this.renderTransactionItem(transaction)).join('') :
+                                '<div class="month-empty-state"><i class="fas fa-receipt"></i><div>本月暂无交易记录</div></div>'
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 渲染单个交易项
+    renderTransactionItem(transaction) {
+        const category = this.app.categories.find(cat => cat.id === transaction.category) || { name: '其他', icon: '📦', color: '#a0aec0' };
+        const date = new Date(transaction.date);
+        const formattedDate = `${date.getMonth() + 1}月${date.getDate()}日 ${transaction.time || ''}`;
+        
+        return `
+            <div class="month-transaction-item">
+                <div class="month-transaction-icon" style="background: ${category.color}20;">
+                    <span>${category.icon}</span>
+                </div>
+                <div class="month-transaction-details">
+                    <div class="month-transaction-header">
+                        <div>
+                            <div class="month-transaction-description">${transaction.description || '无描述'}</div>
+                            <div class="month-transaction-meta">${category.name} • ${formattedDate}</div>
+                        </div>
+                        <div class="month-transaction-amount ${transaction.type}">
+                            ${transaction.type === 'income' ? '+' : '-'}¥${parseFloat(transaction.amount || 0).toFixed(2)}
+                        </div>
+                    </div>
+                    ${transaction.merchant ? `<div class="month-transaction-merchant">商家: ${transaction.merchant}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // 显示弹窗
+    showModal(html) {
+        // 移除现有弹窗
+        this.closeModal();
+        
+        // 创建弹窗
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = html;
+        
+        // 修改弹窗容器为移动端样式
+        const modalOverlay = modalContainer.querySelector('.modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.className = 'mobile-modal-overlay';
+            
+            const modalContent = modalOverlay.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.className = 'mobile-modal-container';
+                
+                const modalHeader = modalContent.querySelector('.modal-header');
+                if (modalHeader) {
+                    modalHeader.className = 'mobile-modal-header';
+                    
+                    const modalClose = modalHeader.querySelector('.modal-close');
+                    if (modalClose) {
+                        modalClose.className = 'mobile-modal-close';
+                    }
+                }
+                
+                const modalBody = modalContent.querySelector('.modal-body');
+                if (modalBody) {
+                    modalBody.className = 'mobile-modal-body';
+                }
+            }
+        }
+        
+        // 确保弹窗在手机模拟器容器内显示
+        const phoneSimulator = document.querySelector('.phone-simulator');
+        if (phoneSimulator) {
+            // 将弹窗添加到手机模拟器容器内
+            phoneSimulator.appendChild(modalContainer);
+            
+            // 确保弹窗样式正确应用
+            const modalOverlay = modalContainer.querySelector('.mobile-modal-overlay');
+            if (modalOverlay) {
+                modalOverlay.style.position = 'absolute';
+                modalOverlay.style.width = '100%';
+                modalOverlay.style.height = '100%';
+            }
+        } else {
+            document.body.appendChild(modalContainer);
+        }
+        
+        // 添加点击外部关闭功能
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) {
+                this.closeModal();
+            }
+        });
+        
+        // 添加ESC键关闭功能
+        this.modalKeyHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeModal();
+            }
+        };
+        document.addEventListener('keydown', this.modalKeyHandler);
+    }
+
+    // 关闭弹窗
+    closeModal() {
+        const modal = document.getElementById('month-detail-modal');
+        if (modal) {
+            modal.remove();
+        }
+        if (this.modalKeyHandler) {
+            document.removeEventListener('keydown', this.modalKeyHandler);
+            this.modalKeyHandler = null;
+        }
     }
 }
 
