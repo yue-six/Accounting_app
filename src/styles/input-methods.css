@@ -1,0 +1,305 @@
+/* 多方式记账样式 */
+.multi-input-actions {
+    margin: 20px 0;
+}
+
+.input-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 0 auto;
+    max-width: 300px;
+}
+
+.input-method-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    border: 2px solid rgba(30,136,229,0.2);
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    min-height: 80px;
+    text-align: center;
+}
+
+.input-method-btn.voice {
+    border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
+}
+
+.input-method-btn.qr {
+    border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
+}
+
+.input-method-btn.manual {
+    border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
+}
+
+.input-method-btn.photo {
+    border-color: #1e88e5;
+    background-color: rgba(30,136,229,0.05);
+}
+
+.method-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.method-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #000000;
+}
+
+/* 输入模态框样式 - 移动端统一标准 */
+.input-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.input-modal-content {
+    background: white;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
+    -webkit-overflow-scrolling: touch;
+}
+
+.input-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(30,136,229,0.1);
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 56px;
+}
+
+.input-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000000;
+    flex: 1;
+    text-align: center;
+}
+
+.input-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.input-modal-close:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.input-modal-body {
+    padding: 20px;
+    max-height: calc(85vh - 56px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 语音识别状态 */
+.voice-status {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.voice-status.recording {
+    color: #000000;
+}
+
+.voice-status.processing {
+    color: #000000;
+}
+
+.voice-status.success {
+    color: #000000;
+}
+
+/* 扫码界面 */
+.qr-scanner-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.qr-video {
+    width: 100%;
+    max-width: 300px;
+    height: 300px;
+    background: white;
+    border: 2px dashed rgba(0,0,0,0.3);
+    border-radius: 8px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+}
+
+/* 拍照界面 */
+.photo-capture-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.photo-preview {
+    width: 100%;
+    max-width: 300px;
+    height: 300px;
+    background: white;
+    border: 2px dashed rgba(0,0,0,0.3);
+    border-radius: 8px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    overflow: hidden;
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.capture-btn {
+    background: #1e88e5;
+    color: #000000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.capture-btn:hover {
+    background: #38b2ac;
+}
+
+.capture-btn:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+}
+
+/* 手动输入表单 */
+.manual-input-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+.form-input, .form-select {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #4fd1c5;
+    box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background: #4fd1c5;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    flex: 1;
+    transition: background 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #38b2ac;
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    flex: 1;
+    transition: background 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e0;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+    .input-methods-grid {
+        grid-template-columns: 1fr;
+        max-width: 200px;
+    }
+    
+    .input-modal-content {
+        margin: 10px;
+        max-width: none;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}

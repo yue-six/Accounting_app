@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航栏模式切换测试</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="phone-simulator">
+        <div class="phone-frame">
+            <div class="phone-status-bar">
+                <div class="status-time">14:25</div>
+                <div class="status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            
+            <div class="app-container">
+                <div class="status-bar">
+                    <h1>导航栏测试</h1>
+                </div>
+
+                <div id="page-container" style="padding: 20px;">
+                    <h2>当前用户模式: <span id="current-mode">student</span></h2>
+                    <p>底部导航栏应该根据当前用户模式显示对应的模式选项</p>
+                    
+                    <div class="card">
+                        <h3>测试用户模式切换</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <button class="btn btn-primary" onclick="switchMode('student')" style="white-space: nowrap;" title="切换到学生模式">学生模式</button>
+                            <button class="btn btn-primary" onclick="switchMode('family')" style="white-space: nowrap;" title="切换到家庭模式">家庭模式</button>
+                            <button class="btn btn-primary" onclick="switchMode('freelancer')" title="切换到自由职业者模式">
+                                自由职业者模式
+                            </button>
+                        </div>
+                        
+                        <div class="test-result">
+                            <h4>测试结果:</h4>
+                            <div id="test-result">等待测试...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部导航栏 -->
+                <div class="bottom-nav">
+                    <a href="#" class="nav-item active" data-page="home">
+                        <i class="fas fa-home"></i>
+                        <span>首页</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="analysis">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>分析</span>
+                    </a>
+                    <a href="#" class="nav-item mode-nav-item" data-page="student-mode" data-mode="student">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>学生模式</span>
+                    </a>
+                    <a href="#" class="nav-item mode-nav-item" data-page="family-mode" data-mode="family">
+                        <i class="fas fa-home"></i>
+                        <span>家庭模式</span>
+                    </a>
+                    <a href="#" class="nav-item mode-nav-item" data-page="freelancer-mode" data-mode="freelancer">
+                        <i class="fas fa-briefcase"></i>
+                        <span>自由职业</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="profile">
+                        <i class="fas fa-user"></i>
+                        <span>我的</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟router的功能
+        const router = {
+            userMode: localStorage.getItem('user_mode') || 'student',
+            
+            switchUserMode(mode) {
+                this.userMode = mode;
+                localStorage.setItem('user_mode', mode);
+                this.updateNavigationForMode();
+                
+                // 更新显示
+                document.getElementById('current-mode').textContent = mode;
+                
+                // 显示成功提示
+                const modeNames = {
+                    'student': '学生模式',
+                    'family': '家庭模式',
+                    'freelancer': '自由职业者模式'
+                };
+                
+                document.getElementById('test-result').innerHTML = 
+                    `<div class="success">✓ 已成功切换到${modeNames[mode]}</div>`;
+            },
+            
+            updateNavigationForMode() {
+                const bottomNav = document.querySelector('.bottom-nav');
+                if (bottomNav) {
+                    const navItems = bottomNav.querySelectorAll('.nav-item');
+                    
+                    navItems.forEach(item => {
+                        const page = item.getAttribute('data-page');
+                        const alwaysVisible = ['home', 'analysis', 'profile'];
+                        
+                        if (alwaysVisible.includes(page)) {
+                            item.style.display = 'flex';
+                        } else if (item.classList.contains('mode-nav-item')) {
+                            const itemMode = item.getAttribute('data-mode');
+                            item.style.display = itemMode === this.userMode ? 'flex' : 'none';
+                        }
+                    });
+                }
+            }
+        };
+        
+        // 初始化
+        router.updateNavigationForMode();
+        
+        // 切换模式函数
+        function switchMode(mode) {
+            router.switchUserMode(mode);
+        }
+        
+        // 页面加载时显示当前模式
+        document.getElementById('current-mode').textContent = router.userMode;
+    </script>
+
+    <style>
+        .test-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .success {
+            color: #38a169;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+    </style>
+</body>
+</html>
