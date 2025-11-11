@@ -123,16 +123,15 @@ class ProfilePage {
                 <!-- 用户模式 -->
                 <div class="card">
                     <h3><i class="fas fa-user-tag"></i> 用户模式</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
-                        <div class="mode-btn ${this.getCurrentUserMode() === 'student' ? 'active' : ''}" onclick="profilePage.setUserMode('student')">
-                            <div>学生模式</div>
-                            <small style="font-size: 0.8em; color: #718096;">生活费分配 · 兼职收入</small>
+                    <div style="display: flex; gap: 12px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <div class="mode-btn ${this.getCurrentUserMode() === 'student' ? 'active' : ''}" onclick="profilePage.setUserMode('student')" style="flex: 1; min-width: 120px; white-space: nowrap;">
+                            <div style="font-size: 0.95rem; font-weight: 600; margin-bottom: 4px;">学生模式</div>
+                            <small style="font-size: 0.7em; color: #718096; line-height: 1.2;">生活费·储蓄目标</small>
                         </div>
-                        <div class="mode-btn ${this.getCurrentUserMode() === 'family' ? 'active' : ''}" onclick="profilePage.setUserMode('family')">
-                            <div>家庭模式</div>
-                            <small style="font-size: 0.8em; color: #718096;">多人共享 · 家庭开支</small>
+                        <div class="mode-btn ${this.getCurrentUserMode() === 'family' ? 'active' : ''}" onclick="profilePage.setUserMode('family')" style="flex: 1; min-width: 120px; white-space: nowrap;">
+                            <div style="font-size: 0.95rem; font-weight: 600; margin-bottom: 4px;">家庭模式</div>
+                            <small style="font-size: 0.7em; color: #718096; line-height: 1.2;">多人·共享</small>
                         </div>
-
                     </div>
                 </div>
 

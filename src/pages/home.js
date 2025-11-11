@@ -114,7 +114,7 @@ class HomePage {
 
     // 渲染储蓄目标概览
     renderSavingsOverview() {
-        // 只显示学生模式下的考证/学费储蓄计划
+        // 只显示学生模式下的储蓄计划
         const userMode = this.getCurrentUserMode();
         
         if (userMode !== 'student') {
@@ -124,7 +124,7 @@ class HomePage {
                         <i class="fas fa-graduation-cap"></i>
                     </div>
                     <p style="color: #718096; margin-bottom: 15px;">储蓄目标功能仅对学生模式开放</p>
-                    <p style="color: #a0aec0; font-size: 0.9rem;">切换到学生模式可查看考证/学费储蓄计划</p>
+                    <p style="color: #a0aec0; font-size: 0.9rem;">切换到学生模式可查看储蓄计划</p>
                 </div>
             `;
         }
@@ -168,11 +168,7 @@ class HomePage {
                     ${activeGoals.map(goal => this.renderStudentGoalPreview(goal)).join('')}
                 </div>
                 
-                <div class="savings-actions">
-                    <button class="action-btn" onclick="homePage.navigateToStudentMode()">
-                        查看全部目标
-                    </button>
-                </div>
+
             </div>
         `;
     }

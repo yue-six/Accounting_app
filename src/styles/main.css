@@ -58,6 +58,7 @@ body {
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     position: relative;
     overflow: hidden;
+    z-index: 10000;
 }
 
 .phone-frame {
@@ -159,9 +160,7 @@ body {
     margin-bottom: 2px;
 }
 
-.nav-item.active i {
-    /* 移除缩放效果 */
-}
+/* 导航项活动状态的图标样式 - 移除缩放效果 */
 
 .nav-item span {
     font-size: 0.65rem;
@@ -310,7 +309,7 @@ body {
     background-clip: text;
 }
 
-/* 学生模式：去除生活费智能分配与储蓄计划外侧框，使内部板块保留白色卡片视觉 */
+/* 学生模式：去除生活费分配与储蓄计划外侧框，使内部板块保留白色卡片视觉 */
 #student-mode-page .budget-card,
 #student-mode-page .goals-card {
     border: none;
@@ -791,7 +790,8 @@ body {
 }
 
 .student-mode-page .budget-allocation {
-    animation: slideInLeft 0.8s ease-out;
+    /* 取消侧滑动画效果 */
+    animation: none;
 }
 
 .student-mode-page .part-time-summary {
@@ -1226,10 +1226,6 @@ body {
     transition: background-color 0.2s ease !important;
     padding: 0 !important;
     margin: 0 !important;
-}
-
-.mobile-modal-close:hover {
-    background: rgba(0, 0, 0, 0.05) !important;
 }
 
 .mobile-modal-body {
@@ -1898,6 +1894,108 @@ body {
     color: var(--primary);
 }
 
+/* 生活费分配的优化布局 */
+.input-row-optimized {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-row-optimized input[type="number"] {
+    flex: 1;
+    appearance: none;
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+}
+
+/* 隐藏数字输入框的调节按钮 */
+.input-row-optimized input[type="number"]::-webkit-outer-spin-button,
+.input-row-optimized input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-row-optimized input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* 生活费分配的优化布局 */
+.input-row-optimized {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-row-optimized input[type="number"] {
+    flex: 1;
+    appearance: none;
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+}
+
+/* 隐藏数字输入框的调节按钮 */
+.input-row-optimized input[type="number"]::-webkit-outer-spin-button,
+.input-row-optimized input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-row-optimized input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* 学生模式页面滚动优化 */
+#student-mode-page {
+    will-change: transform;
+    contain: layout style paint;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+#student-mode-page .content-wrapper {
+    will-change: transform;
+    contain: content;
+}
+
+#student-mode-page .budget-item,
+#student-mode-page .goals-card,
+#student-mode-page .budget-allocation,
+#student-mode-page .exam-goals-list {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    contain: content;
+}
+
+/* 预防滚动时内容闪烁 */
+#student-mode-page {
+    -webkit-overflow-scrolling: touch;
+    overflow-anchor: none;
+}
+
+/* 优化滚动容器 */
+#page-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    contain: layout style paint;
+}
+
+/* 防止滚动时重绘 */
+.student-mode-page * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* 优化动画性能 */
+#student-mode-page .progress-bar,
+#student-mode-page .progress-fill {
+    will-change: width;
+    transform: translateZ(0);
+}
+
 /* 统一：学生模式下所有按钮改为灰白色风格（覆盖原有主色调） */
 #student-mode-page .btn,
 #student-mode-page .student-mode-page .btn,
@@ -1919,11 +2017,6 @@ body {
 }
 
 /* 悬停状态：轻微变暗 */
-#student-mode-page .btn:hover,
-#student-mode-page .btn:focus {
-    background: rgba(235,238,243,0.98) !important;
-    color: #1f2937 !important;
-}
 
 /* 模板按钮样式 */
 .template-buttons {
@@ -2790,7 +2883,8 @@ body {
 
 /* 预算分配项动画 */
 .budget-item {
-    animation: slideIn 0.3s ease-out;
+    /* 取消侧滑动画效果 */
+    animation: none;
 }
 
 /* 延迟动画 */
@@ -3553,18 +3647,22 @@ input:checked + .slider:before {
 
 /* 用户模式选择器 */
 .mode-btn {
-    padding: 16px;
+    padding: 14px 12px;
     border: 2px solid rgba(102, 126, 234, 0.2);
     border-radius: 16px;
-    background: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.8);
     color: var(--primary);
     text-align: center;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
-
 
 
 .mode-btn.active {
@@ -4889,10 +4987,6 @@ input:checked + .slider:before {
     border-bottom: none;
 }
 
-.month-transaction-item:hover {
-    background: #f8fafc;
-}
-
 .month-transaction-icon {
     width: 40px;
     height: 40px;
@@ -5152,10 +5246,6 @@ input:checked + .slider:before {
 
 .month-transaction-item:last-child {
     border-bottom: none;
-}
-
-.month-transaction-item:hover {
-    background: #f8fafc;
 }
 
 .month-transaction-icon {

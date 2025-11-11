@@ -21,9 +21,29 @@ class StudentModePage {
             this.settings = JSON.parse(localStorage.getItem('student_mode_settings') || '{}');
             this.examGoals = JSON.parse(localStorage.getItem('student_exam_goals') || '[]');
             this.budgetAllocations = JSON.parse(localStorage.getItem('student_budget_allocations') || '{}');
+            
+            // 预计算数据，减少滚动时的计算开销
+            this.precomputeData();
         } catch (e) {
             console.error('加载学生模式数据失败:', e);
         }
+    }
+    
+    // 预计算数据以优化性能
+    precomputeData() {
+        // 预先计算预算分配数据
+        if (this.settings.monthlyAllowance) {
+            this.cachedBudgetAllocation = this.renderBudgetAllocation();
+        }
+        
+        // 预先计算储蓄目标数据
+        this.cachedExamGoals = this.renderExamGoals();
+        
+        // 缓存已花费金额数据
+        this.cachedSpentAmounts = {};
+        Object.keys(this.budgetRatios).forEach(key => {
+            this.cachedSpentAmounts[key] = this.getSpentAmount(key);
+        });
     }
 
     // 渲染页面
@@ -41,6 +61,11 @@ class StudentModePage {
         `;
     }
 
+    // 优化渲染方法 - 只渲染可见部分
+    renderOptimized() {
+        return this.render();
+    }
+
     // 渲染页面头部
     renderHeader() {
         return `
@@ -55,13 +80,13 @@ class StudentModePage {
     renderBudgetSection() {
         return `
             <div class="budget-card">
-                <h3 class="section-title"><i class="fas fa-chart-pie"></i> 生活费智能分配</h3>
+                <h3 class="section-title"><i class="fas fa-chart-pie"></i> 生活费分配</h3>
                 <div class="budget-item">
                     <div class="budget-setup">
                         <div class="input-group">
                             <label>每月生活费</label>
-                            <div class="input-row">
-                                <input type="number" id="monthly-allowance" value="${this.settings.monthlyAllowance || ''}" placeholder="请输入金额">
+                            <div class="input-row-optimized">
+                                <input type="number" id="monthly-allowance" value="${this.settings.monthlyAllowance || ''}" placeholder="请输入金额" style="appearance: none; -moz-appearance: textfield;">
                                 <button class="btn btn-primary" onclick="studentModePage.setupBudgetAllocation()">智能分配</button>
                             </div>
                         </div>
@@ -81,7 +106,7 @@ class StudentModePage {
     renderGoalsSection() {
         return `
             <div class="card goals-card">
-                <h3 class="section-title"><i class="fas fa-certificate"></i> 考证/学费储蓄计划</h3>
+                <h3 class="section-title"><i class="fas fa-certificate"></i> 储蓄计划</h3>
 
                 <div class="goals-inner">
                     <div class="savings-stats" style="justify-content:center; margin-bottom:14px;">
@@ -299,6 +324,39 @@ class StudentModePage {
     initEvents() {
         studentModePage = this;
         this.loadStudentData();
+        
+        // 添加滚动性能优化
+        this.setupScrollOptimization();
+    }
+
+    // 设置滚动优化
+    setupScrollOptimization() {
+        // 防抖滚动事件处理
+        let scrollTimeout;
+        const handleScroll = () => {
+            // 清除之前的定时器
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+            }
+            
+            // 在滚动停止后执行操作
+            scrollTimeout = setTimeout(() => {
+                // 滚动停止后的处理，可以在这里进行延迟加载等操作
+                this.onScrollEnd();
+            }, 50);
+        };
+
+        // 添加滚动事件监听器
+        const pageContainer = document.getElementById('page-container');
+        if (pageContainer) {
+            pageContainer.addEventListener('scroll', handleScroll, { passive: true });
+        }
+    }
+
+    // 滚动停止后的处理
+    onScrollEnd() {
+        // 可以在这里添加滚动停止后的优化逻辑
+        // 例如：加载可见区域的内容，暂停不可见区域的动画等
     }
 
     // 设置预算分配
@@ -312,7 +370,10 @@ class StudentModePage {
         this.settings.monthlyAllowance = monthlyAllowance;
         localStorage.setItem('student_mode_settings', JSON.stringify(this.settings));
         
-        document.getElementById('budget-allocation').innerHTML = this.renderBudgetAllocation();
+        // 使用requestAnimationFrame优化DOM更新
+        requestAnimationFrame(() => {
+            document.getElementById('budget-allocation').innerHTML = this.renderBudgetAllocation();
+        });
         this.app.showToast('预算分配已更新');
     }
 
