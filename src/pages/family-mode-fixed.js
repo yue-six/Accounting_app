@@ -601,10 +601,84 @@ class FamilyModePage {
             await this.loadFamilyDataFromDatabase();
         }
         
+        // 初始化数据监听器
+        this.initDataListeners();
+        
         // 更新页面显示
         this.updateFamilyOverview();
         
         console.log('家庭模式页面事件初始化完成');
+    }
+
+    // 初始化数据监听器
+    initDataListeners() {
+        console.log('初始化家庭模式数据监听器...');
+        
+        // 监听主应用的数据更新事件
+        if (this.app && typeof this.app.addDataUpdateListener === 'function') {
+            this.app.addDataUpdateListener((eventType, data) => {
+                console.log('家庭模式收到数据更新事件:', eventType);
+                
+                switch (eventType) {
+                    case 'transaction_added':
+                        // 当其他页面添加交易时，更新家庭模式数据
+                        this.handleExternalTransactionAdded(data);
+                        break;
+                    case 'manual_refresh':
+                        // 手动刷新时重新加载数据
+                        this.loadFamilyDataFromDatabase();
+                        this.updateFamilyOverview();
+                        break;
+                    default:
+                        // 对于其他事件，也尝试更新数据
+                        this.loadFamilyDataFromDatabase();
+                        this.updateFamilyOverview();
+                        break;
+                }
+            });
+        }
+        
+        // 监听全局数据更新事件
+        window.addEventListener('appDataUpdated', (event) => {
+            console.log('家庭模式收到全局数据更新事件:', event.detail);
+            this.handleGlobalDataUpdate(event.detail);
+        });
+        
+        console.log('家庭模式数据监听器初始化完成');
+    }
+
+    // 处理外部交易添加
+    handleExternalTransactionAdded(transaction) {
+        console.log('处理外部交易添加:', transaction);
+        
+        // 如果交易来自家庭模式，不需要重复处理
+        if (transaction.source === 'family_mode') {
+            console.log('交易来自家庭模式，跳过处理');
+            return;
+        }
+        
+        // 重新加载家庭数据以保持同步
+        this.loadFamilyDataFromDatabase();
+        this.updateFamilyOverview();
+    }
+
+    // 处理全局数据更新
+    handleGlobalDataUpdate(detail) {
+        const { eventType, data } = detail;
+        
+        switch (eventType) {
+            case 'transaction_added':
+                this.handleExternalTransactionAdded(data);
+                break;
+            case 'data_updated':
+                // 数据更新时重新加载
+                this.loadFamilyDataFromDatabase();
+                this.updateFamilyOverview();
+                break;
+            default:
+                console.log('家庭模式处理未知事件类型:', eventType);
+                break;
+        }
     }
     
     // 更新家庭概览显示
@@ -1137,7 +1211,7 @@ class FamilyModePage {
                 return;
             }
             
-            const transaction = {
+            const familyTransaction = {
                 amount: amount,
                 category: category,
                 description: note || '家庭支出',
@@ -1148,19 +1222,37 @@ class FamilyModePage {
                 member_name: this.currentUser.name
             };
             
+            // 创建用于主应用的标准交易格式
+            const mainAppTransaction = {
+                amount: amount,
+                category: category,
+                description: note || `${this.currentUser.name}的家庭支出`,
+                type: 'expense',
+                merchant: '家庭模式',
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toISOString(),
+                source: 'family_mode'
+            };
+            
             if (this.modeDatabase) {
                 // 保存到数据库
                 const success = await this.modeDatabase.addFamilyTransaction({
-                    ...transaction,
+                    ...familyTransaction,
                     family_id: this.familySettings.id || 'default_family'
                 });
                 
                 if (success) {
-                    this.familyTransactions.unshift(transaction);
+                    this.familyTransactions.unshift(familyTransaction);
                 }
             } else {
                 // 保存到本地存储
-                this.familyTransactions.unshift(transaction);
+                this.familyTransactions.unshift(familyTransaction);
+            }
+            
+            // 同时添加到主应用交易记录中
+            if (this.app && typeof this.app.addTransaction === 'function') {
+                await this.app.addTransaction(mainAppTransaction);
+                console.log('✅ 家庭模式交易已同步到主应用');
             }
             
             // 保存数据
