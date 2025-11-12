@@ -331,6 +331,8 @@ class HomePage {
             this.bindTransactionEvents();
             // 初始化模式特定事件
             this.initModeSpecificEvents();
+            // 初始化交易监听器
+            this.initTransactionListeners();
             console.log('事件绑定完成');
         }, 200);
 
@@ -1794,6 +1796,131 @@ class HomePage {
                 statusText.textContent = '未连接';
                 statusDot.style.animation = 'none';
             }
+        }
+    }
+
+    // 初始化交易监听器
+    initTransactionListeners() {
+        console.log('初始化交易监听器...');
+        
+        // 监听app内部的数据更新事件
+        if (this.app && typeof this.app.addDataUpdateListener === 'function') {
+            this.app.addDataUpdateListener((eventType, data) => {
+                console.log('收到数据更新事件:', eventType, data);
+                this.handleDataUpdate(eventType, data);
+            });
+        }
+        
+        // 监听全局自定义事件
+        window.addEventListener('appDataUpdated', (event) => {
+            console.log('收到全局数据更新事件:', event.detail);
+            this.handleDataUpdate(event.detail.eventType, event.detail.data);
+        });
+
+        // 监听交易添加事件
+        if (this.app && typeof this.app.onTransactionAdded === 'function') {
+            // 保存原有的回调函数
+            const originalCallback = this.app.onTransactionAdded;
+            this.app.onTransactionAdded = (transaction) => {
+                console.log('收到交易添加事件:', transaction);
+                
+                // 调用原有的回调
+                if (originalCallback) {
+                    originalCallback(transaction);
+                }
+                
+                // 更新页面数据
+                this.handleTransactionAdded(transaction);
+            };
+        } else {
+            // 如果没有现有回调，直接设置
+            this.app.onTransactionAdded = (transaction) => {
+                console.log('收到交易添加事件:', transaction);
+                this.handleTransactionAdded(transaction);
+            };
+        }
+
+        console.log('交易监听器初始化完成');
+    }
+
+    // 处理数据更新
+    handleDataUpdate(eventType, data) {
+        switch (eventType) {
+            case 'transaction_added':
+                console.log('处理交易添加事件');
+                this.handleTransactionAdded(data);
+                break;
+            case 'manual_refresh':
+                console.log('手动刷新所有数据');
+                this.updateData();
+                break;
+            default:
+                console.log('未知事件类型:', eventType);
+                // 对于未知事件，也尝试更新数据
+                this.updateData();
+                break;
+        }
+    }
+
+    // 处理交易添加
+    handleTransactionAdded(transaction) {
+        console.log('处理交易添加，更新最近交易板块...');
+        
+        // 立即更新交易列表
+        this.updateRecentTransactions();
+        
+        // 更新本月统计
+        setTimeout(() => {
+            this.loadMonthlyStats();
+        }, 100);
+        
+        // 显示更新提示
+        this.showTransactionUpdateNotification(transaction);
+    }
+
+    // 更新最近交易板块
+    updateRecentTransactions() {
+        const container = document.getElementById('recent-transactions');
+        if (container) {
+            container.innerHTML = this.renderRecentTransactions();
+            
+            // 重新绑定交易项事件
+            setTimeout(() => {
+                this.bindTransactionEvents();
+            }, 50);
+            
+            console.log('最近交易板块已更新');
+        } else {
+            console.warn('未找到最近交易容器');
+        }
+    }
+
+    // 显示交易更新通知
+    showTransactionUpdateNotification(transaction) {
+        const category = this.app.categories.find(c => c.id === transaction.category);
+        const categoryName = category ? category.name : '未分类';
+        const typeText = transaction.type === 'income' ? '收入' : '支出';
+        
+        // 显示Toast通知
+        this.app.showToast(
+            `已添加${typeText}记录：${transaction.description} ¥${Math.abs(transaction.amount)}`,
+            'success'
+        );
+        
+        // 添加控制台日志
+        console.log(`交易更新通知：${typeText} - ${categoryName} - ¥${Math.abs(transaction.amount)}`);
+    }
+
+    // 清理监听器（当页面卸载时调用）
+    destroy() {
+        console.log('清理交易监听器...');
+        
+        // 移除全局事件监听
+        window.removeEventListener('appDataUpdated', this.handleDataUpdate);
+        
+        // 移除app内部监听器
+        if (this.app && typeof this.app.removeDataUpdateListener === 'function') {
+            this.app.removeDataUpdateListener(this.handleDataUpdate);
         }
     }
 }

@@ -26,6 +26,10 @@ class AccountingApp {
         this.advancedAnalytics = null;
         this.smartBudgetManager = null;
         this.voiceInputManager = null;
+        
+        // 交易事件监听器
+        this.transactionListeners = [];
+        this.dataUpdateListeners = [];
     }
 
     // 初始化应用
@@ -234,6 +238,9 @@ class AccountingApp {
         if (typeof this.onTransactionAdded === 'function') {
             this.onTransactionAdded(transaction);
         }
+        
+        // 触发全局数据更新事件
+        this.triggerDataUpdate('transaction_added', transaction);
         
         return transaction;
     }
@@ -771,6 +778,46 @@ class AccountingApp {
                 homePage.initEvents();
             }
         }
+    }
+
+    // 添加事件监听器
+    addDataUpdateListener(callback) {
+        if (typeof callback === 'function') {
+            this.dataUpdateListeners.push(callback);
+        }
+    }
+
+    // 移除事件监听器
+    removeDataUpdateListener(callback) {
+        const index = this.dataUpdateListeners.indexOf(callback);
+        if (index > -1) {
+            this.dataUpdateListeners.splice(index, 1);
+        }
+    }
+
+    // 触发数据更新事件
+    triggerDataUpdate(eventType, data) {
+        console.log(`触发数据更新事件: ${eventType}`, data);
+        
+        // 触发监听器
+        this.dataUpdateListeners.forEach(listener => {
+            try {
+                listener(eventType, data);
+            } catch (error) {
+                console.error('数据更新监听器执行错误:', error);
+            }
+        });
+
+        // 触发全局事件
+        const event = new CustomEvent('appDataUpdated', {
+            detail: { eventType, data }
+        });
+        window.dispatchEvent(event);
+    }
+
+    // 强制刷新所有页面数据
+    refreshAllData() {
+        this.triggerDataUpdate('manual_refresh', null);
     }
 }
 
